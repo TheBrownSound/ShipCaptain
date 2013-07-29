@@ -27,6 +27,20 @@
 				sizeCanvas();
 			}
 
+			window.onkeydown = function(event) {
+				console.log('KeyCode: ', event.keyCode);
+				switch(event.keyCode) {
+					case 37: // Left arrow
+						Game.playerBoat.moveSail(-6);
+						break;
+					case 39: // Right arrow
+						Game.playerBoat.moveSail(6);
+						break;
+					default:
+						//console.log('Keycode ['+event.keyCode+'] not handled');
+				}
+			}
+
 			window.onkeyup = function(event) {
 				console.log('KeyCode: ', event.keyCode);
 				switch(event.keyCode) {

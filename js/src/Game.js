@@ -10,9 +10,9 @@ var Game = (function(){
 		createjs.Touch.enable(self.stage);
 		self.stage.enableMouseOver(10);
 		self.stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
-		
 		self.stage.snapToPixelEnabled = true;
-		var playerBoat = new Boat();
+		
+		var playerBoat = self.playerBoat = new Boat();
 		playerBoat.x = self.stage.canvas.width/2;
 		playerBoat.y = self.stage.canvas.height/2;
 
@@ -28,10 +28,7 @@ var Game = (function(){
 	}
 
 	self.canvasResized = function() {
-		if (self.world) {
-			self.world.canvasSizeChanged(self.stage.canvas.width, self.stage.canvas.height);
-			placeMiniMap();
-		}
+		self.update();
 	}
 
 	self.escape = function() {
