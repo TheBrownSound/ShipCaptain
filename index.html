@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Ship Game</title>
+	<!-- <link href='http://fonts.googleapis.com/css?family=Luckiest+Guy' rel='stylesheet' type='text/css'> -->
+	<link href="css/style.css" rel="stylesheet" type="text/css" />
+
+	<script type="text/javascript" src="js/lib/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="js/lib/easeljs-0.6.1.min.js"></script>
+
+	<!-- Game Scripts -->
+	<script type="text/javascript" src="js/src/Game.js"></script>
+	<script type="text/javascript" src="js/src/Boat.js"></script>
+
+	<script type="text/javascript">
+		
+		$(document).ready(function() {
+			// Create images for createjs to use
+			var toolbarHeight = 41;
+
+			Game.images = {};
+			Game.images.foregroundImage = new Image();
+			Game.images.foregroundImage.src = "/images/foreground.png";
+
+			window.onresize = function(event) {
+				sizeCanvas();
+			}
+
+			window.onkeyup = function(event) {
+				console.log('KeyCode: ', event.keyCode);
+				switch(event.keyCode) {
+					case 37: // Left arrow
+						break;
+					case 38: // Up arrow
+						break;
+					case 39: // Right arrow
+						break;
+					case 40: // Down arrow
+						break;
+					case 65: // A key
+						break;
+					case 187: // = key, Zoom In
+						Game.world.zoomIn();
+						break;
+					case 189: // - key, Zoom Out
+						Game.world.zoomOut();
+						break;
+					case 27: // Escape
+						break;
+					default:
+						console.log('Keycode ['+event.keyCode+'] not handled');
+				}
+			}
+
+			function sizeCanvas() {
+				var canvas = document.getElementById('world');
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+				Game.canvasResized();
+			}
+
+			sizeCanvas();
+		});
+	</script>
+
+</head>
+<body onload='Game.init("world");'>
+	<div id='debug'>
+		<div id="coords">Map Coords</div>
+		<div id="fps"></div>
+	</div>
+	<div class="canvasHolder">
+		<canvas id="world" width="960" height="400" style="background-color:#86D3E4;"></canvas>
+	</div>
+</body>
+</html>
