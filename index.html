@@ -11,7 +11,9 @@
 
 	<!-- Game Scripts -->
 	<script type="text/javascript" src="js/src/Game.js"></script>
+	<script type="text/javascript" src="js/src/World.js"></script>
 	<script type="text/javascript" src="js/src/Boat.js"></script>
+	<script type="text/javascript" src="js/src/Sail.js"></script>
 
 	<script type="text/javascript">
 		
@@ -19,22 +21,18 @@
 			// Create images for createjs to use
 			var toolbarHeight = 41;
 
-			Game.images = {};
-			Game.images.foregroundImage = new Image();
-			Game.images.foregroundImage.src = "/images/foreground.png";
-
 			window.onresize = function(event) {
 				sizeCanvas();
 			}
 
 			window.onkeydown = function(event) {
-				console.log('KeyCode: ', event.keyCode);
+				//console.log('KeyCode: ', event.keyCode);
 				switch(event.keyCode) {
 					case 37: // Left arrow
-						Game.playerBoat.moveSail(-6);
+						Game.world.playerBoat.moveSail(-6);
 						break;
 					case 39: // Right arrow
-						Game.playerBoat.moveSail(6);
+						Game.world.playerBoat.moveSail(6);
 						break;
 					default:
 						//console.log('Keycode ['+event.keyCode+'] not handled');
@@ -42,7 +40,7 @@
 			}
 
 			window.onkeyup = function(event) {
-				console.log('KeyCode: ', event.keyCode);
+				//console.log('KeyCode: ', event.keyCode);
 				switch(event.keyCode) {
 					case 37: // Left arrow
 						break;
@@ -85,7 +83,7 @@
 		<div id="fps"></div>
 	</div>
 	<div class="canvasHolder">
-		<canvas id="world" width="960" height="400" style="background-color:#86D3E4;"></canvas>
+		<canvas id="world" width="960" height="400" style="background-color:#1e4969;"></canvas>
 	</div>
 </body>
 </html>

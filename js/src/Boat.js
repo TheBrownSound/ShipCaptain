@@ -1,6 +1,8 @@
 var Boat = (function() {
-	var WIDTH = 426;
-	var HEIGHT = 946;
+	var WIDTH = 220;
+	var HEIGHT = 500;
+	var boomDiameter = 16;
+	var boomWidth = 300;
 
 	var boat = new createjs.Container();
 	boat.regX = WIDTH/2;
@@ -8,11 +10,9 @@ var Boat = (function() {
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 
-	var sail = new createjs.Bitmap('images/small_sail.png');
-	sail.regX = 792/2;
-	sail.regY = 145;
+	var sail = new Sail(boomWidth, boomDiameter);
 	sail.x = WIDTH/2;
-	sail.y = 400;
+	sail.y = 210;
 
 	boat.addChild(hull);
 	boat.addChild(sail);

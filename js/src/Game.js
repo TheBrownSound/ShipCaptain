@@ -12,13 +12,9 @@ var Game = (function(){
 		self.stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
 		self.stage.snapToPixelEnabled = true;
 		
-		var playerBoat = self.playerBoat = new Boat();
-		playerBoat.x = self.stage.canvas.width/2;
-		playerBoat.y = self.stage.canvas.height/2;
+		var world = self.world = new World(self.stage.canvas.width, self.stage.canvas.height);
 
-		playerBoat.scaleX = playerBoat.scaleY = .5;
-
-		self.stage.addChild(playerBoat);
+		self.stage.addChild(world);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -28,6 +24,9 @@ var Game = (function(){
 	}
 
 	self.canvasResized = function() {
+		if (self.stage) {
+			self.world.canvasSizeChanged(self.stage.canvas.width, self.stage.canvas.height);
+		}
 		self.update();
 	}
 
