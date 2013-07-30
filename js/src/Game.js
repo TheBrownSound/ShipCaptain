@@ -1,3 +1,10 @@
+// Fuse dependencies
+// @depends World.js
+// @depends Ocean.js
+// @depends Weather.js
+// @depends Boat.js
+// @depends Sail.js
+
 // Parent Game Logic
 var Game = (function(){
 	var game = {}

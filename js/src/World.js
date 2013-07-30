@@ -13,6 +13,7 @@ var World = function(width, height){
 	world.name = 'world';
 
 	var ocean = new Ocean(width,height);
+	//var weather = new Weather();
 
 	var playerBoat = world.playerBoat = new Boat();
 	playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[currentScale];
@@ -63,10 +64,10 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
-		var direction = (playerBoat.rotation+90)%360;
-		//var direction = Math.atan2(_destination.y-rider.y,_destination.x-rider.x)*180/Math.PI
-		ocean.position.x += Math.cos(direction*Math.PI/180)*playerBoat.getSpeed();
-		ocean.position.y += Math.sin(direction*Math.PI/180)*playerBoat.getSpeed();
+		var angle = playerBoat.getHeading();
+		var speed = playerBoat.getSpeed();
+		ocean.position.x += Math.cos(angle*Math.PI/180)*speed;
+		ocean.position.y += Math.sin(angle*Math.PI/180)*speed;
 		ocean.update();
 	}
 

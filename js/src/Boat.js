@@ -1,7 +1,7 @@
 var Boat = (function() {
-	var WIDTH = 220;
-	var HEIGHT = 500;
-	var boomDiameter = 16;
+	var WIDTH = 112;
+	var HEIGHT = 250;
+	var boomDiameter = 10;
 	var boomWidth = 300;
 
 	var _momentum = 0;
@@ -12,9 +12,9 @@ var Boat = (function() {
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 
-	var sail = new Sail(boomWidth, boomDiameter);
+	var sail = new Sail(WIDTH*1.5, boomDiameter);
 	sail.x = WIDTH/2;
-	sail.y = 210;
+	sail.y = 95;
 
 	boat.addChild(hull, sail);
 
@@ -36,6 +36,10 @@ var Boat = (function() {
 
 	boat.getSpeed = function() {
 		return 4;
+	}
+
+	boat.getHeading = function() {
+		return (boat.rotation+90) % 360;
 	}
 
 	return boat;
