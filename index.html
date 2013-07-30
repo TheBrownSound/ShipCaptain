@@ -8,10 +8,13 @@
 
 	<script type="text/javascript" src="js/lib/jquery-2.0.3.min.js"></script>
 	<script type="text/javascript" src="js/lib/easeljs-0.6.1.min.js"></script>
+	<script type="text/javascript" src="js/lib/preloadjs-0.3.1.min.js"></script>
+	
 
 	<!-- Game Scripts -->
 	<script type="text/javascript" src="js/src/Game.js"></script>
 	<script type="text/javascript" src="js/src/World.js"></script>
+	<script type="text/javascript" src="js/src/Ocean.js"></script>
 	<script type="text/javascript" src="js/src/Boat.js"></script>
 	<script type="text/javascript" src="js/src/Sail.js"></script>
 
@@ -29,10 +32,16 @@
 				//console.log('KeyCode: ', event.keyCode);
 				switch(event.keyCode) {
 					case 37: // Left arrow
-						Game.world.playerBoat.moveSail(-6);
+						Game.world.playerBoat.turnLeft();
+						break;
+					case 38: // Up arrow
+						Game.world.playerBoat.adjustSail(-6);
 						break;
 					case 39: // Right arrow
-						Game.world.playerBoat.moveSail(6);
+						Game.world.playerBoat.turnRight();
+						break;
+					case 40: // Down arrow
+						Game.world.playerBoat.adjustSail(6);
 						break;
 					default:
 						//console.log('Keycode ['+event.keyCode+'] not handled');

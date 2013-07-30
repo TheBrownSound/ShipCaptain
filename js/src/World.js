@@ -7,22 +7,25 @@ var World = function(width, height){
 	var _height = _height;
 
 	var currentScale = 0;
-	var scaleIncrements = [.5, 1]
+	var scaleIncrements = [.5, 1];
+
 	var world = new createjs.Container();
 	world.name = 'world';
 
+	var ocean = new Ocean(width,height);
+
 	var playerBoat = world.playerBoat = new Boat();
-	playerBoat.scaleX = playerBoat.scaleY = scaleIncrements[currentScale];
+	playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[currentScale];
 	playerBoat.x = width/2;
 	playerBoat.y = height/2;
 
+	world.addChild(ocean);
 	world.addChild(playerBoat);
 
 	function changeScale(inc) {
 		currentScale += inc;
 		var nextScale = Math.abs(currentScale%scaleIncrements.length);
-		playerBoat.scaleX = playerBoat.scaleY = scaleIncrements[nextScale];
-		Game.update();
+		playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[nextScale];
 	}
 
 	world.getWidth = function() {
@@ -57,6 +60,14 @@ var World = function(width, height){
 
 	world.zoomOut = function() {
 		changeScale(-1);
+	}
+
+	world.update = function() {
+		var direction = (playerBoat.rotation+90)%360;
+		//var direction = Math.atan2(_destination.y-rider.y,_destination.x-rider.x)*180/Math.PI
+		ocean.position.x += Math.cos(direction*Math.PI/180)*playerBoat.getSpeed();
+		ocean.position.y += Math.sin(direction*Math.PI/180)*playerBoat.getSpeed();
+		ocean.update();
 	}
 
 	return world;

@@ -1,51 +1,70 @@
 // Parent Game Logic
 var Game = (function(){
-	var self = {};
-	var _update = false;
+	var game = {}
+	var _preloadAssets = [];
 
-	self.init = function(canvasId) {
-		self.stage = new createjs.Stage(document.getElementById(canvasId));
+	var stage;
+	var world;
+	var preloader;
+	var tide;
+
+	game.init = function(canvasId) {
+		stage = new createjs.Stage(document.getElementById(canvasId));
 
 		//Enable User Inputs
-		createjs.Touch.enable(self.stage);
-		self.stage.enableMouseOver(10);
-		self.stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
-		self.stage.snapToPixelEnabled = true;
-		
-		var world = self.world = new World(self.stage.canvas.width, self.stage.canvas.height);
+		createjs.Touch.enable(stage);
+		stage.enableMouseOver(10);
+		stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
+		stage.snapToPixelEnabled = true;
 
-		self.stage.addChild(world);
+		manifest = [
+			{src:"images/tide_repeat.png", id:"waves"}
+		];
+
+		preloader = new createjs.LoadQueue(false);
+		preloader.onFileLoad = fileLoaded;
+		preloader.onComplete = preloadComplete;
+		preloader.loadManifest(manifest);
+	}
+
+	function fileLoaded(event) {
+		console.log('handleFileLoad: ', event);
+		_preloadAssets.push(event.item);
+	}
+
+	function preloadComplete() {
+		console.log('preloadComplete')
+		game.assets = {};
+		for (var i = 0; i < _preloadAssets.length; i++) {
+			console.log(_preloadAssets[i]);
+			game.assets[_preloadAssets[i].id] = preloader.getResult(_preloadAssets[i].id);
+		};
+		console.log('Game.assets', game.assets);
+
+		world = game.world = new World(stage.canvas.width, stage.canvas.height);
+		
+		stage.addChild(world);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
-		createjs.Ticker.addListener(this);
-
-		self.update();
+		createjs.Ticker.addEventListener("tick", game.tick);
 	}
 
-	self.canvasResized = function() {
-		if (self.stage) {
-			self.world.canvasSizeChanged(self.stage.canvas.width, self.stage.canvas.height);
+	game.canvasResized = function() {
+		if (game.world) {
+			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
-		self.update();
 	}
 
-	self.escape = function() {
+	game.escape = function() {
 
 	}
 
-	self.update = function() {
-		_update = true;
-	}
-
-	self.tick = function() {
-		// this set makes it so the stage only re-renders when an event handler indicates a change has happened.
-		if (_update) {
-			_update = false; // only update once
-			self.stage.update();
-		}
+	game.tick = function() {
+		world.update();
+		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}
 
-	return self;
+	return game;
 })();
