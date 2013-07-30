@@ -17,11 +17,11 @@ var World = function(width, height){
 
 	var playerBoat = world.playerBoat = new Boat();
 	playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[currentScale];
-	playerBoat.x = width/2;
-	playerBoat.y = height/2;
+	
+	ocean.x = playerBoat.x = width/2;
+	ocean.y = playerBoat.y = height/2;
 
-	world.addChild(ocean);
-	world.addChild(playerBoat);
+	world.addChild(ocean, playerBoat);
 
 	function changeScale(inc) {
 		currentScale += inc;
@@ -51,8 +51,9 @@ var World = function(width, height){
 		console.log(width, height);
 		_width = width;
 		_height = height;
-		playerBoat.x = width/2;
-		playerBoat.y = height/2;
+
+		ocean.x = playerBoat.x = width/2;
+		ocean.y = playerBoat.y = height/2;
 	}
 
 	world.zoomIn = function() {
@@ -64,10 +65,12 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
-		var angle = playerBoat.getHeading();
+		var heading = playerBoat.getHeading();
+		document.getElementById('heading').innerHTML = "Heading: "+heading;
 		var speed = playerBoat.getSpeed();
-		ocean.position.x += Math.cos(angle*Math.PI/180)*speed;
-		ocean.position.y += Math.sin(angle*Math.PI/180)*speed;
+		ocean.position.x -= Math.sin(heading*Math.PI/180)*speed;
+		ocean.position.y += Math.cos(heading*Math.PI/180)*speed;
+		ocean.spawnBubble();
 		ocean.update();
 	}
 

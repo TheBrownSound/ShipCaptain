@@ -18,11 +18,11 @@ var World = function(width, height){
 
 	var playerBoat = world.playerBoat = new Boat();
 	playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[currentScale];
-	playerBoat.x = width/2;
-	playerBoat.y = height/2;
+	
+	ocean.x = playerBoat.x = width/2;
+	ocean.y = playerBoat.y = height/2;
 
-	world.addChild(ocean);
-	world.addChild(playerBoat);
+	world.addChild(ocean, playerBoat);
 
 	function changeScale(inc) {
 		currentScale += inc;
@@ -52,8 +52,9 @@ var World = function(width, height){
 		console.log(width, height);
 		_width = width;
 		_height = height;
-		playerBoat.x = width/2;
-		playerBoat.y = height/2;
+
+		ocean.x = playerBoat.x = width/2;
+		ocean.y = playerBoat.y = height/2;
 	}
 
 	world.zoomIn = function() {
@@ -65,10 +66,12 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
-		var angle = playerBoat.getHeading();
+		var heading = playerBoat.getHeading();
+		document.getElementById('heading').innerHTML = "Heading: "+heading;
 		var speed = playerBoat.getSpeed();
-		ocean.position.x += Math.cos(angle*Math.PI/180)*speed;
-		ocean.position.y += Math.sin(angle*Math.PI/180)*speed;
+		ocean.position.x -= Math.sin(heading*Math.PI/180)*speed;
+		ocean.position.y += Math.cos(heading*Math.PI/180)*speed;
+		ocean.spawnBubble();
 		ocean.update();
 	}
 
@@ -86,6 +89,13 @@ var Ocean = function(width, height){
 	ocean.height = height;
 	ocean.position = {x:0, y:0};
 
+	var map = new createjs.Container();
+	var mapCenter = new createjs.Shape();
+	mapCenter.graphics.beginFill('#F00');
+	mapCenter.graphics.drawCircle(-5,-5,20);
+	mapCenter.graphics.endFill();
+	map.addChild(mapCenter);
+
 	console.log('WAVES: ', Game.assets['waves']);
 	var crossWidth = width*2 + height*2;
 
@@ -93,34 +103,81 @@ var Ocean = function(width, height){
 	var g = tide.graphics;
 	g.beginBitmapFill(Game.assets['waves']);
 	g.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-	tide.x = width/2;
-	tide.y = height/2;
+
+	ocean.addChild(map, tide);
 
 	function moveTide() {
 		tide.x = ocean.position.x % 200;
 		tide.y = ocean.position.y % 150;
 	}
 
-	ocean.addChild(tide);
+	ocean.spawnBubble = function() {
+		var bubble = new Bubble();
+		bubble.x = -ocean.position.x;
+		bubble.y = -ocean.position.y;
+		bubble.animate();
+		map.addChild(bubble);
+	}
 
 	ocean.update = function() {
+		document.getElementById('coords').innerHTML = ('x:'+ocean.position.x+' - y:'+ocean.position.y);
+		map.x = ocean.position.x;
+		map.y = ocean.position.y;
 		moveTide();
 	}
 
 	return ocean;
 }
+
+var Bubble = function() {
+	var _floatVariance = 100;
+	var bubble = new createjs.Shape();
+	
+	bubble.graphics.beginFill('#95cbdc');
+	bubble.graphics.drawCircle(-5,-5,10);
+	bubble.graphics.endFill();
+
+	bubble.scaleX = bubble.scaleY = .1;
+	function pop() {
+		bubble.parent.removeChild(bubble);
+	}
+
+	function getRandomArbitary (min, max) {
+		return Math.random() * (max - min) + min;
+	}
+
+	bubble.animate = function() {
+		var floatX = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.x;
+		var floatY = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.y;
+		var scale = getRandomArbitary(1,3);
+	
+		createjs.Tween.get(bubble,{loop:false})
+			.set({scaleX:0.1,scaleY:0.1}, bubble)
+			.to({
+				x: floatX,
+				y: floatY,
+				scaleX: scale,
+				scaleY: scale,
+				alpha: 0
+			},3000,createjs.Ease.easeOut)
+			.call(pop);
+	}
+	return bubble
+}
+
 // @depends Weather.js
 var Boat = (function() {
 	var WIDTH = 112;
-	var HEIGHT = 250;
+	var LENGTH = 250;
 	var boomDiameter = 10;
 	var boomWidth = 300;
 
 	var _momentum = 0;
+	var _heading = 0;
 
 	var boat = new createjs.Container();
 	boat.regX = WIDTH/2;
-	boat.regY = HEIGHT/2;
+	boat.regY = LENGTH/2;
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 
@@ -130,28 +187,39 @@ var Boat = (function() {
 
 	boat.addChild(hull, sail);
 
-	boat.turnLeft = function() {
-		boat.rotation -= 6;
-	}
-
-	boat.turnRight = function() {
-		boat.rotation += 6;
-	}
-
-	boat.toggleSail = function() {
-
+	boat.adjustHeading = function(degree) {
+		_heading += degree;
+		createjs.Tween.get(boat,{loop:false, override:true})
+			.to({rotation:_heading},1000,createjs.Ease.backOut)
 	}
 
 	boat.adjustSail = function(amount) {
 		sail.rotation += amount;
 	}
 
+	boat.toggleSail = function() {
+
+	}
+
 	boat.getSpeed = function() {
 		return 4;
 	}
 
+	boat.getWidth = function() {
+		return WIDTH;
+	}
+
+	boat.getLength = function() {
+		return LENGTH;
+	}
+
 	boat.getHeading = function() {
-		return (boat.rotation+90) % 360;
+		var heading = boat.rotation%360;
+		return (heading < 0) ? heading+360:heading;
+	}
+
+	boat.getSternPosition = function() {
+		return LENGTH-boat.regY;
 	}
 
 	return boat;

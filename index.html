@@ -7,6 +7,7 @@
 
 	<script type="text/javascript" src="js/lib/jquery-2.0.3.min.js"></script>
 	<script type="text/javascript" src="js/lib/easeljs-0.6.1.min.js"></script>
+	<script type="text/javascript" src="js/lib/tweenjs-0.4.1.min.js"></script>
 	<script type="text/javascript" src="js/lib/preloadjs-0.3.1.min.js"></script>
 
 	<!-- Game Scripts -->
@@ -25,13 +26,13 @@
 				//console.log('KeyCode: ', event.keyCode);
 				switch(event.keyCode) {
 					case 37: // Left arrow
-						Game.world.playerBoat.turnLeft();
+						Game.world.playerBoat.adjustHeading(-6);
 						break;
 					case 38: // Up arrow
 						Game.world.playerBoat.adjustSail(-6);
 						break;
 					case 39: // Right arrow
-						Game.world.playerBoat.turnRight();
+						Game.world.playerBoat.adjustHeading(6);
 						break;
 					case 40: // Down arrow
 						Game.world.playerBoat.adjustSail(6);
@@ -82,6 +83,7 @@
 <body onload='Game.init("world");'>
 	<div id='debug'>
 		<div id="coords">Map Coords</div>
+		<div id="heading"></div>
 		<div id="fps"></div>
 	</div>
 	<div class="canvasHolder">
