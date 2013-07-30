@@ -12,3 +12,5 @@ or
 make sure to run python simple server to avoid cross domain issues.
 
 	python -m SimpleHTTPServer
+or
+	make server

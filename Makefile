@@ -7,3 +7,6 @@ compile:
 
 watch:
 	fuse -i $(sourceFile) -o $(outputDir)$(name).js -w
+
+server:
+	python -m SimpleHTTPServer
