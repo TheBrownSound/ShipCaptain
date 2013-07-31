@@ -17,7 +17,6 @@ var Ocean = function(width, height){
 	mapCenter.graphics.endFill();
 	map.addChild(mapCenter);
 
-	console.log('WAVES: ', Game.assets['waves']);
 	var crossWidth = width*2 + height*2;
 
 	var tide = new createjs.Shape();

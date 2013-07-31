@@ -34,7 +34,9 @@ var Boat = (function() {
 	}
 
 	boat.getSpeed = function() {
-		return 4;
+		var power = 0;
+		power += sail.getPower();
+		return power;
 	}
 
 	boat.getWidth = function() {

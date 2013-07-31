@@ -12,8 +12,8 @@ var World = function(width, height){
 	var world = new createjs.Container();
 	world.name = 'world';
 
-	var ocean = new Ocean(width,height);
-	//var weather = new Weather();
+	var ocean = world.ocean = new Ocean(width,height);
+	var weather = world.weather = new Weather();
 
 	var playerBoat = world.playerBoat = new Boat();
 	playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[currentScale];
