@@ -1,7 +1,7 @@
 var Boat = (function() {
 	var WIDTH = 112;
 	var LENGTH = 250;
-	var SPEED = 12;
+	var SPEED = 10;
 	var AGILITY = 1;
 
 	var boomDiameter = 10;

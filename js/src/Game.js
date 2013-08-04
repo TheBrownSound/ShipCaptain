@@ -1,6 +1,7 @@
 // Fuse dependencies
 // @depends Utils.js
 // @depends World.js
+// @depends Gauge.js
 // @depends Ocean.js
 // @depends Weather.js
 // @depends Boat.js
@@ -15,8 +16,8 @@ var Game = (function(){
 
 	var stage;
 	var world;
+	var gauge;
 	var preloader;
-	var tide;
 
 	game.init = function(canvasId) {
 		stage = new createjs.Stage(document.getElementById(canvasId));
@@ -52,8 +53,11 @@ var Game = (function(){
 		console.log('Game.assets', game.assets);
 
 		world = game.world = new World(stage.canvas.width, stage.canvas.height);
-		
-		stage.addChild(world);
+		gauge = new Gauge();
+		gauge.x = stage.canvas.width - 75;
+		gauge.y = stage.canvas.height - 75;
+
+		stage.addChild(world,gauge);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -67,6 +71,8 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
+			gauge.x = stage.canvas.width - 75;
+			gauge.y = stage.canvas.height - 75;
 		}
 	}
 
@@ -121,6 +127,7 @@ var Game = (function(){
 	}
 
 	function tick() {
+		gauge.update();
 		world.update();
 		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";

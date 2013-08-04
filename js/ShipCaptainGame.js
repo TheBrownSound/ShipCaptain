@@ -101,6 +101,26 @@ var World = function(width, height){
 
 	return world;
 }
+var Gauge = function() {
+	var gauge = new createjs.Container();
+	gauge.width = gauge.height = 100;
+
+	var windCircle = new createjs.Bitmap("images/windgauge.png");
+	var compass = new createjs.Bitmap("images/compass.png");
+	var needle = new createjs.Bitmap("images/needle.png");
+
+	windCircle.regX = compass.regX = needle.regX = gauge.width/2;
+	windCircle.regY = compass.regY = needle.regY = gauge.height/2;
+
+	gauge.addChild(windCircle, compass, needle);
+
+	gauge.update = function() {
+		windCircle.rotation = (-Game.world.playerBoat.getHeading())+Game.world.weather.wind.direction;
+		compass.rotation = -Game.world.playerBoat.getHeading();
+	}
+
+	return gauge;
+}
 var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
@@ -201,7 +221,7 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 112;
 	var LENGTH = 250;
-	var SPEED = 12;
+	var SPEED = 10;
 	var AGILITY = 1;
 
 	var boomDiameter = 10;
@@ -438,8 +458,8 @@ var Game = (function(){
 
 	var stage;
 	var world;
+	var gauge;
 	var preloader;
-	var tide;
 
 	game.init = function(canvasId) {
 		stage = new createjs.Stage(document.getElementById(canvasId));
@@ -475,8 +495,11 @@ var Game = (function(){
 		console.log('Game.assets', game.assets);
 
 		world = game.world = new World(stage.canvas.width, stage.canvas.height);
-		
-		stage.addChild(world);
+		gauge = new Gauge();
+		gauge.x = stage.canvas.width - 75;
+		gauge.y = stage.canvas.height - 75;
+
+		stage.addChild(world,gauge);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -490,6 +513,8 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
+			gauge.x = stage.canvas.width - 75;
+			gauge.y = stage.canvas.height - 75;
 		}
 	}
 
@@ -544,6 +569,7 @@ var Game = (function(){
 	}
 
 	function tick() {
+		gauge.update();
 		world.update();
 		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
