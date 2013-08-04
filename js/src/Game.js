@@ -1,14 +1,17 @@
 // Fuse dependencies
+// @depends Utils.js
 // @depends World.js
 // @depends Ocean.js
 // @depends Weather.js
 // @depends Boat.js
 // @depends Sail.js
+// @depends Helm.js
 
 // Parent Game Logic
 var Game = (function(){
 	var game = {}
 	var _preloadAssets = [];
+	var _canvas;
 
 	var stage;
 	var world;
@@ -54,24 +57,79 @@ var Game = (function(){
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
-		createjs.Ticker.addEventListener("tick", game.tick);
+		createjs.Ticker.addEventListener("tick", tick);
+
+		sizeCanvas();
 	}
 
-	game.canvasResized = function() {
+	function sizeCanvas() {
 		if (game.world) {
+			stage.canvas.width = window.innerWidth;
+			stage.canvas.height = window.innerHeight;
 			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
+	}
+
+	function onKeyDown(event) {
+		switch(event.keyCode) {
+			case 37: // Left arrow
+				Game.world.playerBoat.turnLeft();
+				break;
+			case 38: // Up arrow
+				Game.world.playerBoat.adjustTrim(-6);
+				break;
+			case 39: // Right arrow
+				Game.world.playerBoat.turnRight();
+				break;
+			case 40: // Down arrow
+				Game.world.playerBoat.adjustTrim(6);
+				break;
+			default:
+				//console.log('Keycode ['+event.keyCode+'] not handled');
+		}
+	}
+
+	function onKeyUp(event) {
+		switch(event.keyCode) {
+			case 37: // Right arrow
+			case 39: // Left arrow
+				Game.world.playerBoat.stopTurning();
+				break;
+			case 38: // Up arrow
+				break;
+			case 40: // Down arrow
+				break;
+			case 65: // A key
+				break;
+			case 187: // = key, Zoom In
+				Game.world.zoomIn();
+				break;
+			case 189: // - key, Zoom Out
+				Game.world.zoomOut();
+				break;
+			case 27: // Escape
+				break;
+			default:
+				console.log('Keycode ['+event.keyCode+'] not handled');
+		}
+	}
+
+	function tick() {
+		world.update();
+		stage.update();
+		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}
 
 	game.escape = function() {
 
 	}
 
-	game.tick = function() {
-		world.update();
-		stage.update();
-		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
-	}
+	$(document).ready(function(){
+		console.log('DOCUMENT READY');
+		window.onresize = sizeCanvas;
+		window.onkeydown = onKeyDown;
+		window.onkeyup = onKeyUp;
+	});
 
 	return game;
 })();

@@ -65,11 +65,14 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
+		playerBoat.update();
 		var heading = playerBoat.getHeading();
-		document.getElementById('heading').innerHTML = "Heading: "+heading;
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		var speed = playerBoat.getSpeed();
-		ocean.position.x -= Math.sin(heading*Math.PI/180)*speed;
-		ocean.position.y += Math.cos(heading*Math.PI/180)*speed;
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
+		var knotConversion = speed*.5;
+		ocean.position.x -= Math.sin(heading*Math.PI/180)*knotConversion;
+		ocean.position.y += Math.cos(heading*Math.PI/180)*knotConversion;
 		ocean.spawnBubble();
 		ocean.update();
 	}

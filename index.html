@@ -10,80 +10,15 @@
 	<script type="text/javascript" src="js/lib/tweenjs-0.4.1.min.js"></script>
 	<script type="text/javascript" src="js/lib/preloadjs-0.3.1.min.js"></script>
 
-	<!-- Game Scripts -->
+	<!-- Game Script -->
 	<script type="text/javascript" src="js/ShipCaptainGame.js"></script>
-	<script type="text/javascript">
-		
-		$(document).ready(function() {
-			// Create images for createjs to use
-			var toolbarHeight = 41;
-
-			window.onresize = function(event) {
-				sizeCanvas();
-			}
-
-			window.onkeydown = function(event) {
-				//console.log('KeyCode: ', event.keyCode);
-				switch(event.keyCode) {
-					case 37: // Left arrow
-						Game.world.playerBoat.adjustHeading(-6);
-						break;
-					case 38: // Up arrow
-						Game.world.playerBoat.adjustSail(-6);
-						break;
-					case 39: // Right arrow
-						Game.world.playerBoat.adjustHeading(6);
-						break;
-					case 40: // Down arrow
-						Game.world.playerBoat.adjustSail(6);
-						break;
-					default:
-						//console.log('Keycode ['+event.keyCode+'] not handled');
-				}
-			}
-
-			window.onkeyup = function(event) {
-				//console.log('KeyCode: ', event.keyCode);
-				switch(event.keyCode) {
-					case 37: // Left arrow
-						break;
-					case 38: // Up arrow
-						break;
-					case 39: // Right arrow
-						break;
-					case 40: // Down arrow
-						break;
-					case 65: // A key
-						break;
-					case 187: // = key, Zoom In
-						Game.world.zoomIn();
-						break;
-					case 189: // - key, Zoom Out
-						Game.world.zoomOut();
-						break;
-					case 27: // Escape
-						break;
-					default:
-						console.log('Keycode ['+event.keyCode+'] not handled');
-				}
-			}
-
-			function sizeCanvas() {
-				var canvas = document.getElementById('world');
-				canvas.width = window.innerWidth;
-				canvas.height = window.innerHeight;
-				Game.canvasResized();
-			}
-
-			sizeCanvas();
-		});
-	</script>
 
 </head>
 <body onload='Game.init("world");'>
 	<div id='debug'>
 		<div id="coords">Map Coords</div>
 		<div id="heading"></div>
+		<div id="knots"></div>
 		<div id="fps"></div>
 	</div>
 	<div class="canvasHolder">

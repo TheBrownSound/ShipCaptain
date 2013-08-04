@@ -1,4 +1,25 @@
 // Fuse dependencies
+var Utils = function() {
+	var utils = {};
+
+	utils.headingToInt = function(heading) {
+		if (heading > 180) {
+			return heading-360;
+		} else {
+			return heading;
+		}
+	}
+
+	utils.headingDifference = function(headingOne, headingTwo) {
+		var angle = (Math.abs(headingOne - headingTwo))%360;
+		if(angle > 180) {
+			angle = 360 - angle;
+		}
+		return angle;
+	}
+
+	return utils;
+}();
 // Main world class
 // Acts as a model containing the majority of the info
 // about the world as well the parent display object
@@ -66,11 +87,14 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
+		playerBoat.update();
 		var heading = playerBoat.getHeading();
-		document.getElementById('heading').innerHTML = "Heading: "+heading;
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		var speed = playerBoat.getSpeed();
-		ocean.position.x -= Math.sin(heading*Math.PI/180)*speed;
-		ocean.position.y += Math.cos(heading*Math.PI/180)*speed;
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
+		var knotConversion = speed*.5;
+		ocean.position.x -= Math.sin(heading*Math.PI/180)*knotConversion;
+		ocean.position.y += Math.cos(heading*Math.PI/180)*knotConversion;
 		ocean.spawnBubble();
 		ocean.update();
 	}
@@ -177,32 +201,56 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 112;
 	var LENGTH = 250;
+	var SPEED = 12;
+	var AGILITY = 1;
+
 	var boomDiameter = 10;
 	var boomWidth = 300;
 
-	var _momentum = 0;
+	var _turningLeft = false;
+	var _turningRight = false;
+	var _speed = 0;
 	var _heading = 0;
+	var _trim = 0;
 
 	var boat = new createjs.Container();
 	boat.regX = WIDTH/2;
 	boat.regY = LENGTH/2;
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
-
 	var sail = new Sail(WIDTH*1.5, boomDiameter);
 	sail.x = WIDTH/2;
 	sail.y = 95;
 
+	var helm = new Helm();
+
 	boat.addChild(hull, sail);
 
-	boat.adjustHeading = function(degree) {
-		_heading += degree;
-		createjs.Tween.get(boat,{loop:false, override:true})
-			.to({rotation:_heading},1000,createjs.Ease.backOut)
+	boat.turnLeft = helm.turnLeft;
+	boat.turnRight = helm.turnRight;
+
+	function speedCalc() {
+		var potentialSpeed = Math.round(sail.getPower()*SPEED)
+		if (_speed != potentialSpeed) {
+			if (_speed > potentialSpeed) {
+				_speed -= .03;
+			} if (_speed < potentialSpeed) {
+				_speed += .03;
+			}
+		}
 	}
 
-	boat.adjustSail = function(amount) {
-		sail.rotation += amount;
+	boat.stopTurning = function(){
+		helm.stopTurning();
+		boat.rotation = Math.round(boat.rotation);
+	}
+
+	boat.adjustTrim = function() {
+		var windHeading = Game.world.weather.wind.direction;
+		var boatHeading = boat.rotation;
+		var headingOffset = windHeading - boatHeading;
+		if (headingOffset < 0) headingOffset += 360;
+		sail.trim(headingOffset);
 	}
 
 	boat.toggleSail = function() {
@@ -210,9 +258,7 @@ var Boat = (function() {
 	}
 
 	boat.getSpeed = function() {
-		var power = 0;
-		power += sail.getPower();
-		return power;
+		return _speed;
 	}
 
 	boat.getWidth = function() {
@@ -232,16 +278,26 @@ var Boat = (function() {
 		return LENGTH-boat.regY;
 	}
 
+	boat.update = function() {
+		speedCalc();
+		var turnAmount = helm.turnAmount*AGILITY;
+		if (turnAmount !== 0) {
+			var newHeading = (boat.rotation+turnAmount)%360
+			boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
+			boat.adjustTrim();
+		}
+	}
+
 	return boat;
 });
 var Sail = (function(width, height, sloop) {
+	var _maxAngle = 60;
+	var _desiredTrim = 0;
 
 	var sail = new createjs.Container();
-
-	var potentialSailPower = 5;
-
 	var sheet = new	createjs.Shape();
 	var boom = new createjs.Shape();
+
 	boom.graphics.beginFill('#52352A');
 	boom.graphics.drawRoundRect(-(width/2),-height, width, height, 4);
 	boom.graphics.endFill();
@@ -263,28 +319,98 @@ var Sail = (function(width, height, sloop) {
 		g.clear();
 		g.beginFill('#FFF');
 		g.moveTo(-(width/2), -height/2);
-		g.curveTo(-height/2, power*-20, width/2, -height/2);
+		g.curveTo(-height/2, power*-100, width/2, -height/2);
 		g.lineTo(-(width/2), -height/2);
 		g.endFill();
 	}
 
 	sail.getPower = function() {
 		var sailPower = (90-Math.abs(distanceFromOptimalAngle()))/90;
-		var percentOfPower = (sailPower >= 0) ? sailPower : sailPower/8;
-		var power = potentialSailPower*percentOfPower;
-		drawSail(power);
-		return power;
+		var percentOfPower = (sailPower >= 0) ? sailPower : 0;
+		drawSail(percentOfPower);
+		return percentOfPower;
 	}
+
+	sail.trim = function(heading) {
+		sail.angle = Utils.headingToInt(heading);
+	}
+
+	sail.__defineSetter__('angle', function(amount){
+		var offLeft = Utils.headingDifference(360-_maxAngle, amount);
+		var offRight = Utils.headingDifference(_maxAngle, amount);
+		console.log(offLeft+" | "+offRight);
+		if (sail.rotation != amount) {
+			var sailAngle;
+			if (Math.abs(amount) < _maxAngle) {
+				sailAngle = amount;
+			} else {
+				if (offLeft < offRight) {
+					sailAngle = -_maxAngle;
+				} else {
+					sailAngle = _maxAngle;
+				}
+			}
+			createjs.Tween.get(sail, {override:true}).to({rotation:sailAngle}, 300, createjs.Ease.linear);
+		}
+		
+	});
+
+	sail.__defineGetter__('angle', function(){
+		return sail.rotation;
+	});
 
 	sail.addChild(sheet,boom);
 
 	return sail;
 });
+var Helm = function(turnSpeed) {
+	var TURN_SPEED = turnSpeed || 10;
+	var MAX_AMOUNT = 100;
+
+	var helm = {};
+	var _turning = false;
+	var _amount = 0;
+
+	helm.turnLeft = function() {
+		_turning = true;
+		if (_amount > -MAX_AMOUNT) {
+			_amount -= TURN_SPEED;
+		}
+	}
+
+	helm.turnRight = function() {
+		_turning = true;
+		if (_amount < MAX_AMOUNT) {
+			_amount += TURN_SPEED;
+		}
+	}
+
+	helm.stopTurning = function() {
+		_turning = false;
+	}
+
+	helm.__defineGetter__('turnAmount', function(){
+		return _amount/MAX_AMOUNT;
+	});
+
+	setInterval(function() {
+		if (!_turning) {
+			if (_amount > 0) {
+				_amount -= TURN_SPEED;
+			} else if (_amount < 0) {
+				_amount += TURN_SPEED;
+			}
+		}
+	}, 100);
+
+	return helm;
+}
 
 // Parent Game Logic
 var Game = (function(){
 	var game = {}
 	var _preloadAssets = [];
+	var _canvas;
 
 	var stage;
 	var world;
@@ -330,24 +456,79 @@ var Game = (function(){
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
-		createjs.Ticker.addEventListener("tick", game.tick);
+		createjs.Ticker.addEventListener("tick", tick);
+
+		sizeCanvas();
 	}
 
-	game.canvasResized = function() {
+	function sizeCanvas() {
 		if (game.world) {
+			stage.canvas.width = window.innerWidth;
+			stage.canvas.height = window.innerHeight;
 			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
+	}
+
+	function onKeyDown(event) {
+		switch(event.keyCode) {
+			case 37: // Left arrow
+				Game.world.playerBoat.turnLeft();
+				break;
+			case 38: // Up arrow
+				Game.world.playerBoat.adjustTrim(-6);
+				break;
+			case 39: // Right arrow
+				Game.world.playerBoat.turnRight();
+				break;
+			case 40: // Down arrow
+				Game.world.playerBoat.adjustTrim(6);
+				break;
+			default:
+				//console.log('Keycode ['+event.keyCode+'] not handled');
+		}
+	}
+
+	function onKeyUp(event) {
+		switch(event.keyCode) {
+			case 37: // Right arrow
+			case 39: // Left arrow
+				Game.world.playerBoat.stopTurning();
+				break;
+			case 38: // Up arrow
+				break;
+			case 40: // Down arrow
+				break;
+			case 65: // A key
+				break;
+			case 187: // = key, Zoom In
+				Game.world.zoomIn();
+				break;
+			case 189: // - key, Zoom Out
+				Game.world.zoomOut();
+				break;
+			case 27: // Escape
+				break;
+			default:
+				console.log('Keycode ['+event.keyCode+'] not handled');
+		}
+	}
+
+	function tick() {
+		world.update();
+		stage.update();
+		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}
 
 	game.escape = function() {
 
 	}
 
-	game.tick = function() {
-		world.update();
-		stage.update();
-		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
-	}
+	$(document).ready(function(){
+		console.log('DOCUMENT READY');
+		window.onresize = sizeCanvas;
+		window.onkeydown = onKeyDown;
+		window.onkeyup = onKeyUp;
+	});
 
 	return game;
 })();
