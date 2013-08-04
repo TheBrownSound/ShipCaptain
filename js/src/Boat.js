@@ -33,9 +33,9 @@ var Boat = (function() {
 		var potentialSpeed = Math.round(sail.getPower()*SPEED)
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .03;
+				_speed -= .01;
 			} if (_speed < potentialSpeed) {
-				_speed += .03;
+				_speed += .01;
 			}
 		}
 	}
@@ -51,6 +51,15 @@ var Boat = (function() {
 		var headingOffset = windHeading - boatHeading;
 		if (headingOffset < 0) headingOffset += 360;
 		sail.trim(headingOffset);
+	}
+
+	boat.reefSails = function() {
+		sail.reef();
+	}
+
+	boat.hoistSails = function() {
+		sail.hoist();
+		this.adjustTrim();
 	}
 
 	boat.toggleSail = function() {

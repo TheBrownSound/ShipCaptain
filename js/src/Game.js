@@ -4,7 +4,7 @@
 // @depends Ocean.js
 // @depends Weather.js
 // @depends Boat.js
-// @depends Sail.js
+// @depends Sails.js
 // @depends Helm.js
 
 // Parent Game Logic
@@ -91,6 +91,12 @@ var Game = (function(){
 
 	function onKeyUp(event) {
 		switch(event.keyCode) {
+			case 83: // S Key
+				Game.world.playerBoat.reefSails();
+				break;
+			case 87: // W Key
+				Game.world.playerBoat.hoistSails();
+				break;
 			case 37: // Right arrow
 			case 39: // Left arrow
 				Game.world.playerBoat.stopTurning();

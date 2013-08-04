@@ -1,6 +1,7 @@
-var Sail = (function(width, height, sloop) {
-	var _maxAngle = 60;
+var Sail = (function(width, height, square) {
+	var _maxAngle = 50;
 	var _desiredTrim = 0;
+	var _reefed = true;
 
 	var sail = new createjs.Container();
 	var sheet = new	createjs.Shape();
@@ -9,6 +10,8 @@ var Sail = (function(width, height, sloop) {
 	boom.graphics.beginFill('#52352A');
 	boom.graphics.drawRoundRect(-(width/2),-height, width, height, 4);
 	boom.graphics.endFill();
+
+	sail.addChild(sheet,boom);
 
 	function distanceFromOptimalAngle() {
 		var windDirection = Game.world.weather.wind.direction;
@@ -33,7 +36,7 @@ var Sail = (function(width, height, sloop) {
 	}
 
 	sail.getPower = function() {
-		var sailPower = (90-Math.abs(distanceFromOptimalAngle()))/90;
+		var sailPower = (!_reefed) ? (90-Math.abs(distanceFromOptimalAngle()))/90: 0;
 		var percentOfPower = (sailPower >= 0) ? sailPower : 0;
 		drawSail(percentOfPower);
 		return percentOfPower;
@@ -43,10 +46,18 @@ var Sail = (function(width, height, sloop) {
 		sail.angle = Utils.headingToInt(heading);
 	}
 
+	sail.hoist = function() {
+		_reefed = false;
+	}
+
+	sail.reef = function() {
+		_reefed = true;
+		sail.angle = 0;
+	}
+
 	sail.__defineSetter__('angle', function(amount){
 		var offLeft = Utils.headingDifference(360-_maxAngle, amount);
 		var offRight = Utils.headingDifference(_maxAngle, amount);
-		console.log(offLeft+" | "+offRight);
 		if (sail.rotation != amount) {
 			var sailAngle;
 			if (Math.abs(amount) < _maxAngle) {
@@ -67,7 +78,11 @@ var Sail = (function(width, height, sloop) {
 		return sail.rotation;
 	});
 
-	sail.addChild(sheet,boom);
-
 	return sail;
 });
+
+var MainSail = function(length) {
+	var sail = new Sail();
+	
+	return sail;
+}
