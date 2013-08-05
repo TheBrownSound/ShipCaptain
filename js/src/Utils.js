@@ -1,7 +1,12 @@
 var Utils = function() {
 	var utils = {};
 
-	utils.headingToInt = function(heading) {
+	utils.convertToHeading = function(number) {
+		var heading = number%360;
+		return (heading < 0) ? heading+360:heading;
+	}
+
+	utils.convertToNumber = function(heading) {
 		if (heading > 180) {
 			return heading-360;
 		} else {

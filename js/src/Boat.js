@@ -18,19 +18,27 @@ var Boat = (function() {
 	boat.regY = LENGTH/2;
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
-	var sail = new Sail(WIDTH*1.5, boomDiameter);
-	sail.x = WIDTH/2;
-	sail.y = 95;
-
 	var helm = new Helm();
+	var squareRig = new SquareRig(WIDTH*1.5);
+	var mainSail = new ForeAft(LENGTH*.5);
+	squareRig.x = WIDTH/2;
+	mainSail.x = WIDTH/2;
+	squareRig.y = 95;
+	mainSail.y = 115;
 
-	boat.addChild(hull, sail);
+	boat.sails = [squareRig,mainSail];
+
+	boat.addChild(hull, squareRig, mainSail);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
 
 	function speedCalc() {
-		var potentialSpeed = Math.round(sail.getPower()*SPEED)
+		var potentialSpeed = 0;
+		boat.sails.map(function(sail){
+			potentialSpeed += sail.power;
+		});
+		potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .01;
@@ -46,19 +54,19 @@ var Boat = (function() {
 	}
 
 	boat.adjustTrim = function() {
-		var windHeading = Game.world.weather.wind.direction;
-		var boatHeading = boat.rotation;
-		var headingOffset = windHeading - boatHeading;
-		if (headingOffset < 0) headingOffset += 360;
-		sail.trim(headingOffset);
+		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
+		squareRig.trim(windHeading);
+		mainSail.trim(windHeading);
 	}
 
 	boat.reefSails = function() {
-		sail.reef();
+		squareRig.reef();
+		mainSail.reef();
 	}
 
 	boat.hoistSails = function() {
-		sail.hoist();
+		squareRig.hoist();
+		mainSail.hoist();
 		this.adjustTrim();
 	}
 

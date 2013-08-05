@@ -82,13 +82,13 @@ var Game = (function(){
 				Game.world.playerBoat.turnLeft();
 				break;
 			case 38: // Up arrow
-				Game.world.playerBoat.adjustTrim(-6);
+				Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction+10);
 				break;
 			case 39: // Right arrow
 				Game.world.playerBoat.turnRight();
 				break;
 			case 40: // Down arrow
-				Game.world.playerBoat.adjustTrim(6);
+				Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction-10);
 				break;
 			default:
 				//console.log('Keycode ['+event.keyCode+'] not handled');

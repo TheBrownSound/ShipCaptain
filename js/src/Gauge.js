@@ -12,8 +12,8 @@ var Gauge = function() {
 	gauge.addChild(windCircle, compass, needle);
 
 	gauge.update = function() {
-		windCircle.rotation = (-Game.world.playerBoat.getHeading())+Game.world.weather.wind.direction;
-		compass.rotation = -Game.world.playerBoat.getHeading();
+		windCircle.rotation = Game.world.weather.wind.direction;
+		needle.rotation = Game.world.playerBoat.getHeading();
 	}
 
 	return gauge;
