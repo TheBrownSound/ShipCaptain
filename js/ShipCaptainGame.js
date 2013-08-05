@@ -33,8 +33,9 @@ var World = function(width, height){
 	var _width = width;
 	var _height = _height;
 
-	var currentScale = 0;
-	var scaleIncrements = [.5, 1];
+	var currentScale = 1;
+	var scaleIncrements = [.25, .5, 1];
+	var bubbleTick = 0;
 
 	var world = new createjs.Container();
 	world.name = 'world';
@@ -53,7 +54,10 @@ var World = function(width, height){
 	function changeScale(inc) {
 		currentScale += inc;
 		var nextScale = Math.abs(currentScale%scaleIncrements.length);
-		playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[nextScale];
+		createjs.Tween.get(playerBoat, {override:true})
+			.to({scaleX:scaleIncrements[nextScale], scaleY:scaleIncrements[nextScale]}, 1000, createjs.Ease.sineOut)
+		createjs.Tween.get(ocean, {override:true})
+			.to({scaleX:scaleIncrements[nextScale], scaleY:scaleIncrements[nextScale]}, 1000, createjs.Ease.sineOut)
 	}
 
 	world.getWidth = function() {
@@ -94,13 +98,19 @@ var World = function(width, height){
 	world.update = function() {
 		playerBoat.update();
 		var heading = playerBoat.getHeading();
-		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		var speed = playerBoat.getSpeed();
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
-		var knotConversion = speed*.5;
+		var knotConversion = speed*.3;
 		ocean.position.x -= Math.sin(heading*Math.PI/180)*knotConversion;
 		ocean.position.y += Math.cos(heading*Math.PI/180)*knotConversion;
-		ocean.spawnBubble();
+
+		bubbleTick += Math.round(speed);
+		if (bubbleTick >= 7) {
+			bubbleTick = 0;
+			ocean.spawnBubble();
+		}
+
 		ocean.update();
 	}
 
@@ -139,20 +149,27 @@ var Ocean = function(width, height){
 	ocean.position = {x:0, y:0};
 
 	var map = new createjs.Container();
+
+	var island = new createjs.Bitmap("images/island.png");
+
+	island.y = -2000;
+
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
-	map.addChild(mapCenter);
+	map.addChild(mapCenter, island);
 
-	var crossWidth = width*2 + height*2;
+	var crossWidth = width*3 + height*3;
 
 	var tide = new createjs.Shape();
 	var g = tide.graphics;
 	g.beginBitmapFill(Game.assets['waves']);
 	g.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
 
-	ocean.addChild(map, tide);
+	var underwater = new createjs.Container();
+
+	ocean.addChild(underwater, tide, map);
 
 	function moveTide() {
 		tide.x = ocean.position.x % 200;
@@ -164,13 +181,13 @@ var Ocean = function(width, height){
 		bubble.x = -ocean.position.x;
 		bubble.y = -ocean.position.y;
 		bubble.animate();
-		map.addChild(bubble);
+		underwater.addChild(bubble);
 	}
 
 	ocean.update = function() {
 		document.getElementById('coords').innerHTML = ('x:'+ocean.position.x+' - y:'+ocean.position.y);
-		map.x = ocean.position.x;
-		map.y = ocean.position.y;
+		map.x = underwater.x = ocean.position.x;
+		map.y = underwater.y = ocean.position.y;
 		moveTide();
 	}
 
@@ -224,19 +241,19 @@ var Weather = function(){
 	return weather;
 }
 var Boat = (function() {
-	var WIDTH = 112;
-	var LENGTH = 250;
+	var WIDTH = 56;
+	var LENGTH = 125;
 	var SPEED = 10;
 	var AGILITY = 1;
-
-	var boomDiameter = 10;
-	var boomWidth = 300;
 
 	var _turningLeft = false;
 	var _turningRight = false;
 	var _speed = 0;
 	var _heading = 0;
 	var _trim = 0;
+	var _reefed = true;
+
+	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
 	boat.regX = WIDTH/2;
@@ -244,12 +261,12 @@ var Boat = (function() {
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm();
-	var squareRig = new SquareRig(WIDTH*1.5);
-	var mainSail = new ForeAft(LENGTH*.5);
+	var squareRig = new SquareRig(WIDTH*1.5, {x:10,y:LENGTH/2+20}, {x:WIDTH-10,y:LENGTH/2+20});
+	var mainSail = new ForeAft(LENGTH*.5, {x:WIDTH/2,y:LENGTH-20});
 	squareRig.x = WIDTH/2;
 	mainSail.x = WIDTH/2;
-	squareRig.y = 95;
-	mainSail.y = 115;
+	squareRig.y = 45;
+	mainSail.y = 55;
 
 	boat.sails = [squareRig,mainSail];
 
@@ -285,11 +302,13 @@ var Boat = (function() {
 	}
 
 	boat.reefSails = function() {
+		_reefed = true;
 		squareRig.reef();
 		mainSail.reef();
 	}
 
 	boat.hoistSails = function() {
+		_reefed = false;
 		squareRig.hoist();
 		mainSail.hoist();
 		this.adjustTrim();
@@ -323,10 +342,16 @@ var Boat = (function() {
 	boat.update = function() {
 		speedCalc();
 		var turnAmount = helm.turnAmount*AGILITY;
-		if (turnAmount !== 0) {
-			var newHeading = (boat.rotation+turnAmount)%360
-			boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
-			boat.adjustTrim();
+		var windChange = oldWindHeading-Game.world.weather.wind.direction;
+		if (turnAmount !== 0 || windChange !== 0) {
+			if (turnAmount !== 0) {
+				var newHeading = (boat.rotation+turnAmount)%360
+				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
+			}
+			
+			if (!_reefed) {
+				boat.adjustTrim();
+			}
 		}
 	}
 
@@ -405,18 +430,45 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	return sail;
 });
 
-var SquareRig = function(length) {
+var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
+	var sheet_luff = 20;
 	
 	var sheet = new	createjs.Shape();
 	var yard = new createjs.Shape();
 
-	var sheet_luff = 40;
+	var anchorPoint1 = new createjs.Shape();
+	var anchorPoint2 = new createjs.Shape();
+
+	anchorPoint1.x = -(length/2)+10;
+	anchorPoint2.x = length/2-10;
+	anchorPoint1.y = anchorPoint2.y = -5;
 
 	yard.graphics.beginFill('#52352A');
-	yard.graphics.drawRoundRect(-(length/2),-10, length, 10, 4);
+	yard.graphics.drawRoundRect(-(length/2),-6, length, 6, 4);
 	yard.graphics.endFill();
+
+	sail.addChild(anchorPoint1, anchorPoint2, sheet, yard);
+
+	function drawLines() {
+		var g1 = anchorPoint1.graphics;
+		var g2 = anchorPoint2.graphics;
+		g1.clear();
+		g2.clear();
+		g1.setStrokeStyle('2').beginStroke('#000');
+		g2.setStrokeStyle('2').beginStroke('#000');
+		
+		var anchorOne = sail.parent.localToLocal(anchor1.x,anchor1.y, anchorPoint1);
+		var anchorTwo = sail.parent.localToLocal(anchor2.x,anchor2.y, anchorPoint2);
+
+		g1.moveTo(0,0);
+		g2.moveTo(0,0);
+		g1.lineTo(anchorOne.x, anchorOne.y);
+		g2.lineTo(anchorTwo.x, anchorTwo.y);
+		g1.endStroke();
+		g2.endStroke();
+	}
 
 	sail.drawSail = function() {
 		var g = sheet.graphics;
@@ -431,23 +483,39 @@ var SquareRig = function(length) {
 			g.lineTo(-(length/2), -5);
 		}
 		g.endFill();
+		drawLines();
 	}
-
-	sail.addChild(sheet,yard);
 
 	return sail;
 }
 
-var ForeAft = function(length) {
+var ForeAft = function(length, anchorPoint) {
 	var sail = new Sail(45, 60, 135);
 	sail.name = 'fore-aft';
 
 	var sheet = new	createjs.Shape();
 	var boom = new createjs.Shape();
 
+	var anchorLine = new createjs.Shape();
+	anchorLine.y = length-10;
+
 	boom.graphics.beginFill('#52352A');
-	boom.graphics.drawRoundRect(-5, 0, 10, length, 4);
+	boom.graphics.drawRoundRect(-3, 0, 6, length, 4);
 	boom.graphics.endFill();
+
+	sail.addChild(anchorLine, boom, sheet);
+
+	function drawLine() {
+		var g = anchorLine.graphics;
+		g.clear();
+		g.setStrokeStyle('2').beginStroke('#000');
+		
+		var anchor = sail.parent.localToLocal(anchorPoint.x,anchorPoint.y, anchorLine);
+
+		g.moveTo(0,0);
+		g.lineTo(anchor.x, anchor.y);
+		g.endStroke();
+	}
 
 	sail.drawSail = function() {
 		var g = sheet.graphics;
@@ -455,12 +523,11 @@ var ForeAft = function(length) {
 		g.beginFill('#FFF');
 		g.moveTo(0, 0);
 		var power = (sail.tack == 'port') ? sail.power : -sail.power;
-		g.curveTo(power*-50, length*.9, 0, length);
+		g.curveTo(power*-30, length*.9, 0, length);
 		g.lineTo(0,0);
 		g.endFill();
+		drawLine();
 	}
-
-	sail.addChild(boom, sheet);
 
 	return sail;
 }

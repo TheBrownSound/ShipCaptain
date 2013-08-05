@@ -11,20 +11,27 @@ var Ocean = function(width, height){
 	ocean.position = {x:0, y:0};
 
 	var map = new createjs.Container();
+
+	var island = new createjs.Bitmap("images/island.png");
+
+	island.y = -2000;
+
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
-	map.addChild(mapCenter);
+	map.addChild(mapCenter, island);
 
-	var crossWidth = width*2 + height*2;
+	var crossWidth = width*3 + height*3;
 
 	var tide = new createjs.Shape();
 	var g = tide.graphics;
 	g.beginBitmapFill(Game.assets['waves']);
 	g.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
 
-	ocean.addChild(map, tide);
+	var underwater = new createjs.Container();
+
+	ocean.addChild(underwater, tide, map);
 
 	function moveTide() {
 		tide.x = ocean.position.x % 200;
@@ -36,13 +43,13 @@ var Ocean = function(width, height){
 		bubble.x = -ocean.position.x;
 		bubble.y = -ocean.position.y;
 		bubble.animate();
-		map.addChild(bubble);
+		underwater.addChild(bubble);
 	}
 
 	ocean.update = function() {
 		document.getElementById('coords').innerHTML = ('x:'+ocean.position.x+' - y:'+ocean.position.y);
-		map.x = ocean.position.x;
-		map.y = ocean.position.y;
+		map.x = underwater.x = ocean.position.x;
+		map.y = underwater.y = ocean.position.y;
 		moveTide();
 	}
 

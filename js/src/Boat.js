@@ -1,17 +1,17 @@
 var Boat = (function() {
-	var WIDTH = 112;
-	var LENGTH = 250;
+	var WIDTH = 56;
+	var LENGTH = 125;
 	var SPEED = 10;
 	var AGILITY = 1;
-
-	var boomDiameter = 10;
-	var boomWidth = 300;
 
 	var _turningLeft = false;
 	var _turningRight = false;
 	var _speed = 0;
 	var _heading = 0;
 	var _trim = 0;
+	var _reefed = true;
+
+	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
 	boat.regX = WIDTH/2;
@@ -19,12 +19,12 @@ var Boat = (function() {
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm();
-	var squareRig = new SquareRig(WIDTH*1.5);
-	var mainSail = new ForeAft(LENGTH*.5);
+	var squareRig = new SquareRig(WIDTH*1.5, {x:10,y:LENGTH/2+20}, {x:WIDTH-10,y:LENGTH/2+20});
+	var mainSail = new ForeAft(LENGTH*.5, {x:WIDTH/2,y:LENGTH-20});
 	squareRig.x = WIDTH/2;
 	mainSail.x = WIDTH/2;
-	squareRig.y = 95;
-	mainSail.y = 115;
+	squareRig.y = 45;
+	mainSail.y = 55;
 
 	boat.sails = [squareRig,mainSail];
 
@@ -60,11 +60,13 @@ var Boat = (function() {
 	}
 
 	boat.reefSails = function() {
+		_reefed = true;
 		squareRig.reef();
 		mainSail.reef();
 	}
 
 	boat.hoistSails = function() {
+		_reefed = false;
 		squareRig.hoist();
 		mainSail.hoist();
 		this.adjustTrim();
@@ -98,10 +100,16 @@ var Boat = (function() {
 	boat.update = function() {
 		speedCalc();
 		var turnAmount = helm.turnAmount*AGILITY;
-		if (turnAmount !== 0) {
-			var newHeading = (boat.rotation+turnAmount)%360
-			boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
-			boat.adjustTrim();
+		var windChange = oldWindHeading-Game.world.weather.wind.direction;
+		if (turnAmount !== 0 || windChange !== 0) {
+			if (turnAmount !== 0) {
+				var newHeading = (boat.rotation+turnAmount)%360
+				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
+			}
+			
+			if (!_reefed) {
+				boat.adjustTrim();
+			}
 		}
 	}
 

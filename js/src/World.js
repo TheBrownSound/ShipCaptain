@@ -6,8 +6,9 @@ var World = function(width, height){
 	var _width = width;
 	var _height = _height;
 
-	var currentScale = 0;
-	var scaleIncrements = [.5, 1];
+	var currentScale = 1;
+	var scaleIncrements = [.25, .5, 1];
+	var bubbleTick = 0;
 
 	var world = new createjs.Container();
 	world.name = 'world';
@@ -26,7 +27,10 @@ var World = function(width, height){
 	function changeScale(inc) {
 		currentScale += inc;
 		var nextScale = Math.abs(currentScale%scaleIncrements.length);
-		playerBoat.scaleX = playerBoat.scaleY = ocean.scaleX = ocean.scaleY = scaleIncrements[nextScale];
+		createjs.Tween.get(playerBoat, {override:true})
+			.to({scaleX:scaleIncrements[nextScale], scaleY:scaleIncrements[nextScale]}, 1000, createjs.Ease.sineOut)
+		createjs.Tween.get(ocean, {override:true})
+			.to({scaleX:scaleIncrements[nextScale], scaleY:scaleIncrements[nextScale]}, 1000, createjs.Ease.sineOut)
 	}
 
 	world.getWidth = function() {
@@ -67,13 +71,19 @@ var World = function(width, height){
 	world.update = function() {
 		playerBoat.update();
 		var heading = playerBoat.getHeading();
-		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		var speed = playerBoat.getSpeed();
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
-		var knotConversion = speed*.5;
+		var knotConversion = speed*.3;
 		ocean.position.x -= Math.sin(heading*Math.PI/180)*knotConversion;
 		ocean.position.y += Math.cos(heading*Math.PI/180)*knotConversion;
-		ocean.spawnBubble();
+
+		bubbleTick += Math.round(speed);
+		if (bubbleTick >= 7) {
+			bubbleTick = 0;
+			ocean.spawnBubble();
+		}
+
 		ocean.update();
 	}
 

@@ -71,18 +71,45 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	return sail;
 });
 
-var SquareRig = function(length) {
+var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
+	var sheet_luff = 20;
 	
 	var sheet = new	createjs.Shape();
 	var yard = new createjs.Shape();
 
-	var sheet_luff = 40;
+	var anchorPoint1 = new createjs.Shape();
+	var anchorPoint2 = new createjs.Shape();
+
+	anchorPoint1.x = -(length/2)+10;
+	anchorPoint2.x = length/2-10;
+	anchorPoint1.y = anchorPoint2.y = -5;
 
 	yard.graphics.beginFill('#52352A');
-	yard.graphics.drawRoundRect(-(length/2),-10, length, 10, 4);
+	yard.graphics.drawRoundRect(-(length/2),-6, length, 6, 4);
 	yard.graphics.endFill();
+
+	sail.addChild(anchorPoint1, anchorPoint2, sheet, yard);
+
+	function drawLines() {
+		var g1 = anchorPoint1.graphics;
+		var g2 = anchorPoint2.graphics;
+		g1.clear();
+		g2.clear();
+		g1.setStrokeStyle('2').beginStroke('#000');
+		g2.setStrokeStyle('2').beginStroke('#000');
+		
+		var anchorOne = sail.parent.localToLocal(anchor1.x,anchor1.y, anchorPoint1);
+		var anchorTwo = sail.parent.localToLocal(anchor2.x,anchor2.y, anchorPoint2);
+
+		g1.moveTo(0,0);
+		g2.moveTo(0,0);
+		g1.lineTo(anchorOne.x, anchorOne.y);
+		g2.lineTo(anchorTwo.x, anchorTwo.y);
+		g1.endStroke();
+		g2.endStroke();
+	}
 
 	sail.drawSail = function() {
 		var g = sheet.graphics;
@@ -97,23 +124,39 @@ var SquareRig = function(length) {
 			g.lineTo(-(length/2), -5);
 		}
 		g.endFill();
+		drawLines();
 	}
-
-	sail.addChild(sheet,yard);
 
 	return sail;
 }
 
-var ForeAft = function(length) {
+var ForeAft = function(length, anchorPoint) {
 	var sail = new Sail(45, 60, 135);
 	sail.name = 'fore-aft';
 
 	var sheet = new	createjs.Shape();
 	var boom = new createjs.Shape();
 
+	var anchorLine = new createjs.Shape();
+	anchorLine.y = length-10;
+
 	boom.graphics.beginFill('#52352A');
-	boom.graphics.drawRoundRect(-5, 0, 10, length, 4);
+	boom.graphics.drawRoundRect(-3, 0, 6, length, 4);
 	boom.graphics.endFill();
+
+	sail.addChild(anchorLine, boom, sheet);
+
+	function drawLine() {
+		var g = anchorLine.graphics;
+		g.clear();
+		g.setStrokeStyle('2').beginStroke('#000');
+		
+		var anchor = sail.parent.localToLocal(anchorPoint.x,anchorPoint.y, anchorLine);
+
+		g.moveTo(0,0);
+		g.lineTo(anchor.x, anchor.y);
+		g.endStroke();
+	}
 
 	sail.drawSail = function() {
 		var g = sheet.graphics;
@@ -121,12 +164,11 @@ var ForeAft = function(length) {
 		g.beginFill('#FFF');
 		g.moveTo(0, 0);
 		var power = (sail.tack == 'port') ? sail.power : -sail.power;
-		g.curveTo(power*-50, length*.9, 0, length);
+		g.curveTo(power*-30, length*.9, 0, length);
 		g.lineTo(0,0);
 		g.endFill();
+		drawLine();
 	}
-
-	sail.addChild(boom, sheet);
 
 	return sail;
 }
