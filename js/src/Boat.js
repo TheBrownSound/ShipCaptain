@@ -43,7 +43,7 @@ var Boat = (function() {
 			if (_speed > potentialSpeed) {
 				_speed -= .01;
 			} if (_speed < potentialSpeed) {
-				_speed += .01;
+				_speed += .05;
 			}
 		}
 	}
@@ -102,6 +102,8 @@ var Boat = (function() {
 		var turnAmount = helm.turnAmount*AGILITY;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
 		if (turnAmount !== 0 || windChange !== 0) {
+			console.log(windChange);
+			oldWindHeading = Game.world.weather.wind.direction;
 			if (turnAmount !== 0) {
 				var newHeading = (boat.rotation+turnAmount)%360
 				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;

@@ -12,7 +12,11 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	function updateSail() {
 		var sailHeading = Utils.convertToHeading(sail.angle);
 		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
-		if (angleFromWind > noSail) {
+		if (sail.name == "fore-aft") {
+			//console.log(angleFromWind+' | '+noSail);
+		}
+		var leeway = 10
+		if (angleFromWind > noSail+leeway) {
 			_power = 0;
 		} else {
 			var distanceFromTrim = Math.abs(trimAngle-angleFromWind);
