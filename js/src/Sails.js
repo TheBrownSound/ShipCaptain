@@ -101,8 +101,8 @@ var SquareRig = function(length, anchor1, anchor2) {
 		var g2 = anchorPoint2.graphics;
 		g1.clear();
 		g2.clear();
-		g1.setStrokeStyle('2').beginStroke('#000');
-		g2.setStrokeStyle('2').beginStroke('#000');
+		g1.setStrokeStyle('2').beginStroke('#ded2b3');
+		g2.setStrokeStyle('2').beginStroke('#ded2b3');
 		
 		var anchorOne = sail.parent.localToLocal(anchor1.x,anchor1.y, anchorPoint1);
 		var anchorTwo = sail.parent.localToLocal(anchor2.x,anchor2.y, anchorPoint2);
@@ -153,7 +153,7 @@ var ForeAft = function(length, anchorPoint) {
 	function drawLine() {
 		var g = anchorLine.graphics;
 		g.clear();
-		g.setStrokeStyle('2').beginStroke('#000');
+		g.setStrokeStyle('2').beginStroke('#ded2b3');
 		
 		var anchor = sail.parent.localToLocal(anchorPoint.x,anchorPoint.y, anchorLine);
 
