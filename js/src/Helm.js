@@ -1,5 +1,5 @@
 var Helm = function(turnSpeed) {
-	var TURN_SPEED = turnSpeed || 10;
+	var TURN_SPEED = turnSpeed || 100;
 	var MAX_AMOUNT = 100;
 
 	var helm = {};

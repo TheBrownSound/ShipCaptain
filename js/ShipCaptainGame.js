@@ -96,9 +96,10 @@ var World = function(width, height){
 	}
 
 	world.update = function() {
-		playerBoat.update();
+		
 		var heading = playerBoat.getHeading();
 		var speed = playerBoat.getSpeed();
+
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
 		var knotConversion = speed*.3;
@@ -111,6 +112,7 @@ var World = function(width, height){
 			ocean.spawnBubble();
 		}
 
+		playerBoat.update();
 		ocean.update();
 	}
 
@@ -538,7 +540,7 @@ var ForeAft = function(length, anchorPoint) {
 	return sail;
 }
 var Helm = function(turnSpeed) {
-	var TURN_SPEED = turnSpeed || 10;
+	var TURN_SPEED = turnSpeed || 100;
 	var MAX_AMOUNT = 100;
 
 	var helm = {};
