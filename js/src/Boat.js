@@ -102,7 +102,7 @@ var Boat = (function() {
 		var turnAmount = helm.turnAmount*AGILITY;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
 		if (turnAmount !== 0 || windChange !== 0) {
-			console.log(windChange);
+			//console.log(windChange);
 			oldWindHeading = Game.world.weather.wind.direction;
 			if (turnAmount !== 0) {
 				var newHeading = (boat.rotation+turnAmount)%360

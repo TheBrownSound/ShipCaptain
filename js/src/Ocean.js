@@ -10,18 +10,6 @@ var Ocean = function(width, height){
 	ocean.height = height;
 	ocean.position = {x:0, y:0};
 
-	var map = new createjs.Container();
-
-	var island = new createjs.Bitmap("images/island.png");
-
-	island.y = -2000;
-
-	var mapCenter = new createjs.Shape();
-	mapCenter.graphics.beginFill('#F00');
-	mapCenter.graphics.drawCircle(-5,-5,20);
-	mapCenter.graphics.endFill();
-	map.addChild(mapCenter, island);
-
 	var crossWidth = width*3 + height*3;
 
 	var tide = new createjs.Shape();
@@ -31,7 +19,7 @@ var Ocean = function(width, height){
 
 	var underwater = new createjs.Container();
 
-	ocean.addChild(underwater, tide, map);
+	ocean.addChild(underwater, tide);
 
 	function moveTide() {
 		tide.x = ocean.position.x % 200;
@@ -48,8 +36,8 @@ var Ocean = function(width, height){
 
 	ocean.update = function() {
 		document.getElementById('coords').innerHTML = ('x:'+ocean.position.x+' - y:'+ocean.position.y);
-		map.x = underwater.x = ocean.position.x;
-		map.y = underwater.y = ocean.position.y;
+		underwater.x = ocean.position.x;
+		underwater.y = ocean.position.y;
 		moveTide();
 	}
 

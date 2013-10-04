@@ -1,10 +1,12 @@
 // Fuse dependencies
 // @depends Utils.js
+// @depends Viewport.js
 // @depends World.js
 // @depends Gauge.js
 // @depends Ocean.js
 // @depends Weather.js
 // @depends Boat.js
+// @depends PlayerBoat.js
 // @depends Sails.js
 // @depends Helm.js
 
@@ -14,7 +16,10 @@ var Game = (function(){
 	var _preloadAssets = [];
 	var _canvas;
 
+	var dispatcher = createjs.EventDispatcher.initialize(game);
+
 	var stage;
+	var viewport;
 	var world;
 	var gauge;
 	var preloader;
@@ -34,7 +39,7 @@ var Game = (function(){
 
 		preloader = new createjs.LoadQueue(false);
 		preloader.onFileLoad = fileLoaded;
-		preloader.onComplete = preloadComplete;
+		preloader.onComplete = startGame;
 		preloader.loadManifest(manifest);
 	}
 
@@ -43,8 +48,8 @@ var Game = (function(){
 		_preloadAssets.push(event.item);
 	}
 
-	function preloadComplete() {
-		console.log('preloadComplete')
+	function startGame() {
+		console.log('startGame')
 		game.assets = {};
 		for (var i = 0; i < _preloadAssets.length; i++) {
 			console.log(_preloadAssets[i]);
@@ -52,12 +57,16 @@ var Game = (function(){
 		};
 		console.log('Game.assets', game.assets);
 
-		world = game.world = new World(stage.canvas.width, stage.canvas.height);
+		var world = game.world = new World();
+		viewport = new Viewport(world);
 		gauge = new Gauge();
+
+		viewport.width = stage.canvas.width;
+		viewport.height = stage.canvas.height;
 		gauge.x = stage.canvas.width - 75;
 		gauge.y = stage.canvas.height - 75;
 
-		stage.addChild(world,gauge);
+		stage.addChild(viewport,gauge);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -67,10 +76,10 @@ var Game = (function(){
 	}
 
 	function sizeCanvas() {
-		if (game.world) {
+		if (viewport) {
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
-			game.world.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
+			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 			gauge.x = stage.canvas.width - 75;
 			gauge.y = stage.canvas.height - 75;
 		}
@@ -78,57 +87,36 @@ var Game = (function(){
 
 	function onKeyDown(event) {
 		switch(event.keyCode) {
-			case 37: // Left arrow
-				Game.world.playerBoat.turnLeft();
-				break;
 			case 38: // Up arrow
-				Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction+10);
-				break;
-			case 39: // Right arrow
-				Game.world.playerBoat.turnRight();
+				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction+10);
 				break;
 			case 40: // Down arrow
-				Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction-10);
+				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction-10);
 				break;
 			default:
-				//console.log('Keycode ['+event.keyCode+'] not handled');
+				game.dispatchEvent({type:'onKeyDown', key:event.keyCode});
 		}
 	}
 
 	function onKeyUp(event) {
 		switch(event.keyCode) {
-			case 83: // S Key
-				Game.world.playerBoat.reefSails();
-				break;
-			case 87: // W Key
-				Game.world.playerBoat.hoistSails();
-				break;
-			case 37: // Right arrow
-			case 39: // Left arrow
-				Game.world.playerBoat.stopTurning();
-				break;
-			case 38: // Up arrow
-				break;
-			case 40: // Down arrow
-				break;
-			case 65: // A key
-				break;
 			case 187: // = key, Zoom In
-				Game.world.zoomIn();
+				viewport.zoomIn();
 				break;
 			case 189: // - key, Zoom Out
-				Game.world.zoomOut();
+				viewport.zoomOut();
 				break;
 			case 27: // Escape
+				game.dispatchEvent('escape');
 				break;
 			default:
-				console.log('Keycode ['+event.keyCode+'] not handled');
+				game.dispatchEvent({type:'onKeyUp', key:event.keyCode});
 		}
 	}
 
 	function tick() {
 		gauge.update();
-		world.update();
+		//world.update();
 		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}
