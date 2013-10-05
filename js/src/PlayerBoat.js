@@ -16,10 +16,7 @@ var PlayerBoat = function() {
 	Game.addEventListener('onKeyUp', function(event) {
 		switch(event.key) {
 			case 83: // S Key
-				boat.reefSails();
-				break;
-			case 87: // W Key
-				boat.hoistSails();
+				boat.toggleSails();
 				break;
 			case 37: // Right arrow
 			case 39: // Left arrow

@@ -29,25 +29,25 @@ var World = function(){
 
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
+		
+		// Boat x and y changes based on speed
 		var knotConversion = speed*.3;
 		var xPos = Math.sin(heading*Math.PI/180)*knotConversion;
 		var yPos = Math.cos(heading*Math.PI/180)*knotConversion;
 
+		// Camera animation based on speed
 		var xSpeed = Math.round(xPos*60);
 		var ySpeed = Math.round(yPos*60);
-		//console.log('x-speed: ', xSpeed);
-		//var ySpeed = Math.round(yPos*30);
-
 		createjs.Tween.get(map, {override:true})
 			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
 			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 
+		// Update relative positions
 		map.regX += xPos;
 		map.regY -= yPos;
 		playerBoat.x += xPos;
 		playerBoat.y -= yPos;
-
 		ocean.position.x -= xPos;
 		ocean.position.y += yPos;
 

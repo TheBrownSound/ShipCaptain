@@ -9,7 +9,7 @@ var Boat = (function() {
 	var _speed = 0;
 	var _heading = 0;
 	var _trim = 0;
-	var _reefed = true;
+	var _furled = true;
 
 	var oldWindHeading = 0;
 
@@ -48,32 +48,35 @@ var Boat = (function() {
 		}
 	}
 
-	boat.stopTurning = function(){
-		helm.stopTurning();
-		boat.rotation = Math.round(boat.rotation);
-	}
-
-	boat.adjustTrim = function() {
+	function adjustTrim() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
 		squareRig.trim(windHeading);
 		mainSail.trim(windHeading);
 	}
 
-	boat.reefSails = function() {
-		_reefed = true;
+	boat.stopTurning = function(){
+		helm.stopTurning();
+		boat.rotation = Math.round(boat.rotation);
+	}
+
+	function furlSails() {
 		squareRig.reef();
 		mainSail.reef();
 	}
 
-	boat.hoistSails = function() {
-		_reefed = false;
+	function hoistSails() {
 		squareRig.hoist();
 		mainSail.hoist();
-		this.adjustTrim();
+		adjustTrim();
 	}
 
-	boat.toggleSail = function() {
-
+	boat.toggleSails = function() {
+		if (_furled) {
+			hoistSails();
+		} else {
+			furlSails();
+		}
+		_furled = !_furled;
 	}
 
 	boat.getSpeed = function() {
@@ -109,8 +112,8 @@ var Boat = (function() {
 				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
 			}
 			
-			if (!_reefed) {
-				boat.adjustTrim();
+			if (!_furled) {
+				adjustTrim();
 			}
 		}
 	}

@@ -114,25 +114,25 @@ var World = function(){
 
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
+		
+		// Boat x and y changes based on speed
 		var knotConversion = speed*.3;
 		var xPos = Math.sin(heading*Math.PI/180)*knotConversion;
 		var yPos = Math.cos(heading*Math.PI/180)*knotConversion;
 
+		// Camera animation based on speed
 		var xSpeed = Math.round(xPos*60);
 		var ySpeed = Math.round(yPos*60);
-		//console.log('x-speed: ', xSpeed);
-		//var ySpeed = Math.round(yPos*30);
-
 		createjs.Tween.get(map, {override:true})
 			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
 			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 
+		// Update relative positions
 		map.regX += xPos;
 		map.regY -= yPos;
 		playerBoat.x += xPos;
 		playerBoat.y -= yPos;
-
 		ocean.position.x -= xPos;
 		ocean.position.y += yPos;
 
@@ -271,7 +271,7 @@ var Boat = (function() {
 	var _speed = 0;
 	var _heading = 0;
 	var _trim = 0;
-	var _reefed = true;
+	var _furled = true;
 
 	var oldWindHeading = 0;
 
@@ -310,32 +310,35 @@ var Boat = (function() {
 		}
 	}
 
-	boat.stopTurning = function(){
-		helm.stopTurning();
-		boat.rotation = Math.round(boat.rotation);
-	}
-
-	boat.adjustTrim = function() {
+	function adjustTrim() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
 		squareRig.trim(windHeading);
 		mainSail.trim(windHeading);
 	}
 
-	boat.reefSails = function() {
-		_reefed = true;
+	boat.stopTurning = function(){
+		helm.stopTurning();
+		boat.rotation = Math.round(boat.rotation);
+	}
+
+	function furlSails() {
 		squareRig.reef();
 		mainSail.reef();
 	}
 
-	boat.hoistSails = function() {
-		_reefed = false;
+	function hoistSails() {
 		squareRig.hoist();
 		mainSail.hoist();
-		this.adjustTrim();
+		adjustTrim();
 	}
 
-	boat.toggleSail = function() {
-
+	boat.toggleSails = function() {
+		if (_furled) {
+			hoistSails();
+		} else {
+			furlSails();
+		}
+		_furled = !_furled;
 	}
 
 	boat.getSpeed = function() {
@@ -371,8 +374,8 @@ var Boat = (function() {
 				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
 			}
 			
-			if (!_reefed) {
-				boat.adjustTrim();
+			if (!_furled) {
+				adjustTrim();
 			}
 		}
 	}
@@ -397,10 +400,7 @@ var PlayerBoat = function() {
 	Game.addEventListener('onKeyUp', function(event) {
 		switch(event.key) {
 			case 83: // S Key
-				boat.reefSails();
-				break;
-			case 87: // W Key
-				boat.hoistSails();
+				boat.toggleSails();
 				break;
 			case 37: // Right arrow
 			case 39: // Left arrow
