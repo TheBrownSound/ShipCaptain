@@ -2,7 +2,7 @@ var PlayerBoat = function() {
 	var boat = new Boat();
 
 	Game.addEventListener('onKeyDown', function(event) {
-		//console.log(event.key);
+		console.log(event.key);
 		switch(event.key) {
 			case 37: // Left arrow
 				boat.turnLeft();
@@ -10,6 +10,8 @@ var PlayerBoat = function() {
 			case 39: // Right arrow
 				boat.turnRight();
 				break;
+			case 32: // Space
+				boat.shootGuns();
 		}
 	});
 

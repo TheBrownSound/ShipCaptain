@@ -24,8 +24,8 @@ var World = function(){
 
 	createjs.Ticker.addEventListener("tick", update);
 	function update() {
-		var heading = playerBoat.getHeading();
-		var speed = playerBoat.getSpeed();
+		var heading = playerBoat.heading;
+		var speed = playerBoat.speed;
 
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);

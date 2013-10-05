@@ -79,6 +79,29 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
+	boat.shootGuns = function() {
+
+	}
+
+	// Getters
+	boat.__defineGetter__('speed', function(){
+		return _speed;
+	});
+
+	boat.__defineGetter__('heading', function(){
+		var heading = boat.rotation%360;
+		return (heading < 0) ? heading+360:heading;;
+	});
+
+	boat.__defineGetter__('width', function(){
+		return WIDTH;
+	});
+	
+	boat.__defineGetter__('length', function(){
+		return LENGTH;
+	});
+
+
 	boat.getSpeed = function() {
 		return _speed;
 	}
@@ -92,8 +115,7 @@ var Boat = (function() {
 	}
 
 	boat.getHeading = function() {
-		var heading = boat.rotation%360;
-		return (heading < 0) ? heading+360:heading;
+		
 	}
 
 	boat.getSternPosition = function() {

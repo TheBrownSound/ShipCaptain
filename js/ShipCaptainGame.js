@@ -109,8 +109,8 @@ var World = function(){
 
 	createjs.Ticker.addEventListener("tick", update);
 	function update() {
-		var heading = playerBoat.getHeading();
-		var speed = playerBoat.getSpeed();
+		var heading = playerBoat.heading;
+		var speed = playerBoat.speed;
 
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
@@ -163,7 +163,7 @@ var Gauge = function() {
 
 	gauge.update = function() {
 		windCircle.rotation = Game.world.weather.wind.direction;
-		needle.rotation = Game.world.playerBoat.getHeading();
+		needle.rotation = Game.world.playerBoat.heading;
 	}
 
 	return gauge;
@@ -341,6 +341,29 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
+	boat.shootGuns = function() {
+
+	}
+
+	// Getters
+	boat.__defineGetter__('speed', function(){
+		return _speed;
+	});
+
+	boat.__defineGetter__('heading', function(){
+		var heading = boat.rotation%360;
+		return (heading < 0) ? heading+360:heading;;
+	});
+
+	boat.__defineGetter__('width', function(){
+		return WIDTH;
+	});
+	
+	boat.__defineGetter__('length', function(){
+		return LENGTH;
+	});
+
+
 	boat.getSpeed = function() {
 		return _speed;
 	}
@@ -354,8 +377,7 @@ var Boat = (function() {
 	}
 
 	boat.getHeading = function() {
-		var heading = boat.rotation%360;
-		return (heading < 0) ? heading+360:heading;
+		
 	}
 
 	boat.getSternPosition = function() {
@@ -386,7 +408,7 @@ var PlayerBoat = function() {
 	var boat = new Boat();
 
 	Game.addEventListener('onKeyDown', function(event) {
-		//console.log(event.key);
+		console.log(event.key);
 		switch(event.key) {
 			case 37: // Left arrow
 				boat.turnLeft();
@@ -394,6 +416,8 @@ var PlayerBoat = function() {
 			case 39: // Right arrow
 				boat.turnRight();
 				break;
+			case 32: // Space
+				boat.shootGuns();
 		}
 	});
 

@@ -13,7 +13,7 @@ var Gauge = function() {
 
 	gauge.update = function() {
 		windCircle.rotation = Game.world.weather.wind.direction;
-		needle.rotation = Game.world.playerBoat.getHeading();
+		needle.rotation = Game.world.playerBoat.heading;
 	}
 
 	return gauge;
