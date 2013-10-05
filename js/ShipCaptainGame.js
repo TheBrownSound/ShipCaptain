@@ -96,6 +96,10 @@ var World = function(){
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
 
+	var enemy = world.enemy = new AIBoat();
+	enemy.rotation = 20;
+	enemy.wander(320);
+
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
 
@@ -104,46 +108,43 @@ var World = function(){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-	map.addChild(mapCenter, island, playerBoat)
+	map.addChild(mapCenter, island, playerBoat, enemy);
 	world.addChild(ocean, map);
 
 	createjs.Ticker.addEventListener("tick", update);
 	function update() {
-		var heading = playerBoat.heading;
-		var speed = playerBoat.speed;
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
 
-		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
-		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
-		
-		// Boat x and y changes based on speed
-		var knotConversion = speed*.3;
-		var xPos = Math.sin(heading*Math.PI/180)*knotConversion;
-		var yPos = Math.cos(heading*Math.PI/180)*knotConversion;
 
-		// Camera animation based on speed
-		var xSpeed = Math.round(xPos*60);
-		var ySpeed = Math.round(yPos*60);
-		createjs.Tween.get(map, {override:true})
-			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
-		createjs.Tween.get(ocean, {override:true})
-			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
-
-		// Update relative positions
-		map.regX += xPos;
-		map.regY -= yPos;
-		playerBoat.x += xPos;
-		playerBoat.y -= yPos;
-		ocean.position.x -= xPos;
-		ocean.position.y += yPos;
-
-		bubbleTick += Math.round(speed);
+		bubbleTick += Math.round(playerBoat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
 			ocean.spawnBubble();
 		}
+		enemy.update();
+		enemy.hoistSails();
 
-		playerBoat.update();
+		// Save boat position for velocity check
+		var boatX = playerBoat.x;
+		var boatY = playerBoat.y;
+
+		// Update relative positions
+		map.regX = playerBoat.x;
+		map.regY = playerBoat.y;
+		ocean.position.x = -playerBoat.x;
+		ocean.position.y = -playerBoat.y;
 		ocean.update();
+		playerBoat.update();
+
+		// Camera animation based on directional velocity
+		var xSpeed = Math.round((boatX - playerBoat.x)*60);
+		var ySpeed = Math.round((boatY - playerBoat.y)*60);
+		createjs.Tween.get(map, {override:true})
+			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+		createjs.Tween.get(ocean, {override:true})
+			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+		
 	}
 
 	return world;
@@ -263,7 +264,7 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var SPEED = 10;
+	var SPEED = 3;
 	var AGILITY = 1;
 
 	var _turningLeft = false;
@@ -321,12 +322,12 @@ var Boat = (function() {
 		boat.rotation = Math.round(boat.rotation);
 	}
 
-	function furlSails() {
+	boat.furlSails = function() {
 		squareRig.reef();
 		mainSail.reef();
 	}
 
-	function hoistSails() {
+	boat.hoistSails = function() {
 		squareRig.hoist();
 		mainSail.hoist();
 		adjustTrim();
@@ -334,9 +335,9 @@ var Boat = (function() {
 
 	boat.toggleSails = function() {
 		if (_furled) {
-			hoistSails();
+			this.hoistSails();
 		} else {
-			furlSails();
+			this.furlSails();
 		}
 		_furled = !_furled;
 	}
@@ -363,23 +364,6 @@ var Boat = (function() {
 		return LENGTH;
 	});
 
-
-	boat.getSpeed = function() {
-		return _speed;
-	}
-
-	boat.getWidth = function() {
-		return WIDTH;
-	}
-
-	boat.getLength = function() {
-		return LENGTH;
-	}
-
-	boat.getHeading = function() {
-		
-	}
-
 	boat.getSternPosition = function() {
 		return LENGTH-boat.regY;
 	}
@@ -400,6 +384,10 @@ var Boat = (function() {
 				adjustTrim();
 			}
 		}
+		var xAmount = Math.sin(this.heading*Math.PI/180)*this.speed;
+		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
+		this.x += xAmount;
+		this.y -= yAmount;
 	}
 
 	return boat;
@@ -408,7 +396,6 @@ var PlayerBoat = function() {
 	var boat = new Boat();
 
 	Game.addEventListener('onKeyDown', function(event) {
-		console.log(event.key);
 		switch(event.key) {
 			case 37: // Left arrow
 				boat.turnLeft();
@@ -432,6 +419,51 @@ var PlayerBoat = function() {
 				break;
 		}
 	});
+
+	return boat;
+}
+var AIBoat = function() {
+	var boat = new Boat();
+	var destination = 0;
+	
+	function sailToDestination() {
+		switch(typeof(destination)) {
+			case 'number':
+				turnToHeading(destination);
+				break;
+			case 'object':
+				
+				break;
+		}
+	}
+
+	function turnToHeading(heading) {
+		var turnAmount = (heading - boat.heading)%360
+		if(turnAmount > 180) {
+			turnAmount = turnAmount - 360;
+		}
+		var speed = Math.abs(turnAmount)*10;
+		createjs.Tween.get(boat, {override:true})
+			.to({rotation:boat.rotation+turnAmount}, speed, createjs.Ease.sineOut)
+
+	}
+
+	boat.attack = function(enemy) {
+
+	}
+
+	boat.evade = function(enemy) {
+		
+	}
+
+	boat.navigateTo = function(point) {
+
+	}
+
+	boat.wander = function(heading) {
+		destination = heading;
+		sailToDestination();
+	}
 
 	return boat;
 }

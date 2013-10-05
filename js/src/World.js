@@ -11,6 +11,10 @@ var World = function(){
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
 
+	var enemy = world.enemy = new AIBoat();
+	enemy.rotation = 20;
+	enemy.wander(320);
+
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
 
@@ -19,46 +23,43 @@ var World = function(){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-	map.addChild(mapCenter, island, playerBoat)
+	map.addChild(mapCenter, island, playerBoat, enemy);
 	world.addChild(ocean, map);
 
 	createjs.Ticker.addEventListener("tick", update);
 	function update() {
-		var heading = playerBoat.heading;
-		var speed = playerBoat.speed;
+		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
 
-		document.getElementById('heading').innerHTML = "Heading: "+Math.round(heading);
-		document.getElementById('knots').innerHTML = "Knots: "+Math.round(speed);
-		
-		// Boat x and y changes based on speed
-		var knotConversion = speed*.3;
-		var xPos = Math.sin(heading*Math.PI/180)*knotConversion;
-		var yPos = Math.cos(heading*Math.PI/180)*knotConversion;
 
-		// Camera animation based on speed
-		var xSpeed = Math.round(xPos*60);
-		var ySpeed = Math.round(yPos*60);
-		createjs.Tween.get(map, {override:true})
-			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
-		createjs.Tween.get(ocean, {override:true})
-			.to({x:-xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
-
-		// Update relative positions
-		map.regX += xPos;
-		map.regY -= yPos;
-		playerBoat.x += xPos;
-		playerBoat.y -= yPos;
-		ocean.position.x -= xPos;
-		ocean.position.y += yPos;
-
-		bubbleTick += Math.round(speed);
+		bubbleTick += Math.round(playerBoat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
 			ocean.spawnBubble();
 		}
+		enemy.update();
+		enemy.hoistSails();
 
-		playerBoat.update();
+		// Save boat position for velocity check
+		var boatX = playerBoat.x;
+		var boatY = playerBoat.y;
+
+		// Update relative positions
+		map.regX = playerBoat.x;
+		map.regY = playerBoat.y;
+		ocean.position.x = -playerBoat.x;
+		ocean.position.y = -playerBoat.y;
 		ocean.update();
+		playerBoat.update();
+
+		// Camera animation based on directional velocity
+		var xSpeed = Math.round((boatX - playerBoat.x)*60);
+		var ySpeed = Math.round((boatY - playerBoat.y)*60);
+		createjs.Tween.get(map, {override:true})
+			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+		createjs.Tween.get(ocean, {override:true})
+			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+		
 	}
 
 	return world;

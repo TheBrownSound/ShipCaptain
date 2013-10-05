@@ -5,10 +5,11 @@
 // @depends Gauge.js
 // @depends Ocean.js
 // @depends Weather.js
-// @depends Boat.js
-// @depends PlayerBoat.js
-// @depends Sails.js
-// @depends Helm.js
+// @depends boats/Boat.js
+// @depends boats/PlayerBoat.js
+// @depends boats/AIBoat.js
+// @depends boats/Sails.js
+// @depends boats/Helm.js
 
 // Parent Game Logic
 var Game = (function(){

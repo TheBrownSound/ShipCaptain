@@ -1,7 +1,7 @@
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var SPEED = 10;
+	var SPEED = 3;
 	var AGILITY = 1;
 
 	var _turningLeft = false;
@@ -59,12 +59,12 @@ var Boat = (function() {
 		boat.rotation = Math.round(boat.rotation);
 	}
 
-	function furlSails() {
+	boat.furlSails = function() {
 		squareRig.reef();
 		mainSail.reef();
 	}
 
-	function hoistSails() {
+	boat.hoistSails = function() {
 		squareRig.hoist();
 		mainSail.hoist();
 		adjustTrim();
@@ -72,9 +72,9 @@ var Boat = (function() {
 
 	boat.toggleSails = function() {
 		if (_furled) {
-			hoistSails();
+			this.hoistSails();
 		} else {
-			furlSails();
+			this.furlSails();
 		}
 		_furled = !_furled;
 	}
@@ -101,23 +101,6 @@ var Boat = (function() {
 		return LENGTH;
 	});
 
-
-	boat.getSpeed = function() {
-		return _speed;
-	}
-
-	boat.getWidth = function() {
-		return WIDTH;
-	}
-
-	boat.getLength = function() {
-		return LENGTH;
-	}
-
-	boat.getHeading = function() {
-		
-	}
-
 	boat.getSternPosition = function() {
 		return LENGTH-boat.regY;
 	}
@@ -138,6 +121,10 @@ var Boat = (function() {
 				adjustTrim();
 			}
 		}
+		var xAmount = Math.sin(this.heading*Math.PI/180)*this.speed;
+		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
+		this.x += xAmount;
+		this.y -= yAmount;
 	}
 
 	return boat;

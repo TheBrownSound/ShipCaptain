@@ -2,7 +2,6 @@ var PlayerBoat = function() {
 	var boat = new Boat();
 
 	Game.addEventListener('onKeyDown', function(event) {
-		console.log(event.key);
 		switch(event.key) {
 			case 37: // Left arrow
 				boat.turnLeft();
