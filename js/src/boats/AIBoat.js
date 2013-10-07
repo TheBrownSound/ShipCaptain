@@ -44,23 +44,21 @@ var AIBoat = function() {
 			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
 			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
 			
-			var attackMarkerOne = Utils.getDebugMarker();
-			var attackMarkerTwo = Utils.getDebugMarker();
+			var attackMarker = Utils.getDebugMarker();
 
-			attackMarkerOne.x = attackPositions.left.x;
-			attackMarkerOne.y = attackPositions.left.y;
-
-			attackMarkerTwo.x = attackPositions.right.x;
-			attackMarkerTwo.y = attackPositions.right.y;
-
-			enemy.parent.addChild(attackMarkerTwo, attackMarkerOne);
-			
 			if (distanceFromRight > distanceFromLeft) {
+				attackMarker.x = attackPositions.left.x;
+				attackMarker.y = attackPositions.left.y;
+				
 				sailToDestination(attackPositions.left);
 			} else {
+				attackMarker.x = attackPositions.right.x;
+				attackMarker.y = attackPositions.right.y;
+				
 				sailToDestination(attackPositions.right);
 			}
-			
+
+			enemy.parent.addChild(attackMarker);
 			
 		}, 2000);
 	}

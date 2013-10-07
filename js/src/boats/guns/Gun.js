@@ -4,11 +4,11 @@ var Gun = function() {
 	var loaded = true;
 
 	function fire() {
-		var ball = new Projectile(Utils.convertToHeading(gun.parent.rotation), 10);
-		var pos = gun.localToLocal(0,0,Game.world);
+		var ball = new Projectile(Utils.convertToHeading(gun.parent.rotation), 20);
+		var pos = gun.localToLocal(0,0,gun.parent.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
-		Game.world.addChild(ball);
+		gun.parent.parent.addChild(ball);
 
 		loaded = false;
 		setTimeout(function(){
@@ -26,9 +26,7 @@ var Gun = function() {
 }
 
 var Projectile = function(angle, velocity) {
-	var lifespan = velocity*10;
-	var xSpeed = Math.sin(angle*Math.PI/180)*velocity;
-	var ySpeed = Math.cos(angle*Math.PI/180)*velocity;
+	var range = velocity*4;
 
 	var cannonBall = new createjs.Shape();
 	cannonBall.graphics.beginFill('#000');
@@ -40,15 +38,22 @@ var Projectile = function(angle, velocity) {
 	}
 
 	function explode() {
+		for (var i = 0; i < 30; i++) {
+			var bubble = new Bubble();
+			bubble.x = cannonBall.x;
+			bubble.y = cannonBall.y;
+			cannonBall.parent.addChild(bubble);
+			bubble.animate();
+		};
 		cannonBall.parent.removeChild(cannonBall);
 		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	function update() {
-		lifespan--;
-		if (lifespan > 0) {
-			cannonBall.x += xSpeed;
-			cannonBall.y -= ySpeed;
+		range--;
+		if (range > 0) {
+			cannonBall.x += Math.sin(angle*Math.PI/180)*velocity;
+			cannonBall.y -= Math.cos(angle*Math.PI/180)*velocity;
 			checkForHit();
 		} else {
 			explode();
