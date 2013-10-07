@@ -1,7 +1,7 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
 	var gun = new Gun(12, boat);
-	//gun.rotation = 90;
+	//gun.rotation = -45;
 	//gun.x = boat.width/2;
 	gun.y = 30;
 

@@ -15,6 +15,13 @@ var Utils = function() {
 		}
 	}
 
+	utils.getAxisSpeed = function(angle, speed) {
+		return {
+			x: Math.sin(angle*Math.PI/180)*speed,
+			y: Math.cos(angle*Math.PI/180)*speed
+		}
+	}
+
 	utils.headingDifference = function(headingOne, headingTwo) {
 		var angle = (Math.abs(headingOne - headingTwo))%360;
 		if(angle > 180) {
@@ -306,8 +313,7 @@ var Boat = (function() {
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	hull.x = -(WIDTH/2)
-	//squareRig.x = WIDTH/2;
-	//mainSail.x = WIDTH/2;
+
 	squareRig.y = 45;
 	mainSail.y = 55;
 
@@ -346,6 +352,12 @@ var Boat = (function() {
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
 		createjs.Ticker.removeEventListener("tick", update);
+	}
+
+	boat.setSailColor = function(hex) {
+		for (var sail in this.sails) {
+			this.sails[sail].color = hex;
+		}
 	}
 
 	boat.stopTurning = function(){
@@ -445,7 +457,7 @@ var Boat = (function() {
 var PlayerBoat = function() {
 	var boat = new Boat();
 	var gun = new Gun(12, boat);
-	//gun.rotation = 90;
+	//gun.rotation = -45;
 	//gun.x = boat.width/2;
 	gun.y = 30;
 
@@ -568,6 +580,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	var sail = new createjs.Container();
 
+	sail.sailColor = '#FFF';
+
 	function updateSail() {
 		var sailHeading = Utils.convertToHeading(sail.angle);
 		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
@@ -631,6 +645,10 @@ var Sail = (function(windOffset, sailRange, noSail) {
 		return (windToBoat > 180) ? 'port' : 'starboard';
 	});
 
+	sail.__defineSetter__('color', function(hex){
+		sail.sailColor = hex;
+	});
+
 	return sail;
 });
 
@@ -677,7 +695,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill('#FFF');
+		g.beginFill(this.sailColor);
 		if (sail.power > 0) {
 			var luffAmount = -(sail.power*sheet_luff);
 			g.moveTo(-(length/2), -5);
@@ -724,7 +742,7 @@ var ForeAft = function(length, anchorPoint) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill('#FFF');
+		g.beginFill(this.sailColor);
 		g.moveTo(0, 0);
 		var power = (sail.tack == 'port') ? sail.power : -sail.power;
 		g.curveTo(power*-30, length*.9, 0, length);
@@ -805,12 +823,26 @@ var Gun = function(size, owner) {
 		gun.graphics.endFill();
 	}
 
+	function recoil() {
+		var firePosition = {x:gun.x,y:gun.y};
+		var kick = Utils.getAxisSpeed(gun.rotation, size);
+		gun.x -= kick.x;
+		gun.y += kick.y;
+
+		// Roll back when reloaded
+		createjs.Tween.get(gun, {override:true})
+			.wait(reloadTime-1000)
+			.to({x:firePosition.x,y:firePosition.y}, 1000, createjs.Ease.sineOut)
+	}
+
 	function fire() {
 		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
 		var pos = gun.localToLocal(0,0,gun.parent.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
+
+		recoil();
 
 		loaded = false;
 		setTimeout(function(){

@@ -26,8 +26,7 @@ var Boat = (function() {
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	hull.x = -(WIDTH/2)
-	//squareRig.x = WIDTH/2;
-	//mainSail.x = WIDTH/2;
+
 	squareRig.y = 45;
 	mainSail.y = 55;
 
@@ -66,6 +65,12 @@ var Boat = (function() {
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
 		createjs.Ticker.removeEventListener("tick", update);
+	}
+
+	boat.setSailColor = function(hex) {
+		for (var sail in this.sails) {
+			this.sails[sail].color = hex;
+		}
 	}
 
 	boat.stopTurning = function(){

@@ -14,6 +14,13 @@ var Utils = function() {
 		}
 	}
 
+	utils.getAxisSpeed = function(angle, speed) {
+		return {
+			x: Math.sin(angle*Math.PI/180)*speed,
+			y: Math.cos(angle*Math.PI/180)*speed
+		}
+	}
+
 	utils.headingDifference = function(headingOne, headingTwo) {
 		var angle = (Math.abs(headingOne - headingTwo))%360;
 		if(angle > 180) {

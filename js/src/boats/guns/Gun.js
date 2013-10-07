@@ -26,12 +26,26 @@ var Gun = function(size, owner) {
 		gun.graphics.endFill();
 	}
 
+	function recoil() {
+		var firePosition = {x:gun.x,y:gun.y};
+		var kick = Utils.getAxisSpeed(gun.rotation, size);
+		gun.x -= kick.x;
+		gun.y += kick.y;
+
+		// Roll back when reloaded
+		createjs.Tween.get(gun, {override:true})
+			.wait(reloadTime-1000)
+			.to({x:firePosition.x,y:firePosition.y}, 1000, createjs.Ease.sineOut)
+	}
+
 	function fire() {
 		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
 		var pos = gun.localToLocal(0,0,gun.parent.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
+
+		recoil();
 
 		loaded = false;
 		setTimeout(function(){

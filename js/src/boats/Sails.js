@@ -9,6 +9,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	var sail = new createjs.Container();
 
+	sail.sailColor = '#FFF';
+
 	function updateSail() {
 		var sailHeading = Utils.convertToHeading(sail.angle);
 		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
@@ -72,6 +74,10 @@ var Sail = (function(windOffset, sailRange, noSail) {
 		return (windToBoat > 180) ? 'port' : 'starboard';
 	});
 
+	sail.__defineSetter__('color', function(hex){
+		sail.sailColor = hex;
+	});
+
 	return sail;
 });
 
@@ -118,7 +124,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill('#FFF');
+		g.beginFill(this.sailColor);
 		if (sail.power > 0) {
 			var luffAmount = -(sail.power*sheet_luff);
 			g.moveTo(-(length/2), -5);
@@ -165,7 +171,7 @@ var ForeAft = function(length, anchorPoint) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill('#FFF');
+		g.beginFill(this.sailColor);
 		g.moveTo(0, 0);
 		var power = (sail.tack == 'port') ? sail.power : -sail.power;
 		g.curveTo(power*-30, length*.9, 0, length);
