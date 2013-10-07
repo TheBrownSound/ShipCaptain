@@ -17,12 +17,15 @@ var Boat = (function() {
 	boat.regX = WIDTH/2;
 	boat.regY = LENGTH/2;
 
+	var dispatcher = createjs.EventDispatcher.initialize(boat);
+
 	var hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm();
-	var squareRig = new SquareRig(WIDTH*1.5, {x:10,y:LENGTH/2+20}, {x:WIDTH-10,y:LENGTH/2+20});
-	var mainSail = new ForeAft(LENGTH*.5, {x:WIDTH/2,y:LENGTH-20});
-	squareRig.x = WIDTH/2;
-	mainSail.x = WIDTH/2;
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
+	hull.x = -(WIDTH/2)
+	//squareRig.x = WIDTH/2;
+	//mainSail.x = WIDTH/2;
 	squareRig.y = 45;
 	mainSail.y = 55;
 
@@ -125,6 +128,8 @@ var Boat = (function() {
 		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
 		this.x += xAmount;
 		this.y -= yAmount;
+
+		this.dispatchEvent('moved');
 	}
 
 	return boat;

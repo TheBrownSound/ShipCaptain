@@ -22,5 +22,25 @@ var Utils = function() {
 		return angle;
 	}
 
+	utils.distanceBetweenTwoPoints = function(point1, point2) {
+		var xs = point2.x - point1.x;
+		xs = xs * xs;
+		var ys = point2.y - point1.y;
+		ys = ys * ys;
+		return Math.sqrt(xs + ys);
+	}
+
+	utils.getRandomInt = function(min, max) {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+
+	utils.getDebugMarker = function(){
+		var marker = new createjs.Shape();
+		marker.graphics.beginFill('#F00');
+		marker.graphics.drawCircle(-5,-5,20);
+		marker.graphics.endFill();
+		return marker;
+	}
+
 	return utils;
 }();

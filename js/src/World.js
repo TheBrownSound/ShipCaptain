@@ -12,8 +12,7 @@ var World = function(){
 	var playerBoat = world.playerBoat = new PlayerBoat();
 
 	var enemy = world.enemy = new AIBoat();
-	enemy.rotation = 20;
-	enemy.wander(320);
+	enemy.attack(playerBoat);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -38,7 +37,6 @@ var World = function(){
 			ocean.spawnBubble();
 		}
 		enemy.update();
-		enemy.hoistSails();
 
 		// Save boat position for velocity check
 		var boatX = playerBoat.x;

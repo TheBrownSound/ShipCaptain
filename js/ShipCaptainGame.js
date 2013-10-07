@@ -23,6 +23,26 @@ var Utils = function() {
 		return angle;
 	}
 
+	utils.distanceBetweenTwoPoints = function(point1, point2) {
+		var xs = point2.x - point1.x;
+		xs = xs * xs;
+		var ys = point2.y - point1.y;
+		ys = ys * ys;
+		return Math.sqrt(xs + ys);
+	}
+
+	utils.getRandomInt = function(min, max) {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+
+	utils.getDebugMarker = function(){
+		var marker = new createjs.Shape();
+		marker.graphics.beginFill('#F00');
+		marker.graphics.drawCircle(-5,-5,20);
+		marker.graphics.endFill();
+		return marker;
+	}
+
 	return utils;
 }();
 var Viewport = function(container) {
@@ -97,8 +117,7 @@ var World = function(){
 	var playerBoat = world.playerBoat = new PlayerBoat();
 
 	var enemy = world.enemy = new AIBoat();
-	enemy.rotation = 20;
-	enemy.wander(320);
+	enemy.attack(playerBoat);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -123,7 +142,6 @@ var World = function(){
 			ocean.spawnBubble();
 		}
 		enemy.update();
-		enemy.hoistSails();
 
 		// Save boat position for velocity check
 		var boatX = playerBoat.x;
@@ -280,12 +298,15 @@ var Boat = (function() {
 	boat.regX = WIDTH/2;
 	boat.regY = LENGTH/2;
 
+	var dispatcher = createjs.EventDispatcher.initialize(boat);
+
 	var hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm();
-	var squareRig = new SquareRig(WIDTH*1.5, {x:10,y:LENGTH/2+20}, {x:WIDTH-10,y:LENGTH/2+20});
-	var mainSail = new ForeAft(LENGTH*.5, {x:WIDTH/2,y:LENGTH-20});
-	squareRig.x = WIDTH/2;
-	mainSail.x = WIDTH/2;
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
+	hull.x = -(WIDTH/2)
+	//squareRig.x = WIDTH/2;
+	//mainSail.x = WIDTH/2;
 	squareRig.y = 45;
 	mainSail.y = 55;
 
@@ -388,6 +409,8 @@ var Boat = (function() {
 		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
 		this.x += xAmount;
 		this.y -= yAmount;
+
+		this.dispatchEvent('moved');
 	}
 
 	return boat;
@@ -424,17 +447,28 @@ var PlayerBoat = function() {
 }
 var AIBoat = function() {
 	var boat = new Boat();
+
 	var destination = 0;
 
-	function sailToDestination() {
-		switch(typeof(destination)) {
-			case 'number':
-				turnToHeading(destination);
+	function sailToDestination(location) {
+		destination = location;
+		switch(typeof(location)) {
+			case 'number': // Heading
+				turnToHeading(location);
 				break;
 			case 'object':
-				
+				var heading = findHeadingToPoint(location.x,location.y);
+				turnToHeading(heading);
 				break;
 		}
+		boat.hoistSails();
+	}
+
+	function findHeadingToPoint(xPos, yPos) {
+		var xDiff = xPos - boat.x;
+		var yDiff = yPos - boat.y;
+		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
+		return Utils.convertToHeading(heading);
 	}
 
 	function turnToHeading(heading) {
@@ -442,14 +476,40 @@ var AIBoat = function() {
 		if(turnAmount > 180) {
 			turnAmount = turnAmount - 360;
 		}
-		var turnSpeed = Math.abs(turnAmount)*10;
+		var turnSpeed = Math.abs(turnAmount)*50;
 		createjs.Tween.get(boat, {override:true})
 			.to({rotation:boat.rotation+turnAmount}, turnSpeed, createjs.Ease.sineOut)
-
 	}
 
 	boat.attack = function(enemy) {
+		setInterval(function(){
+			var leadAmount = 120;
+			var attackPositions = {
+				left: enemy.localToLocal(-leadAmount, 0, enemy.parent),
+				right: enemy.localToLocal(leadAmount, 0, enemy.parent)
+			}
+			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
+			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
+			
+			var attackMarkerOne = Utils.getDebugMarker();
+			var attackMarkerTwo = Utils.getDebugMarker();
 
+			attackMarkerOne.x = attackPositions.left.x;
+			attackMarkerOne.y = attackPositions.left.y;
+
+			attackMarkerTwo.x = attackPositions.right.x;
+			attackMarkerTwo.y = attackPositions.right.y;
+
+			enemy.parent.addChild(attackMarkerTwo, attackMarkerOne);
+			
+			if (distanceFromRight > distanceFromLeft) {
+				sailToDestination(attackPositions.left);
+			} else {
+				sailToDestination(attackPositions.right);
+			}
+			
+			
+		}, 2000);
 	}
 
 	boat.evade = function(enemy) {
@@ -461,8 +521,7 @@ var AIBoat = function() {
 	}
 
 	boat.wander = function(heading) {
-		destination = heading;
-		sailToDestination();
+		sailToDestination(heading);
 	}
 
 	return boat;
