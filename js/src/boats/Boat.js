@@ -11,6 +11,7 @@ var Boat = (function() {
 	var _trim = 0;
 	var _furled = true;
 
+	var bubbleTick = 0;
 	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
@@ -119,6 +120,16 @@ var Boat = (function() {
 			if (!_furled) {
 				adjustTrim();
 			}
+		}
+		bubbleTick += Math.round(this.speed);
+		if (bubbleTick >= 7) {
+			bubbleTick = 0;
+			var bubble = new Bubble();
+			var pos = this.localToLocal(0, 0, this.parent);
+			bubble.x = pos.x;
+			bubble.y = pos.y;
+			bubble.animate();
+			this.parent.addChildAt(bubble, 0);
 		}
 		var xAmount = Math.sin(this.heading*Math.PI/180)*this.speed;
 		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;

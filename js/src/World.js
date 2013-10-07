@@ -1,7 +1,5 @@
 // Main world class
 var World = function(){
-	
-	var bubbleTick = 0;
 
 	var world = new createjs.Container();
 	world.name = 'world';
@@ -30,12 +28,6 @@ var World = function(){
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
 
-
-		bubbleTick += Math.round(playerBoat.speed);
-		if (bubbleTick >= 7) {
-			bubbleTick = 0;
-			ocean.spawnBubble();
-		}
 		enemy.update();
 
 		// Save boat position for velocity check
