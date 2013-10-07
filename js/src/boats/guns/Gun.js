@@ -1,6 +1,6 @@
 var Gun = function() {
 	var gun = new createjs.Container();
-	var reloadTime = 10;
+	var reloadTime = 10000;
 	var loaded = true;
 
 	function fire() {
