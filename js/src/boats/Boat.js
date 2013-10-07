@@ -41,7 +41,7 @@ var Boat = (function() {
 		potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .01;
+				_speed -= .005;
 			} if (_speed < potentialSpeed) {
 				_speed += .05;
 			}

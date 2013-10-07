@@ -304,7 +304,7 @@ var Boat = (function() {
 		potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .01;
+				_speed -= .005;
 			} if (_speed < potentialSpeed) {
 				_speed += .05;
 			}
@@ -425,7 +425,7 @@ var PlayerBoat = function() {
 var AIBoat = function() {
 	var boat = new Boat();
 	var destination = 0;
-	
+
 	function sailToDestination() {
 		switch(typeof(destination)) {
 			case 'number':
@@ -442,9 +442,9 @@ var AIBoat = function() {
 		if(turnAmount > 180) {
 			turnAmount = turnAmount - 360;
 		}
-		var speed = Math.abs(turnAmount)*10;
+		var turnSpeed = Math.abs(turnAmount)*10;
 		createjs.Tween.get(boat, {override:true})
-			.to({rotation:boat.rotation+turnAmount}, speed, createjs.Ease.sineOut)
+			.to({rotation:boat.rotation+turnAmount}, turnSpeed, createjs.Ease.sineOut)
 
 	}
 
