@@ -1,5 +1,6 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
+	var gun = new Gun();
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -10,7 +11,7 @@ var PlayerBoat = function() {
 				boat.turnRight();
 				break;
 			case 32: // Space
-				boat.shootGuns();
+				gun.shoot();
 		}
 	});
 
@@ -25,6 +26,8 @@ var PlayerBoat = function() {
 				break;
 		}
 	});
+
+	boat.addChild(gun);
 
 	return boat;
 }

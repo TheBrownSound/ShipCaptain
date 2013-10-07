@@ -82,10 +82,6 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
-	boat.shootGuns = function() {
-
-	}
-
 	// Getters
 	boat.__defineGetter__('speed', function(){
 		return _speed;

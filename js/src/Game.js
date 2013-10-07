@@ -10,6 +10,7 @@
 // @depends boats/AIBoat.js
 // @depends boats/Sails.js
 // @depends boats/Helm.js
+// @depends boats/guns/Gun.js
 
 // Parent Game Logic
 var Game = (function(){
