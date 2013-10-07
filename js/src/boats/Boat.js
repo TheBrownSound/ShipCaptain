@@ -11,6 +11,8 @@ var Boat = (function() {
 	var _trim = 0;
 	var _furled = true;
 
+	var _health = 100;
+
 	var bubbleTick = 0;
 	var oldWindHeading = 0;
 
@@ -41,7 +43,9 @@ var Boat = (function() {
 		boat.sails.map(function(sail){
 			potentialSpeed += sail.power;
 		});
-		potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+		if (_health > 0) {
+			potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .005;
@@ -55,6 +59,13 @@ var Boat = (function() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
 		squareRig.trim(windHeading);
 		mainSail.trim(windHeading);
+	}
+
+	function sink() {
+		console.log('sunk');
+		boat.parent.removeChild(boat);
+		boat.dispatchEvent('sunk');
+		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	boat.stopTurning = function(){
@@ -82,6 +93,16 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
+	boat.damage = function(amount) {
+		if (_health > 0) {
+			console.log(_health);
+			_health -= amount;
+			if (_health <= 0) {
+				sink();
+			}
+		}
+	}
+
 	// Getters
 	boat.__defineGetter__('speed', function(){
 		return _speed;
@@ -104,7 +125,7 @@ var Boat = (function() {
 		return LENGTH-boat.regY;
 	}
 
-	boat.update = function() {
+	function update() {
 		speedCalc();
 		var turnAmount = helm.turnAmount*AGILITY;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
@@ -116,27 +137,28 @@ var Boat = (function() {
 				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
 			}
 			
-			if (!_furled) {
+			if (!_furled && _health > 0) {
 				adjustTrim();
 			}
 		}
-		bubbleTick += Math.round(this.speed);
+		bubbleTick += Math.round(boat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
 			var bubble = new Bubble();
-			var pos = this.localToLocal(0, 0, this.parent);
+			var pos = boat.localToLocal(0, 0, boat.parent);
 			bubble.x = pos.x;
 			bubble.y = pos.y;
 			bubble.animate();
-			this.parent.addChildAt(bubble, 0);
+			boat.parent.addChildAt(bubble, 0);
 		}
-		var xAmount = Math.sin(this.heading*Math.PI/180)*this.speed;
-		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
-		this.x += xAmount;
-		this.y -= yAmount;
+		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
+		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
+		boat.x += xAmount;
+		boat.y -= yAmount;
 
-		this.dispatchEvent('moved');
+		boat.dispatchEvent('moved');
 	}
 
+	createjs.Ticker.addEventListener("tick", update);
 	return boat;
 });

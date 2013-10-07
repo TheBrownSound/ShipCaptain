@@ -131,16 +131,20 @@ var World = function(){
 	map.addChild(mapCenter, island, playerBoat, enemy);
 	world.addChild(ocean, map);
 
-	createjs.Ticker.addEventListener("tick", update);
+	function addBoat(boat) {
+		boat.addEventListener('sunk', function(){
+			var boatIndex = world.ships.indexOf(boat);
+			if (boatIndex >= 0) {
+				world.ships.splice(boatIndex, 1);
+			}
+		})
+		map.addChild(boat);
+		world.ships.push(boat);
+	}
+	
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
-
-		enemy.update();
-
-		// Save boat position for velocity check
-		var boatX = playerBoat.x;
-		var boatY = playerBoat.y;
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -148,17 +152,18 @@ var World = function(){
 		ocean.position.x = -playerBoat.x;
 		ocean.position.y = -playerBoat.y;
 		ocean.update();
-		playerBoat.update();
 
 		// Camera animation based on directional velocity
-		var xSpeed = Math.round((boatX - playerBoat.x)*60);
-		var ySpeed = Math.round((boatY - playerBoat.y)*60);
+		var xSpeed = Math.sin(playerBoat.heading*Math.PI/180)*playerBoat.speed;
+		var ySpeed = Math.cos(playerBoat.heading*Math.PI/180)*playerBoat.speed;
 		createjs.Tween.get(map, {override:true})
-			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
-			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		
 	}
+
+	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }
 var Gauge = function() {
@@ -286,6 +291,8 @@ var Boat = (function() {
 	var _trim = 0;
 	var _furled = true;
 
+	var _health = 100;
+
 	var bubbleTick = 0;
 	var oldWindHeading = 0;
 
@@ -316,7 +323,9 @@ var Boat = (function() {
 		boat.sails.map(function(sail){
 			potentialSpeed += sail.power;
 		});
-		potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+		if (_health > 0) {
+			potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .005;
@@ -330,6 +339,13 @@ var Boat = (function() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
 		squareRig.trim(windHeading);
 		mainSail.trim(windHeading);
+	}
+
+	function sink() {
+		console.log('sunk');
+		boat.parent.removeChild(boat);
+		boat.dispatchEvent('sunk');
+		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	boat.stopTurning = function(){
@@ -357,6 +373,16 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
+	boat.damage = function(amount) {
+		if (_health > 0) {
+			console.log(_health);
+			_health -= amount;
+			if (_health <= 0) {
+				sink();
+			}
+		}
+	}
+
 	// Getters
 	boat.__defineGetter__('speed', function(){
 		return _speed;
@@ -379,7 +405,7 @@ var Boat = (function() {
 		return LENGTH-boat.regY;
 	}
 
-	boat.update = function() {
+	function update() {
 		speedCalc();
 		var turnAmount = helm.turnAmount*AGILITY;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
@@ -391,34 +417,36 @@ var Boat = (function() {
 				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
 			}
 			
-			if (!_furled) {
+			if (!_furled && _health > 0) {
 				adjustTrim();
 			}
 		}
-		bubbleTick += Math.round(this.speed);
+		bubbleTick += Math.round(boat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
 			var bubble = new Bubble();
-			var pos = this.localToLocal(0, 0, this.parent);
+			var pos = boat.localToLocal(0, 0, boat.parent);
 			bubble.x = pos.x;
 			bubble.y = pos.y;
 			bubble.animate();
-			this.parent.addChildAt(bubble, 0);
+			boat.parent.addChildAt(bubble, 0);
 		}
-		var xAmount = Math.sin(this.heading*Math.PI/180)*this.speed;
-		var yAmount = Math.cos(this.heading*Math.PI/180)*this.speed;
-		this.x += xAmount;
-		this.y -= yAmount;
+		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
+		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
+		boat.x += xAmount;
+		boat.y -= yAmount;
 
-		this.dispatchEvent('moved');
+		boat.dispatchEvent('moved');
 	}
 
+	createjs.Ticker.addEventListener("tick", update);
 	return boat;
 });
 var PlayerBoat = function() {
 	var boat = new Boat();
 	var gun = new Gun(5, boat);
 	gun.rotation = 90;
+	gun.x = boat.width/2;
 	gun.y = boat.length/2;
 
 	Game.addEventListener('onKeyDown', function(event) {
@@ -798,15 +826,16 @@ var Projectile = function(angle, velocity, owner) {
 	cannonBall.graphics.endFill();
 
 	function checkForHit() {
-		var ships = Game.world.ships;
-		for (var ship in ships) {
-			if (ships[ship] != owner) {
+		for (var ship in Game.world.ships) {
+			var boat = Game.world.ships[ship]
+			if (boat != owner) {
 				var globalPos = cannonBall.localToGlobal(0,0);
-				var local = ships[ship].globalToLocal(globalPos.x, globalPos.y);
-				var hit = ships[ship].hitTest(local.x, local.y);
+				var local = boat.globalToLocal(globalPos.x, globalPos.y);
+				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
 					explode();
-					break;
+					boat.damage(20);
+					return;
 				}
 			}
 		};

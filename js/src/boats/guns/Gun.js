@@ -45,15 +45,16 @@ var Projectile = function(angle, velocity, owner) {
 	cannonBall.graphics.endFill();
 
 	function checkForHit() {
-		var ships = Game.world.ships;
-		for (var ship in ships) {
-			if (ships[ship] != owner) {
+		for (var ship in Game.world.ships) {
+			var boat = Game.world.ships[ship]
+			if (boat != owner) {
 				var globalPos = cannonBall.localToGlobal(0,0);
-				var local = ships[ship].globalToLocal(globalPos.x, globalPos.y);
-				var hit = ships[ship].hitTest(local.x, local.y);
+				var local = boat.globalToLocal(globalPos.x, globalPos.y);
+				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
 					explode();
-					break;
+					boat.damage(20);
+					return;
 				}
 			}
 		};

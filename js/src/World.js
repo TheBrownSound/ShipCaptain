@@ -26,16 +26,20 @@ var World = function(){
 	map.addChild(mapCenter, island, playerBoat, enemy);
 	world.addChild(ocean, map);
 
-	createjs.Ticker.addEventListener("tick", update);
+	function addBoat(boat) {
+		boat.addEventListener('sunk', function(){
+			var boatIndex = world.ships.indexOf(boat);
+			if (boatIndex >= 0) {
+				world.ships.splice(boatIndex, 1);
+			}
+		})
+		map.addChild(boat);
+		world.ships.push(boat);
+	}
+	
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
-
-		enemy.update();
-
-		// Save boat position for velocity check
-		var boatX = playerBoat.x;
-		var boatY = playerBoat.y;
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -43,16 +47,17 @@ var World = function(){
 		ocean.position.x = -playerBoat.x;
 		ocean.position.y = -playerBoat.y;
 		ocean.update();
-		playerBoat.update();
 
 		// Camera animation based on directional velocity
-		var xSpeed = Math.round((boatX - playerBoat.x)*60);
-		var ySpeed = Math.round((boatY - playerBoat.y)*60);
+		var xSpeed = Math.sin(playerBoat.heading*Math.PI/180)*playerBoat.speed;
+		var ySpeed = Math.cos(playerBoat.heading*Math.PI/180)*playerBoat.speed;
 		createjs.Tween.get(map, {override:true})
-			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
-			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		
 	}
+
+	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }
