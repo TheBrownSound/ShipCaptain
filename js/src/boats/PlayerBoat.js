@@ -1,9 +1,9 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
-	var gun = new Gun(5, boat);
-	gun.rotation = 90;
-	gun.x = boat.width/2;
-	gun.y = boat.length/2;
+	var gun = new Gun(12, boat);
+	//gun.rotation = 90;
+	//gun.x = boat.width/2;
+	gun.y = 30;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -30,7 +30,7 @@ var PlayerBoat = function() {
 		}
 	});
 
-	boat.addChild(gun);
+	boat.addChildAt(gun, 1);
 
 	return boat;
 }

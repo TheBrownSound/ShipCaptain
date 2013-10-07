@@ -22,7 +22,7 @@ var Boat = (function() {
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
-	var helm = new Helm();
+	var helm = new Helm(boat);
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	hull.x = -(WIDTH/2)

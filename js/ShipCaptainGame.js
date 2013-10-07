@@ -154,12 +154,12 @@ var World = function(){
 		ocean.update();
 
 		// Camera animation based on directional velocity
-		var xSpeed = Math.sin(playerBoat.heading*Math.PI/180)*playerBoat.speed;
+		var xSpeed = Math.sin(playerBoat.heading*Math.PI/180)*-playerBoat.speed;
 		var ySpeed = Math.cos(playerBoat.heading*Math.PI/180)*playerBoat.speed;
 		createjs.Tween.get(map, {override:true})
-			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
-			.to({x:xSpeed*-100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
 		
 	}
 
@@ -302,7 +302,7 @@ var Boat = (function() {
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
-	var helm = new Helm();
+	var helm = new Helm(boat);
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	hull.x = -(WIDTH/2)
@@ -444,10 +444,10 @@ var Boat = (function() {
 });
 var PlayerBoat = function() {
 	var boat = new Boat();
-	var gun = new Gun(5, boat);
-	gun.rotation = 90;
-	gun.x = boat.width/2;
-	gun.y = boat.length/2;
+	var gun = new Gun(12, boat);
+	//gun.rotation = 90;
+	//gun.x = boat.width/2;
+	gun.y = 30;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -474,7 +474,7 @@ var PlayerBoat = function() {
 		}
 	});
 
-	boat.addChild(gun);
+	boat.addChildAt(gun, 1);
 
 	return boat;
 }
@@ -735,45 +735,43 @@ var ForeAft = function(length, anchorPoint) {
 
 	return sail;
 }
-var Helm = function(turnSpeed) {
-	var TURN_SPEED = turnSpeed || 100;
+var Helm = function(ship) {
 	var MAX_AMOUNT = 100;
+	var MIN_AMOUNT = 20;
 
 	var helm = {};
 	var _turning = false;
 	var _amount = 0;
 
+	function getTurnSpeed() {
+		var turnAmount = Math.round(ship.speed*50);
+		if (turnAmount < MAX_AMOUNT && turnAmount > MIN_AMOUNT) {
+			return turnAmount
+		} else if (turnAmount >= MAX_AMOUNT) {
+			return MAX_AMOUNT;
+		} else {
+			return MIN_AMOUNT;
+		}
+	}
+
 	helm.turnLeft = function() {
 		_turning = true;
-		if (_amount > -MAX_AMOUNT) {
-			_amount -= TURN_SPEED;
-		}
+		_amount = -getTurnSpeed();
 	}
 
 	helm.turnRight = function() {
 		_turning = true;
-		if (_amount < MAX_AMOUNT) {
-			_amount += TURN_SPEED;
-		}
+		_amount = getTurnSpeed();
 	}
 
 	helm.stopTurning = function() {
 		_turning = false;
+		_amount = 0;
 	}
 
 	helm.__defineGetter__('turnAmount', function(){
 		return _amount/MAX_AMOUNT;
 	});
-
-	setInterval(function() {
-		if (!_turning) {
-			if (_amount > 0) {
-				_amount -= TURN_SPEED;
-			} else if (_amount < 0) {
-				_amount += TURN_SPEED;
-			}
-		}
-	}, 100);
 
 	return helm;
 }
@@ -781,7 +779,7 @@ var Helm = function(turnSpeed) {
 
 var Gun = function(size, owner) {
 	var gun = new createjs.Shape();
-	var reloadTime = 100;
+	var reloadTime = 10000;
 	var loaded = true;
 
 	var width = size;
@@ -789,16 +787,30 @@ var Gun = function(size, owner) {
 
 	function drawGun() {
 		gun.graphics.beginFill('#000');
-		gun.graphics.rect(-(width/2),-length,width,length);
+		// Barrel
+		gun.graphics.moveTo(0,0);
+		gun.graphics.curveTo(width/2,0,width/2,-(width/2));
+		gun.graphics.lineTo(width/2-(width/4),-length);
+		gun.graphics.lineTo(-(width/2)+(width/4),-length);
+		gun.graphics.lineTo(-(width/2),-(width/2));
+		gun.graphics.curveTo(-(width/2),0,0,0);
+		gun.graphics.endFill();
+		// Barrel mouth
+		gun.graphics.beginFill('#000');
+		gun.graphics.drawRoundRect(-(width/2),-length,width,width/2, width/4);
+		gun.graphics.endFill();
+		// Barrel butt
+		gun.graphics.beginFill('#000');
+		gun.graphics.drawCircle(0,0, width/4);
 		gun.graphics.endFill();
 	}
 
 	function fire() {
-		var ball = new Projectile(Utils.convertToHeading(owner.rotation+gun.rotation), 20, owner);
-		var pos = gun.localToLocal(0,-length,gun.parent.parent);
+		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
+		var pos = gun.localToLocal(0,0,gun.parent.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
-		gun.parent.parent.addChild(ball);
+		owner.parent.addChildAt(ball, 2);
 
 		loaded = false;
 		setTimeout(function(){
@@ -817,12 +829,16 @@ var Gun = function(size, owner) {
 	return gun;
 }
 
-var Projectile = function(angle, velocity, owner) {
+var Projectile = function(size, angle, owner) {
+	var velocity = size*2;
 	var range = velocity*4;
+
+	var boatXSpeed = Math.sin(owner.heading*Math.PI/180)*-owner.speed;
+	var boatYSpeed = Math.cos(owner.heading*Math.PI/180)*owner.speed;
 
 	var cannonBall = new createjs.Shape();
 	cannonBall.graphics.beginFill('#000');
-	cannonBall.graphics.drawCircle(0,0,5);
+	cannonBall.graphics.drawCircle(0,0,size/2);
 	cannonBall.graphics.endFill();
 
 	function checkForHit() {
@@ -856,8 +872,8 @@ var Projectile = function(angle, velocity, owner) {
 	function update() {
 		range--;
 		if (range > 0) {
-			cannonBall.x += Math.sin(angle*Math.PI/180)*velocity;
-			cannonBall.y -= Math.cos(angle*Math.PI/180)*velocity;
+			cannonBall.x += Math.sin(angle*Math.PI/180)*velocity+boatXSpeed;
+			cannonBall.y -= Math.cos(angle*Math.PI/180)*velocity-boatYSpeed;
 			checkForHit();
 		} else {
 			explode();
