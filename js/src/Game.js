@@ -27,7 +27,7 @@ var Game = (function(){
 	var preloader;
 
 	game.init = function(canvasId) {
-		stage = new createjs.Stage(document.getElementById(canvasId));
+		stage = game.stage = new createjs.Stage(document.getElementById(canvasId));
 
 		//Enable User Inputs
 		createjs.Touch.enable(stage);

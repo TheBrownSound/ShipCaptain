@@ -108,14 +108,17 @@ var World = function(){
 
 	var world = new createjs.Container();
 	world.name = 'world';
+	world.ships = [];
 
 	var map = world.map = new createjs.Container();
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
-
 	var enemy = world.enemy = new AIBoat();
 	enemy.attack(playerBoat);
+
+	world.ships.push(playerBoat);
+	world.ships.push(enemy);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -156,7 +159,6 @@ var World = function(){
 			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 		
 	}
-
 	return world;
 }
 var Gauge = function() {
@@ -288,7 +290,6 @@ var Boat = (function() {
 	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
-	boat.regX = WIDTH/2;
 	boat.regY = LENGTH/2;
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
@@ -416,7 +417,9 @@ var Boat = (function() {
 });
 var PlayerBoat = function() {
 	var boat = new Boat();
-	var gun = new Gun();
+	var gun = new Gun(5, boat);
+	gun.rotation = 90;
+	gun.y = boat.length/2;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -493,21 +496,21 @@ var AIBoat = function() {
 			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
 			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
 			
-			var attackMarker = Utils.getDebugMarker();
+			//var attackMarker = Utils.getDebugMarker();
 
 			if (distanceFromRight > distanceFromLeft) {
-				attackMarker.x = attackPositions.left.x;
-				attackMarker.y = attackPositions.left.y;
+				//attackMarker.x = attackPositions.left.x;
+				//attackMarker.y = attackPositions.left.y;
 				
 				sailToDestination(attackPositions.left);
 			} else {
-				attackMarker.x = attackPositions.right.x;
-				attackMarker.y = attackPositions.right.y;
+				//attackMarker.x = attackPositions.right.x;
+				//attackMarker.y = attackPositions.right.y;
 				
 				sailToDestination(attackPositions.right);
 			}
 
-			enemy.parent.addChild(attackMarker);
+			//enemy.parent.addChild(attackMarker);
 			
 		}, 2000);
 	}
@@ -748,14 +751,23 @@ var Helm = function(turnSpeed) {
 }
 
 
-var Gun = function() {
-	var gun = new createjs.Container();
-	var reloadTime = 10000;
+var Gun = function(size, owner) {
+	var gun = new createjs.Shape();
+	var reloadTime = 100;
 	var loaded = true;
 
+	var width = size;
+	var length = size*3;
+
+	function drawGun() {
+		gun.graphics.beginFill('#000');
+		gun.graphics.rect(-(width/2),-length,width,length);
+		gun.graphics.endFill();
+	}
+
 	function fire() {
-		var ball = new Projectile(Utils.convertToHeading(gun.parent.rotation), 20);
-		var pos = gun.localToLocal(0,0,gun.parent.parent);
+		var ball = new Projectile(Utils.convertToHeading(owner.rotation+gun.rotation), 20, owner);
+		var pos = gun.localToLocal(0,-length,gun.parent.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		gun.parent.parent.addChild(ball);
@@ -772,10 +784,12 @@ var Gun = function() {
 		}
 	}
 
+	drawGun();
+
 	return gun;
 }
 
-var Projectile = function(angle, velocity) {
+var Projectile = function(angle, velocity, owner) {
 	var range = velocity*4;
 
 	var cannonBall = new createjs.Shape();
@@ -784,10 +798,22 @@ var Projectile = function(angle, velocity) {
 	cannonBall.graphics.endFill();
 
 	function checkForHit() {
-
+		var ships = Game.world.ships;
+		for (var ship in ships) {
+			if (ships[ship] != owner) {
+				var globalPos = cannonBall.localToGlobal(0,0);
+				var local = ships[ship].globalToLocal(globalPos.x, globalPos.y);
+				var hit = ships[ship].hitTest(local.x, local.y);
+				if (hit) {
+					explode();
+					break;
+				}
+			}
+		};
 	}
 
 	function explode() {
+		createjs.Ticker.removeEventListener("tick", update);
 		for (var i = 0; i < 30; i++) {
 			var bubble = new Bubble();
 			bubble.x = cannonBall.x;
@@ -796,7 +822,6 @@ var Projectile = function(angle, velocity) {
 			bubble.animate();
 		};
 		cannonBall.parent.removeChild(cannonBall);
-		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	function update() {
@@ -829,7 +854,7 @@ var Game = (function(){
 	var preloader;
 
 	game.init = function(canvasId) {
-		stage = new createjs.Stage(document.getElementById(canvasId));
+		stage = game.stage = new createjs.Stage(document.getElementById(canvasId));
 
 		//Enable User Inputs
 		createjs.Touch.enable(stage);

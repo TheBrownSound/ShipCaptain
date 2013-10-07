@@ -1,6 +1,8 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
-	var gun = new Gun();
+	var gun = new Gun(5, boat);
+	gun.rotation = 90;
+	gun.y = boat.length/2;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {

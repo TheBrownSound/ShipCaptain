@@ -15,7 +15,6 @@ var Boat = (function() {
 	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
-	boat.regX = WIDTH/2;
 	boat.regY = LENGTH/2;
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);

@@ -3,14 +3,17 @@ var World = function(){
 
 	var world = new createjs.Container();
 	world.name = 'world';
+	world.ships = [];
 
 	var map = world.map = new createjs.Container();
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
-
 	var enemy = world.enemy = new AIBoat();
 	enemy.attack(playerBoat);
+
+	world.ships.push(playerBoat);
+	world.ships.push(enemy);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -51,6 +54,5 @@ var World = function(){
 			.to({x:xSpeed, y:ySpeed}, 1000, createjs.Ease.sineOut)
 		
 	}
-
 	return world;
 }
