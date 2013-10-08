@@ -739,22 +739,35 @@ var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
 	var sheet_luff = 20;
+	var yard_thickness = 6;
+
+	var bunches = 5;
+	var bunchSize = length/bunches;
 	
 	var sheet = new	createjs.Shape();
 	var yard = new createjs.Shape();
+	var ties = new createjs.Shape();
 
 	var anchorPoint1 = new createjs.Shape();
 	var anchorPoint2 = new createjs.Shape();
 
 	anchorPoint1.x = -(length/2)+10;
 	anchorPoint2.x = length/2-10;
-	anchorPoint1.y = anchorPoint2.y = -5;
+	anchorPoint1.y = anchorPoint2.y = 0;
 
+	// Draw Yard
 	yard.graphics.beginFill('#52352A');
-	yard.graphics.drawRoundRect(-(length/2),-6, length, 6, 4);
+	yard.graphics.drawRoundRect(-(length/2),-3, length, yard_thickness, yard_thickness/2);
 	yard.graphics.endFill();
+	
+	// Draw Ties
+	ties.graphics.beginFill(sail.lineColor);
+	for (var i = 0; i < bunches-1; i++) {
+		ties.graphics.drawRoundRect((-length/2+bunchSize)+(bunchSize*i), -(yard_thickness+2)/2, 2, yard_thickness+2, 2);
+	};
+	ties.graphics.endFill();
 
-	sail.addChild(anchorPoint1, anchorPoint2, sheet, yard);
+	sail.addChild(anchorPoint1, anchorPoint2, sheet, yard, ties);
 
 	function drawLines() {
 		var g1 = anchorPoint1.graphics;
@@ -778,16 +791,23 @@ var SquareRig = function(length, anchor1, anchor2) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill(this.sailColor);
-		if (sail.power > 0) {
+		if (this.reefed && this.power == 0) {
+			g.beginFill(this.sailColor);
+			for (var i = 0; i < bunches; i++) {
+				g.drawEllipse((-length/2)+(bunchSize*i),-bunchSize/4, bunchSize, bunchSize/2);
+			};
+			g.endFill();
+		} else {
 			var luffAmount = -(sail.power*sheet_luff);
-			g.moveTo(-(length/2), -5);
+			g.beginFill(this.sailColor);
+			g.moveTo(-(length/2), -2);
 			g.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
 			g.curveTo(0, luffAmount*2, length*.4, luffAmount);
-			g.curveTo(length*.4, luffAmount/2, length/2, -5);
-			g.lineTo(-(length/2), -5);
+			g.curveTo(length*.4, luffAmount/2, length/2, -2);
+			g.lineTo(-(length/2), -2);
+			g.endFill();
 		}
-		g.endFill();
+		
 		drawLines();
 	}
 
