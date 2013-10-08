@@ -18,13 +18,22 @@ var Sail = (function(windOffset, sailRange, noSail) {
 			//console.log(angleFromWind+' | '+noSail);
 		}
 		var leeway = 10
-		if (angleFromWind > noSail+leeway) {
-			_power = 0;
+		if (_reefed) {
+			if (_power > 0) {
+				_power -= .01;
+			} else if (_power < 0) {
+				_power += .01;
+			}
 		} else {
-			var distanceFromTrim = Math.abs(trimAngle-angleFromWind);
-			var power = (noSail - distanceFromTrim)/noSail;
-			_power = power;
+			if (angleFromWind > noSail+leeway) {
+				_power = 0;
+			} else {
+				var distanceFromTrim = Math.abs(trimAngle-angleFromWind);
+				var power = (noSail - distanceFromTrim)/noSail;
+				_power = Math.round( power * 100) / 100; //Rounds to two decimals
+			}
 		}
+		
 		if (sail.drawSail) sail.drawSail();
 	}
 
@@ -67,7 +76,11 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	});
 
 	sail.__defineGetter__('power', function(){
-		return (_reefed) ? 0 : _power;
+		return _power;
+	});
+
+	sail.__defineSetter__('power', function(pwr){
+		_power = pwr;
 	});
 
 	sail.__defineGetter__('tack', function(){
