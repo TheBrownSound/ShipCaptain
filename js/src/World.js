@@ -9,11 +9,11 @@ var World = function(){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
-	var enemy = world.enemy = new AIBoat();
-	enemy.attack(playerBoat);
+	//var enemy = world.enemy = new AIBoat();
+	//enemy.attack(playerBoat);
 
 	world.ships.push(playerBoat);
-	world.ships.push(enemy);
+	//world.ships.push(enemy);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -23,8 +23,11 @@ var World = function(){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-	map.addChild(mapCenter, island, playerBoat, enemy);
+
+	map.addChild(mapCenter, island);
 	world.addChild(ocean, map);
+
+	addBoat(playerBoat);
 
 	function addBoat(boat) {
 		boat.addEventListener('sunk', function(){

@@ -10,19 +10,20 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	var sail = new createjs.Container();
 
 	sail.sailColor = '#FFF';
+	sail.lineColor = '#ded2b3';
 
 	function updateSail() {
+		//console.log('update sail');
 		var sailHeading = Utils.convertToHeading(sail.angle);
 		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
-		if (sail.name == "fore-aft") {
-			//console.log(angleFromWind+' | '+noSail);
-		}
-		var leeway = 10
+		var leeway = 10;
+
 		if (_reefed) {
+			_power = Math.round( _power * 10) / 10;
 			if (_power > 0) {
-				_power -= .01;
+				_power -= 0.1;
 			} else if (_power < 0) {
-				_power += .01;
+				_power += 0.1;
 			}
 		} else {
 			if (angleFromWind > noSail+leeway) {
@@ -34,7 +35,14 @@ var Sail = (function(windOffset, sailRange, noSail) {
 			}
 		}
 		
-		if (sail.drawSail) sail.drawSail();
+		if (sail.drawSail) {
+			sail.drawSail();
+		} 
+	}
+
+	function trimTo(angle) {
+		createjs.Tween.get(sail, {override:true})
+			.to({rotation:angle}, 2000, createjs.Ease.linear);
 	}
 
 	sail.hoist = function() {
@@ -43,32 +51,34 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	sail.reef = function() {
 		_reefed = true;
-		sail.angle = 0;
+		trimTo(0);
 	}
 
 	sail.trim = function(windHeading) {
-		windToBoat = windHeading;
-		//console.log('Trim for wind: ', windHeading);
-		var nosail = (Math.abs(Utils.convertToNumber(windHeading)) > noSail);
-		if (nosail) { // in irons
-			sail.angle = 0;
-		} else {
-			var offset = (windHeading > 180) ? trimAngle : -trimAngle;
-			sail.angle = Utils.convertToNumber(windHeading+offset);
+		if (!_reefed) {
+			windToBoat = windHeading;
+			//console.log('Trim for wind: ', windHeading);
+			var nosail = (Math.abs(Utils.convertToNumber(windHeading)) > noSail);
+			if (nosail) { // in irons
+				sail.angle = 0;
+			} else {
+				var offset = (windHeading > 180) ? trimAngle : -trimAngle;
+				sail.angle = Utils.convertToNumber(windHeading+offset);
+			}
 		}
 	}
 
 	sail.__defineSetter__('angle', function(desiredAngle){
-		//console.log('set angle: ', desiredAngle);
-		var actualAngle = desiredAngle;
-		if (desiredAngle < -sailRange) {
-			actualAngle = -sailRange;
-		} else if (desiredAngle > sailRange) {
-			actualAngle = sailRange;
+		// console.log('set angle: ', desiredAngle);
+		if (!_reefed) {
+			var actualAngle = desiredAngle;
+			if (desiredAngle < -sailRange) {
+				actualAngle = -sailRange;
+			} else if (desiredAngle > sailRange) {
+				actualAngle = sailRange;
+			}
+			trimTo(actualAngle)
 		}
-		createjs.Tween.get(sail, {override:true})
-			.to({rotation:actualAngle}, 2000, createjs.Ease.linear)
-			.addEventListener("change", updateSail);
 	});
 
 	sail.__defineGetter__('angle', function(){
@@ -79,8 +89,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 		return _power;
 	});
 
-	sail.__defineSetter__('power', function(pwr){
-		_power = pwr;
+	sail.__defineGetter__('reefed', function(){
+		return _reefed;
 	});
 
 	sail.__defineGetter__('tack', function(){
@@ -91,6 +101,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 		sail.sailColor = hex;
 	});
 
+	createjs.Ticker.addEventListener('tick', updateSail);
 	return sail;
 });
 
@@ -120,8 +131,8 @@ var SquareRig = function(length, anchor1, anchor2) {
 		var g2 = anchorPoint2.graphics;
 		g1.clear();
 		g2.clear();
-		g1.setStrokeStyle('2').beginStroke('#ded2b3');
-		g2.setStrokeStyle('2').beginStroke('#ded2b3');
+		g1.setStrokeStyle('2').beginStroke(sail.lineColor);
+		g2.setStrokeStyle('2').beginStroke(sail.lineColor);
 		
 		var anchorOne = sail.parent.localToLocal(anchor1.x,anchor1.y, anchorPoint1);
 		var anchorTwo = sail.parent.localToLocal(anchor2.x,anchor2.y, anchorPoint2);
@@ -172,7 +183,7 @@ var ForeAft = function(length, anchorPoint) {
 	function drawLine() {
 		var g = anchorLine.graphics;
 		g.clear();
-		g.setStrokeStyle('2').beginStroke('#ded2b3');
+		g.setStrokeStyle('2').beginStroke(sail.lineColor);
 		
 		var anchor = sail.parent.localToLocal(anchorPoint.x,anchorPoint.y, anchorLine);
 
@@ -184,12 +195,28 @@ var ForeAft = function(length, anchorPoint) {
 	sail.drawSail = function() {
 		var g = sheet.graphics;
 		g.clear();
-		g.beginFill(this.sailColor);
-		g.moveTo(0, 0);
-		var power = (sail.tack == 'port') ? sail.power : -sail.power;
-		g.curveTo(power*-30, length*.9, 0, length);
-		g.lineTo(0,0);
-		g.endFill();
+		if (this.reefed && this.power == 0) {
+			var bunches = 4;
+			var bunchSize = length/bunches;
+			g.beginFill(this.sailColor);
+			for (var i = 0; i < bunches; i++) {
+				g.drawEllipse(-bunchSize/4,bunchSize*i, bunchSize/2, bunchSize);
+			};
+			g.endFill();
+			g.beginFill(this.lineColor);
+			for (var i = 0; i < bunches-1; i++) {
+				g.drawRoundRect(-bunchSize/8,bunchSize*i+bunchSize-2, bunchSize/4, 2, 2);
+			};
+			g.endFill();
+		} else {
+			var power = (sail.tack == 'port') ? this.power : -this.power;
+			g.beginFill(this.sailColor);
+			g.moveTo(0, 0);
+			g.curveTo(power*-30, length*.9, 0, length);
+			g.lineTo(0,0);
+			g.endFill();
+		}
+		
 		drawLine();
 	}
 
