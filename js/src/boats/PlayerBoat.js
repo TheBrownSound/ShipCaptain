@@ -1,17 +1,10 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
-	boat.setSailColor('#000');
-	// GUNS!
-	var gun1 = new Gun(6, boat);
-	var gun2 = new Gun(6, boat);
-	var gun3 = new Gun(6, boat);
-	var gun4 = new Gun(6, boat);
-	gun1.rotation = gun3.rotation = 90;
-	gun2.rotation = gun4.rotation = -90;
+	boat.setSailColor('#FFF');
+	// GUN!
+	var gun1 = new Gun(10, boat);
 
-	//gun.x = boat.width/2;
-	gun1.y = gun2.y = 60;
-	gun3.y = gun4.y = 100;
+	gun1.y = 30;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -23,9 +16,6 @@ var PlayerBoat = function() {
 				break;
 			case 32: // Space
 				gun1.shoot();
-				gun2.shoot();
-				gun3.shoot();
-				gun4.shoot();
 		}
 	});
 
@@ -42,9 +32,6 @@ var PlayerBoat = function() {
 	});
 
 	boat.addChildAt(gun1, 1);
-	boat.addChildAt(gun2, 1);
-	boat.addChildAt(gun3, 1);
-	boat.addChildAt(gun4, 1);
 
 	return boat;
 }
