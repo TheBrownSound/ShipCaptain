@@ -498,10 +498,18 @@ var Boat = (function() {
 });
 var PlayerBoat = function() {
 	var boat = new Boat();
-	var gun = new Gun(12, boat);
-	//gun.rotation = -45;
+	boat.setSailColor('#000');
+	// GUNS!
+	var gun1 = new Gun(6, boat);
+	var gun2 = new Gun(6, boat);
+	var gun3 = new Gun(6, boat);
+	var gun4 = new Gun(6, boat);
+	gun1.rotation = gun3.rotation = 90;
+	gun2.rotation = gun4.rotation = -90;
+
 	//gun.x = boat.width/2;
-	gun.y = 30;
+	gun1.y = gun2.y = 60;
+	gun3.y = gun4.y = 100;
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -512,7 +520,10 @@ var PlayerBoat = function() {
 				boat.turnRight();
 				break;
 			case 32: // Space
-				gun.shoot();
+				gun1.shoot();
+				gun2.shoot();
+				gun3.shoot();
+				gun4.shoot();
 		}
 	});
 
@@ -528,7 +539,10 @@ var PlayerBoat = function() {
 		}
 	});
 
-	boat.addChildAt(gun, 1);
+	boat.addChildAt(gun1, 1);
+	boat.addChildAt(gun2, 1);
+	boat.addChildAt(gun3, 1);
+	boat.addChildAt(gun4, 1);
 
 	return boat;
 }
@@ -838,7 +852,11 @@ var Helm = function(ship) {
 
 
 var Gun = function(size, owner) {
-	var gun = new createjs.Shape();
+	var gun = new createjs.Container();
+	var cannon = new createjs.Shape();
+
+	gun.addChild(cannon);
+
 	var reloadTime = 1000;
 	var loaded = true;
 
@@ -846,35 +864,33 @@ var Gun = function(size, owner) {
 	var length = size*3;
 
 	function drawGun() {
-		gun.graphics.beginFill('#000');
+		var gfx = cannon.graphics
+		gfx.beginFill('#000');
 		// Barrel
-		gun.graphics.moveTo(0,0);
-		gun.graphics.curveTo(width/2,0,width/2,-(width/2));
-		gun.graphics.lineTo(width/2-(width/4),-length);
-		gun.graphics.lineTo(-(width/2)+(width/4),-length);
-		gun.graphics.lineTo(-(width/2),-(width/2));
-		gun.graphics.curveTo(-(width/2),0,0,0);
-		gun.graphics.endFill();
+		gfx.moveTo(0,0);
+		gfx.curveTo(width/2,0,width/2,-(width/2));
+		gfx.lineTo(width/2-(width/4),-length);
+		gfx.lineTo(-(width/2)+(width/4),-length);
+		gfx.lineTo(-(width/2),-(width/2));
+		gfx.curveTo(-(width/2),0,0,0);
+		gfx.endFill();
 		// Barrel mouth
-		gun.graphics.beginFill('#000');
-		gun.graphics.drawRoundRect(-(width/2),-length,width,width/2, width/4);
-		gun.graphics.endFill();
+		gfx.beginFill('#000');
+		gfx.drawRoundRect(-(width/2),-length,width,width/2, width/4);
+		gfx.endFill();
 		// Barrel butt
-		gun.graphics.beginFill('#000');
-		gun.graphics.drawCircle(0,0, width/4);
-		gun.graphics.endFill();
+		gfx.beginFill('#000');
+		gfx.drawCircle(0,0, width/4);
+		gfx.endFill();
 	}
 
 	function recoil() {
-		var firePosition = {x:gun.x,y:gun.y};
-		var kick = Utils.getAxisSpeed(gun.rotation, size);
-		gun.x -= kick.x;
-		gun.y += kick.y;
+		cannon.y += size;
 
 		// Roll back when reloaded
-		createjs.Tween.get(gun, {override:true})
+		createjs.Tween.get(cannon, {override:true})
 			.wait(reloadTime-1000)
-			.to({x:firePosition.x,y:firePosition.y}, 1000, createjs.Ease.sineOut)
+			.to({y:0}, 1000, createjs.Ease.sineOut)
 	}
 
 	function fire() {
@@ -884,13 +900,11 @@ var Gun = function(size, owner) {
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
 
-		for (var i = 0; i < 40; i++) {
+		for (var i = 0; i < size*2; i++) {
 			var smoke = new Particles.Smoke(90);
-			smoke.x = pos.x;
-			smoke.y = pos.y;
-			smoke.rotation = gun.rotation+owner.rotation-45;
+			smoke.rotation = -45;
 			smoke.animate();
-			owner.parent.addChild(smoke);
+			gun.addChild(smoke);
 		};
 
 		recoil();
@@ -916,8 +930,8 @@ var Projectile = function(size, angle, owner) {
 	var velocity = size*2;
 	var range = velocity*4;
 
-	var boatXSpeed = Math.sin(owner.heading*Math.PI/180)*-owner.speed;
-	var boatYSpeed = Math.cos(owner.heading*Math.PI/180)*owner.speed;
+	var boatXSpeed = Math.sin(owner.heading*Math.PI/180)*owner.speed;
+	var boatYSpeed = Math.cos(owner.heading*Math.PI/180)*-owner.speed;
 
 	var cannonBall = new createjs.Shape();
 	cannonBall.graphics.beginFill('#000');
