@@ -42,6 +42,10 @@ var Utils = function() {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
+	utils.getRandomFloat = function(min, max) {
+		return Math.random() * (max - min) + min;
+	}
+
 	utils.getDebugMarker = function(){
 		var marker = new createjs.Shape();
 		marker.graphics.beginFill('#F00');
@@ -51,6 +55,80 @@ var Utils = function() {
 	}
 
 	return utils;
+}();
+var Particles = function() {
+	var particles = {};
+
+	particles.Smoke = function(range) {
+		range = range || 360;
+
+		var smoke = new createjs.Container();
+		var img = new createjs.Bitmap("images/smoke.png");
+		img.regX = img.regY = 25;
+		smoke.addChild(img);
+
+		function dissapate() {
+			smoke.parent.removeChild(smoke);
+		}
+
+		smoke.animate = function() {
+			var angle = Utils.getRandomInt(0,range);
+			var scale = Utils.getRandomFloat(.2,1);
+			var swirl = Utils.getRandomInt(-360, 360);
+			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(50,100));
+			smoke.scaleX = smoke.scaleY = 0;
+
+			createjs.Tween.get(this,{loop:false})
+				.to({
+					x: smoke.x+move.x,
+					y: smoke.y-move.y,
+					scaleX: scale,
+					scaleY: scale,
+					alpha: 0
+				},1000,createjs.Ease.easeOut)
+				.call(dissapate);
+			createjs.Tween.get(img,{loop:true})
+				.to({
+					rotation: swirl
+				},1000,createjs.Ease.linear);
+		}
+
+		return smoke;
+	}
+
+	particles.Bubble = function() {
+		var _floatVariance = 100;
+		var bubble = new createjs.Shape();
+		
+		bubble.graphics.beginFill('#95cbdc');
+		bubble.graphics.drawCircle(-5,-5,10);
+		bubble.graphics.endFill();
+	
+		bubble.scaleX = bubble.scaleY = .1;
+		function pop() {
+			bubble.parent.removeChild(bubble);
+		}
+	
+		bubble.animate = function() {
+			var floatX = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.x;
+			var floatY = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.y;
+			var scale = Utils.getRandomFloat(1,3);
+		
+			createjs.Tween.get(bubble,{loop:false})
+				.set({scaleX:0.1,scaleY:0.1}, bubble)
+				.to({
+					x: floatX,
+					y: floatY,
+					scaleX: scale,
+					scaleY: scale,
+					alpha: 0
+				},3000,createjs.Ease.easeOut)
+				.call(pop);
+		}
+		return bubble;
+	}
+
+	return particles;
 }();
 var Viewport = function(container) {
 	var _width = 400;
@@ -222,7 +300,7 @@ var Ocean = function(width, height){
 	}
 
 	ocean.spawnBubble = function() {
-		var bubble = new Bubble();
+		var bubble = new Particles.Bubble();
 		bubble.x = -ocean.position.x;
 		bubble.y = -ocean.position.y;
 		bubble.animate();
@@ -237,42 +315,6 @@ var Ocean = function(width, height){
 	}
 
 	return ocean;
-}
-
-var Bubble = function() {
-	var _floatVariance = 100;
-	var bubble = new createjs.Shape();
-	
-	bubble.graphics.beginFill('#95cbdc');
-	bubble.graphics.drawCircle(-5,-5,10);
-	bubble.graphics.endFill();
-
-	bubble.scaleX = bubble.scaleY = .1;
-	function pop() {
-		bubble.parent.removeChild(bubble);
-	}
-
-	function getRandomArbitary (min, max) {
-		return Math.random() * (max - min) + min;
-	}
-
-	bubble.animate = function() {
-		var floatX = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.x;
-		var floatY = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.y;
-		var scale = getRandomArbitary(1,3);
-	
-		createjs.Tween.get(bubble,{loop:false})
-			.set({scaleX:0.1,scaleY:0.1}, bubble)
-			.to({
-				x: floatX,
-				y: floatY,
-				scaleX: scale,
-				scaleY: scale,
-				alpha: 0
-			},3000,createjs.Ease.easeOut)
-			.call(pop);
-	}
-	return bubble
 }
 
 var Weather = function(){
@@ -436,7 +478,7 @@ var Boat = (function() {
 		bubbleTick += Math.round(boat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
-			var bubble = new Bubble();
+			var bubble = new Particles.Bubble();
 			var pos = boat.localToLocal(0, 0, boat.parent);
 			bubble.x = pos.x;
 			bubble.y = pos.y;
@@ -797,7 +839,7 @@ var Helm = function(ship) {
 
 var Gun = function(size, owner) {
 	var gun = new createjs.Shape();
-	var reloadTime = 10000;
+	var reloadTime = 1000;
 	var loaded = true;
 
 	var width = size;
@@ -837,10 +879,19 @@ var Gun = function(size, owner) {
 
 	function fire() {
 		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
-		var pos = gun.localToLocal(0,0,gun.parent.parent);
+		var pos = gun.localToLocal(0,-(size*2),owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
+
+		for (var i = 0; i < 40; i++) {
+			var smoke = new Particles.Smoke(90);
+			smoke.x = pos.x;
+			smoke.y = pos.y;
+			smoke.rotation = gun.rotation+owner.rotation-45;
+			smoke.animate();
+			owner.parent.addChild(smoke);
+		};
 
 		recoil();
 
@@ -892,7 +943,7 @@ var Projectile = function(size, angle, owner) {
 	function explode() {
 		createjs.Ticker.removeEventListener("tick", update);
 		for (var i = 0; i < 30; i++) {
-			var bubble = new Bubble();
+			var bubble = new Particles.Bubble();
 			bubble.x = cannonBall.x;
 			bubble.y = cannonBall.y;
 			cannonBall.parent.addChild(bubble);
@@ -915,6 +966,7 @@ var Projectile = function(size, angle, owner) {
 	createjs.Ticker.addEventListener("tick", update);
 	return cannonBall;
 }
+
 
 // Parent Game Logic
 var Game = (function(){

@@ -1,6 +1,6 @@
 var Gun = function(size, owner) {
 	var gun = new createjs.Shape();
-	var reloadTime = 10000;
+	var reloadTime = 1000;
 	var loaded = true;
 
 	var width = size;
@@ -40,10 +40,19 @@ var Gun = function(size, owner) {
 
 	function fire() {
 		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
-		var pos = gun.localToLocal(0,0,gun.parent.parent);
+		var pos = gun.localToLocal(0,-(size*2),owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
+
+		for (var i = 0; i < 40; i++) {
+			var smoke = new Particles.Smoke(90);
+			smoke.x = pos.x;
+			smoke.y = pos.y;
+			smoke.rotation = gun.rotation+owner.rotation-45;
+			smoke.animate();
+			owner.parent.addChild(smoke);
+		};
 
 		recoil();
 
@@ -95,7 +104,7 @@ var Projectile = function(size, angle, owner) {
 	function explode() {
 		createjs.Ticker.removeEventListener("tick", update);
 		for (var i = 0; i < 30; i++) {
-			var bubble = new Bubble();
+			var bubble = new Particles.Bubble();
 			bubble.x = cannonBall.x;
 			bubble.y = cannonBall.y;
 			cannonBall.parent.addChild(bubble);

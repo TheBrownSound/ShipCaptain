@@ -27,7 +27,7 @@ var Ocean = function(width, height){
 	}
 
 	ocean.spawnBubble = function() {
-		var bubble = new Bubble();
+		var bubble = new Particles.Bubble();
 		bubble.x = -ocean.position.x;
 		bubble.y = -ocean.position.y;
 		bubble.animate();
@@ -42,40 +42,4 @@ var Ocean = function(width, height){
 	}
 
 	return ocean;
-}
-
-var Bubble = function() {
-	var _floatVariance = 100;
-	var bubble = new createjs.Shape();
-	
-	bubble.graphics.beginFill('#95cbdc');
-	bubble.graphics.drawCircle(-5,-5,10);
-	bubble.graphics.endFill();
-
-	bubble.scaleX = bubble.scaleY = .1;
-	function pop() {
-		bubble.parent.removeChild(bubble);
-	}
-
-	function getRandomArbitary (min, max) {
-		return Math.random() * (max - min) + min;
-	}
-
-	bubble.animate = function() {
-		var floatX = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.x;
-		var floatY = getRandomArbitary(-_floatVariance,_floatVariance)+bubble.y;
-		var scale = getRandomArbitary(1,3);
-	
-		createjs.Tween.get(bubble,{loop:false})
-			.set({scaleX:0.1,scaleY:0.1}, bubble)
-			.to({
-				x: floatX,
-				y: floatY,
-				scaleX: scale,
-				scaleY: scale,
-				alpha: 0
-			},3000,createjs.Ease.easeOut)
-			.call(pop);
-	}
-	return bubble
 }

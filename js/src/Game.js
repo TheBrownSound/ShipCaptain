@@ -1,5 +1,6 @@
 // Fuse dependencies
 // @depends Utils.js
+// @depends Particles.js
 // @depends Viewport.js
 // @depends World.js
 // @depends Gauge.js
@@ -11,6 +12,7 @@
 // @depends boats/Sails.js
 // @depends boats/Helm.js
 // @depends boats/guns/Gun.js
+
 
 // Parent Game Logic
 var Game = (function(){

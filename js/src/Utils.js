@@ -41,6 +41,10 @@ var Utils = function() {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
 
+	utils.getRandomFloat = function(min, max) {
+		return Math.random() * (max - min) + min;
+	}
+
 	utils.getDebugMarker = function(){
 		var marker = new createjs.Shape();
 		marker.graphics.beginFill('#F00');
