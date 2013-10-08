@@ -3,8 +3,7 @@ var Helm = function(ship) {
 	var MIN_AMOUNT = 20;
 
 	var helm = {};
-	var _turning = false;
-	var _amount = 0;
+	var _direction = null;
 
 	function getTurnSpeed() {
 		var turnAmount = Math.round(ship.speed*50);
@@ -18,22 +17,26 @@ var Helm = function(ship) {
 	}
 
 	helm.turnLeft = function() {
-		_turning = true;
-		_amount = -getTurnSpeed();
+		_direction = "left";
 	}
 
 	helm.turnRight = function() {
-		_turning = true;
-		_amount = getTurnSpeed();
+		_direction = "right";
 	}
 
 	helm.stopTurning = function() {
-		_turning = false;
-		_amount = 0;
+		_direction = null;
 	}
 
 	helm.__defineGetter__('turnAmount', function(){
-		return _amount/MAX_AMOUNT;
+		switch(_direction) {
+			case 'left':
+				return -getTurnSpeed()/MAX_AMOUNT;
+			case 'right':
+				return getTurnSpeed()/MAX_AMOUNT;
+			default: 
+				return 0;
+		}
 	});
 
 	return helm;
