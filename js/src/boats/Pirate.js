@@ -1,6 +1,6 @@
 var Pirate = function() {
 	var boat = new AIBoat();
-	boat.setSailColor('#444');
+	
 
 	var LENGTH = 125;
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
@@ -16,6 +16,8 @@ var Pirate = function() {
 	starboardGun.rotation = 90;
 
 	boat.addSail(mainSail);
+	boat.setSailColor('#444');
+	
 	boat.addGun(portGun);
 	boat.addGun(starboardGun);
 

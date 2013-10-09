@@ -103,7 +103,7 @@ var Projectile = function(size, angle, owner) {
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
 					explode();
-					boat.damage(20);
+					boat.damage(size*2);
 					return;
 				}
 			}

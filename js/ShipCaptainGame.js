@@ -594,7 +594,7 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH*.5}, {x:22,y:LENGTH*.5});
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:LENGTH*.6}, {x:23,y:LENGTH*.6});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	squareRig.y = 45;
 	mainSail.y = 55;
@@ -603,12 +603,12 @@ var PlayerBoat = function() {
 
 	// GUNS!
 	var foreGun = new Gun(10, boat);
-	var portGun = new Gun(8, boat);
-	var starboardGun = new Gun(8, boat);
+	var portGun = new Gun(6, boat);
+	var starboardGun = new Gun(6, boat);
 	foreGun.y = 30;
-	portGun.y = starboardGun.y = 100;
-	portGun.x = -10;
-	starboardGun.x = 10;
+	portGun.y = starboardGun.y = 58;
+	portGun.x = -14;
+	starboardGun.x = 14;
 	portGun.rotation = -90;
 	starboardGun.rotation = 90;
 
@@ -792,7 +792,7 @@ var AIBoat = function() {
 }
 var Pirate = function() {
 	var boat = new AIBoat();
-	boat.setSailColor('#444');
+	
 
 	var LENGTH = 125;
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
@@ -808,6 +808,8 @@ var Pirate = function() {
 	starboardGun.rotation = 90;
 
 	boat.addSail(mainSail);
+	boat.setSailColor('#444');
+	
 	boat.addGun(portGun);
 	boat.addGun(starboardGun);
 
@@ -1211,7 +1213,7 @@ var Projectile = function(size, angle, owner) {
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
 					explode();
-					boat.damage(20);
+					boat.damage(size*2);
 					return;
 				}
 			}
