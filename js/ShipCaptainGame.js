@@ -167,10 +167,12 @@ var Viewport = function(container) {
 	var viewport = new createjs.Container();
 	viewport.name = 'viewport';
 
+	var gauge = new Gauge();
+
 	container.x = _width/2;
 	container.y = _height/2;
 
-	viewport.addChild(container);
+	viewport.addChild(container, gauge);
 
 	function changeScale(inc) {
 		currentScale += inc;
@@ -201,6 +203,9 @@ var Viewport = function(container) {
 		console.log('canvasSizeChanged', width, height);
 		_width = width;
 		_height = height;
+
+		gauge.x = width - 75;
+		gauge.y = 75;
 
 		container.x = width/2;
 		container.y = height/2;
@@ -321,11 +326,12 @@ var Gauge = function() {
 
 	gauge.addChild(windCircle, compass, needle);
 
-	gauge.update = function() {
+	function updateGauge() {
 		windCircle.rotation = Game.world.weather.wind.direction;
 		needle.rotation = Game.world.playerBoat.heading;
 	}
 
+	createjs.Ticker.addEventListener('tick', updateGauge);
 	return gauge;
 }
 var Ocean = function(width, height){
@@ -1251,7 +1257,6 @@ var Game = (function(){
 	var stage;
 	var viewport;
 	var world;
-	var gauge;
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -1289,14 +1294,12 @@ var Game = (function(){
 
 		var world = game.world = new World();
 		viewport = new Viewport(world);
-		gauge = new Gauge();
+		
 
 		viewport.width = stage.canvas.width;
 		viewport.height = stage.canvas.height;
-		gauge.x = stage.canvas.width - 75;
-		gauge.y = stage.canvas.height - 75;
 
-		stage.addChild(viewport,gauge);
+		stage.addChild(viewport);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -1310,8 +1313,6 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
-			gauge.x = stage.canvas.width - 75;
-			gauge.y = stage.canvas.height - 75;
 		}
 	}
 
@@ -1345,8 +1346,6 @@ var Game = (function(){
 	}
 
 	function tick() {
-		gauge.update();
-		//world.update();
 		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}

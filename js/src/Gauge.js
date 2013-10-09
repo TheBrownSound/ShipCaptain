@@ -11,10 +11,11 @@ var Gauge = function() {
 
 	gauge.addChild(windCircle, compass, needle);
 
-	gauge.update = function() {
+	function updateGauge() {
 		windCircle.rotation = Game.world.weather.wind.direction;
 		needle.rotation = Game.world.playerBoat.heading;
 	}
 
+	createjs.Ticker.addEventListener('tick', updateGauge);
 	return gauge;
 }

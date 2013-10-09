@@ -26,7 +26,6 @@ var Game = (function(){
 	var stage;
 	var viewport;
 	var world;
-	var gauge;
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -64,14 +63,12 @@ var Game = (function(){
 
 		var world = game.world = new World();
 		viewport = new Viewport(world);
-		gauge = new Gauge();
+		
 
 		viewport.width = stage.canvas.width;
 		viewport.height = stage.canvas.height;
-		gauge.x = stage.canvas.width - 75;
-		gauge.y = stage.canvas.height - 75;
 
-		stage.addChild(viewport,gauge);
+		stage.addChild(viewport);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -85,8 +82,6 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
-			gauge.x = stage.canvas.width - 75;
-			gauge.y = stage.canvas.height - 75;
 		}
 	}
 
@@ -120,8 +115,6 @@ var Game = (function(){
 	}
 
 	function tick() {
-		gauge.update();
-		//world.update();
 		stage.update();
 		document.getElementById('fps').innerHTML = Math.round(createjs.Ticker.getMeasuredFPS()) + " fps";
 	}

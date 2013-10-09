@@ -7,10 +7,12 @@ var Viewport = function(container) {
 	var viewport = new createjs.Container();
 	viewport.name = 'viewport';
 
+	var gauge = new Gauge();
+
 	container.x = _width/2;
 	container.y = _height/2;
 
-	viewport.addChild(container);
+	viewport.addChild(container, gauge);
 
 	function changeScale(inc) {
 		currentScale += inc;
@@ -41,6 +43,9 @@ var Viewport = function(container) {
 		console.log('canvasSizeChanged', width, height);
 		_width = width;
 		_height = height;
+
+		gauge.x = width - 75;
+		gauge.y = 75;
 
 		container.x = width/2;
 		container.y = height/2;
