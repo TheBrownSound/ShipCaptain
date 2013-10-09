@@ -1,12 +1,31 @@
 var AIBoat = function() {
 	var boat = new Boat();
+	var _mode = 'wander';
+	var _enemies = [];
+	var _currentTarget = false;
 
-	var destination = 0;
-	var boatInterval = 0;
-	var shootInterval = 0;
+	var moveInterval = setInterval(moveBoat, 2000);
+	var lookInterval = setInterval(checkSurroundings, 100);
+
+	function moveBoat() {
+		if (_mode === 'combat' && _currentTarget) {
+			var attackPosition = getAttackPosition(_currentTarget);
+			sailToDestination(attackPosition);
+		} 
+	}
+
+	function checkSurroundings() {
+		if (_mode === 'combat' && _currentTarget) {
+			for (var gun in boat.guns) {
+				var cannon = boat.guns[gun];
+				if (cannon.isInRange(_currentTarget)) {
+					cannon.shoot();
+				}
+			}
+		} 
+	}
 
 	function sailToDestination(location) {
-		destination = location;
 		switch(typeof(location)) {
 			case 'number': // Heading
 				turnToHeading(location);
@@ -29,49 +48,68 @@ var AIBoat = function() {
 			.to({rotation:boat.rotation+turnAmount}, turnSpeed, createjs.Ease.sineOut)
 	}
 
-	boat.attack = function(enemy) {
-		boatInterval = setInterval(function(){
-			var leadAmount = 120;
-			var attackPositions = {
-				left: enemy.localToLocal(-leadAmount, 0, enemy.parent),
-				right: enemy.localToLocal(leadAmount, 0, enemy.parent)
-			}
-			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
-			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
-			
-			if (distanceFromRight > distanceFromLeft) {
-				sailToDestination(attackPositions.left);
-			} else {				
-				sailToDestination(attackPositions.right);
-			}
-			
-		}, 2000);
+	function getAttackPosition(enemy) {
+		var leadAmount = 120;
+		var attackPositions = {
+			left: enemy.localToLocal(-leadAmount, 0, boat.parent),
+			right: enemy.localToLocal(leadAmount, 0, boat.parent)
+		}
 
-		shootInterval = setInterval(function(){
-			for (var gun in boat.guns) {
-				var cannon = boat.guns[gun];
-				if (cannon.isInRange(enemy)) {
-					cannon.shoot();
-				}
+		var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
+		var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
+		
+		if (distanceFromRight > distanceFromLeft) {
+			return attackPositions.left;
+		} else {				
+			return attackPositions.right;
+		}
+	}
+
+	function clearChecks() {
+		clearInterval(moveInterval);
+		clearInterval(lookInterval);
+	}
+
+	function attackTarget(enemy) {
+		_mode = 'combat';
+		_currentTarget = enemy;
+	}
+
+	function removeEnemy(event) {
+		var enemy = event.target;
+		Utils.removeFromArray(_enemies, enemy);
+		enemy.removeEventListener('sunk', removeEnemy);
+
+		if (enemy === _currentTarget) {
+			if (_enemies.length > 0) {
+				attackTarget(_enemies[0]);
+			} else {
+				_currentTarget = false;
+				_mode = 'wander';
 			}
-		}, 100);
+		}
+	}
+
+	boat.attack = function(enemy) {
+		_enemies.push(enemy);
+		enemy.addEventListener('sunk', removeEnemy);
+
+		if (!_currentTarget) {
+			attackTarget(enemy);
+		}
 	}
 
 	boat.evade = function(enemy) {
-		
+		_mode = 'evade';
 	}
 
-	boat.navigateTo = function(point) {
-
-	}
-
-	boat.wander = function(heading) {
+	boat.wander = function() {
+		var heading = Utils.getRandomInt(1,360);
 		sailToDestination(heading);
 	}
 
 	boat.addEventListener('sunk', function(){
-		clearInterval(boatInterval);
-		clearInterval(shootInterval);
+		clearChecks();
 	});
 
 	return boat;

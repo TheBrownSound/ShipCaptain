@@ -68,5 +68,14 @@ var Utils = function() {
 		return marker;
 	}
 
+	utils.removeFromArray = function(array, item) {
+		var itemIndex = array.indexOf(item);
+		if (itemIndex >= 0) {
+			array.splice(item, 1);
+			return true;
+		}
+		return false;
+	}
+
 	return utils;
 }();

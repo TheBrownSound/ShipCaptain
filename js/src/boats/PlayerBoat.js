@@ -1,5 +1,6 @@
 var PlayerBoat = function() {
 	var boat = new Boat();
+	boat.name = 'PlayerBoat';
 	boat.setSailColor('#FFF');
 	// GUN!
 	var gun1 = new Gun(10, boat);
