@@ -8,7 +8,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	var windToBoat = 0;
 
 	var sail = new createjs.Container();
-	sail.speed = 2.5;
+	sail.speed = 2.2;
 	sail.sailColor = '#FFF';
 	sail.lineColor = '#ded2b3';
 
@@ -110,7 +110,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
-	sail.speed = 3;
+	sail.speed = 2.5;
 
 	var sheet_luff = 20;
 	var yard_thickness = 6;

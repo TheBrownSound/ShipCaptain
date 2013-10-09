@@ -7,7 +7,7 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH*.5}, {x:22,y:LENGTH*.5});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	squareRig.y = 45;
 	mainSail.y = 55;
