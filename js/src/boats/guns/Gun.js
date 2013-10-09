@@ -69,6 +69,10 @@ var Gun = function(size, owner) {
 		}
 	}
 
+	gun.isInRange = function(target) {
+		var relativeHeading = Utils.getRelativeHeading(this.globalToLocal(0,0), target);
+	}
+
 	drawGun();
 
 	return gun;

@@ -174,7 +174,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 			g.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
 			g.curveTo(0, luffAmount*2, length*.4, luffAmount);
 			g.curveTo(length*.4, luffAmount/2, length/2, -2);
-			g.lineTo(-(length/2), -2);
+			g.curveTo(0,luffAmount, -(length/2), -2);
 			g.endFill();
 		}
 		
@@ -185,7 +185,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 }
 
 var ForeAft = function(length, anchorPoint) {
-	var sail = new Sail(45, 60, 135);
+	var sail = new Sail(45, 45, 135);
 	sail.name = 'fore-aft';
 
 	var sheet = new	createjs.Shape();
@@ -232,8 +232,8 @@ var ForeAft = function(length, anchorPoint) {
 			var power = (sail.tack == 'port') ? this.power : -this.power;
 			g.beginFill(this.sailColor);
 			g.moveTo(0, 0);
-			g.curveTo(power*-30, length*.9, 0, length);
-			g.lineTo(0,0);
+			g.curveTo(power*-40, length*.7, 0, length);
+			g.curveTo(power*-10, length/2, 0,0);
 			g.endFill();
 		}
 		

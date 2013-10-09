@@ -30,6 +30,14 @@ var Utils = function() {
 		return angle;
 	}
 
+	utils.getRelativeHeading = function(currentPosition, target) {
+		var xDiff = target.x - currentPosition.x;
+		var yDiff = target.y - currentPosition.y;
+		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
+		console.log('heading = ', heading);
+		return Utils.convertToHeading(heading);
+	}
+
 	utils.distanceBetweenTwoPoints = function(point1, point2) {
 		var xs = point2.x - point1.x;
 		xs = xs * xs;
@@ -190,7 +198,6 @@ var Viewport = function(container) {
 }
 // Main world class
 var World = function(){
-
 	var world = new createjs.Container();
 	world.name = 'world';
 	world.ships = [];
@@ -199,11 +206,6 @@ var World = function(){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
-	//var enemy = world.enemy = new AIBoat();
-	//enemy.attack(playerBoat);
-
-	world.ships.push(playerBoat);
-	//world.ships.push(enemy);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -229,10 +231,34 @@ var World = function(){
 		map.addChild(boat);
 		world.ships.push(boat);
 	}
+
+	function addPirate() {
+		var pirate = new AIBoat();
+		var minDistance = 1000;
+
+		var xAmount = Utils.getRandomInt(minDistance,3000)
+		var xDistance = (Utils.getRandomInt(0,1)) ? -xAmount:xAmount;
+		var yAmount = Utils.getRandomInt(minDistance,3000)
+		var yDistance = (Utils.getRandomInt(0,1)) ? -yAmount:yAmount;
+
+		pirate.x = xDistance+playerBoat.x;
+		pirate.y = yDistance+playerBoat.y;
+		pirate.setSailColor('#000');
+		pirate.attack(playerBoat);
+		addBoat(pirate);
+	}
+
+	function eventSpawner() {
+		var spawnEvent = (Utils.getRandomInt(0,10) === 10);
+		console.log('Spawn event: ', spawnEvent);
+		if (spawnEvent) {
+			addPirate();
+		}
+	}
 	
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
-		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -251,6 +277,9 @@ var World = function(){
 		
 	}
 
+	setInterval(function(){
+		eventSpawner();
+	}, 10000);
 	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }
@@ -357,14 +386,15 @@ var Boat = (function() {
 	var helm = new Helm(boat);
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
-	hull.x = -(WIDTH/2)
+	hull.x = -(WIDTH/2);
 
 	squareRig.y = 45;
 	mainSail.y = 55;
 
 	boat.sails = [squareRig,mainSail];
+	boat.guns = [];
 
-	boat.addChild(hull, squareRig, mainSail);
+	boat.addChild(hull, mainSail, squareRig);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -379,7 +409,7 @@ var Boat = (function() {
 		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .005;
+				_speed -= .002;
 			} if (_speed < potentialSpeed) {
 				_speed += .05;
 			}
@@ -403,6 +433,11 @@ var Boat = (function() {
 		for (var sail in this.sails) {
 			this.sails[sail].color = hex;
 		}
+	}
+
+	boat.addGun = function(gun, position) {
+		this.guns.push(gun);
+		this.addChildAt(gun, 1);
 	}
 
 	boat.stopTurning = function(){
@@ -445,6 +480,11 @@ var Boat = (function() {
 		return _speed;
 	});
 
+	boat.__defineGetter__('knots', function(){
+		var knotConversion = 4;
+		return _speed*knotConversion;
+	});
+
 	boat.__defineGetter__('heading', function(){
 		var heading = boat.rotation%360;
 		return (heading < 0) ? heading+360:heading;;
@@ -478,6 +518,12 @@ var Boat = (function() {
 				adjustTrim();
 			}
 		}
+
+		for (var gun in boat.guns) {
+			var cannon = boat.guns[gun];
+			
+		}
+
 		bubbleTick += Math.round(boat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;
@@ -613,6 +659,17 @@ var AIBoat = function() {
 		sailToDestination(heading);
 	}
 
+	return boat;
+}
+var Pirate = function() {
+	var boat = new AIBoat();
+	var portGun = new Gun(8);
+	var starboardGun = new Gun(8);
+
+	
+
+	boat.addChild(portGun);
+	boat.addChild(starboardGun);
 	return boat;
 }
 var Sail = (function(windOffset, sailRange, noSail) {
@@ -791,7 +848,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 			g.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
 			g.curveTo(0, luffAmount*2, length*.4, luffAmount);
 			g.curveTo(length*.4, luffAmount/2, length/2, -2);
-			g.lineTo(-(length/2), -2);
+			g.curveTo(0,luffAmount, -(length/2), -2);
 			g.endFill();
 		}
 		
@@ -802,7 +859,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 }
 
 var ForeAft = function(length, anchorPoint) {
-	var sail = new Sail(45, 60, 135);
+	var sail = new Sail(45, 45, 135);
 	sail.name = 'fore-aft';
 
 	var sheet = new	createjs.Shape();
@@ -849,8 +906,8 @@ var ForeAft = function(length, anchorPoint) {
 			var power = (sail.tack == 'port') ? this.power : -this.power;
 			g.beginFill(this.sailColor);
 			g.moveTo(0, 0);
-			g.curveTo(power*-30, length*.9, 0, length);
-			g.lineTo(0,0);
+			g.curveTo(power*-40, length*.7, 0, length);
+			g.curveTo(power*-10, length/2, 0,0);
 			g.endFill();
 		}
 		
@@ -867,7 +924,7 @@ var Helm = function(ship) {
 	var _direction = null;
 
 	function getTurnSpeed() {
-		var turnAmount = Math.round(ship.speed*50);
+		var turnAmount = Math.round(ship.knots*20);
 		if (turnAmount < MAX_AMOUNT && turnAmount > MIN_AMOUNT) {
 			return turnAmount
 		} else if (turnAmount >= MAX_AMOUNT) {
@@ -973,6 +1030,10 @@ var Gun = function(size, owner) {
 		if (loaded) {
 			fire();
 		}
+	}
+
+	gun.isInRange = function(target) {
+		var relativeHeading = Utils.getRelativeHeading(this.globalToLocal(0,0), target);
 	}
 
 	drawGun();

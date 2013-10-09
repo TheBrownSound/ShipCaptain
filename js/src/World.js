@@ -1,6 +1,5 @@
 // Main world class
 var World = function(){
-
 	var world = new createjs.Container();
 	world.name = 'world';
 	world.ships = [];
@@ -9,11 +8,6 @@ var World = function(){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 	var playerBoat = world.playerBoat = new PlayerBoat();
-	//var enemy = world.enemy = new AIBoat();
-	//enemy.attack(playerBoat);
-
-	world.ships.push(playerBoat);
-	//world.ships.push(enemy);
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -39,10 +33,34 @@ var World = function(){
 		map.addChild(boat);
 		world.ships.push(boat);
 	}
+
+	function addPirate() {
+		var pirate = new AIBoat();
+		var minDistance = 1000;
+
+		var xAmount = Utils.getRandomInt(minDistance,3000)
+		var xDistance = (Utils.getRandomInt(0,1)) ? -xAmount:xAmount;
+		var yAmount = Utils.getRandomInt(minDistance,3000)
+		var yDistance = (Utils.getRandomInt(0,1)) ? -yAmount:yAmount;
+
+		pirate.x = xDistance+playerBoat.x;
+		pirate.y = yDistance+playerBoat.y;
+		pirate.setSailColor('#000');
+		pirate.attack(playerBoat);
+		addBoat(pirate);
+	}
+
+	function eventSpawner() {
+		var spawnEvent = (Utils.getRandomInt(0,10) === 10);
+		console.log('Spawn event: ', spawnEvent);
+		if (spawnEvent) {
+			addPirate();
+		}
+	}
 	
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
-		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.speed);
+		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -61,6 +79,9 @@ var World = function(){
 		
 	}
 
+	setInterval(function(){
+		eventSpawner();
+	}, 10000);
 	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }

@@ -6,7 +6,7 @@ var Helm = function(ship) {
 	var _direction = null;
 
 	function getTurnSpeed() {
-		var turnAmount = Math.round(ship.speed*50);
+		var turnAmount = Math.round(ship.knots*20);
 		if (turnAmount < MAX_AMOUNT && turnAmount > MIN_AMOUNT) {
 			return turnAmount
 		} else if (turnAmount >= MAX_AMOUNT) {

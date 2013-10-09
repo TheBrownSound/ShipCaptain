@@ -25,14 +25,15 @@ var Boat = (function() {
 	var helm = new Helm(boat);
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
-	hull.x = -(WIDTH/2)
+	hull.x = -(WIDTH/2);
 
 	squareRig.y = 45;
 	mainSail.y = 55;
 
 	boat.sails = [squareRig,mainSail];
+	boat.guns = [];
 
-	boat.addChild(hull, squareRig, mainSail);
+	boat.addChild(hull, mainSail, squareRig);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -47,7 +48,7 @@ var Boat = (function() {
 		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .005;
+				_speed -= .002;
 			} if (_speed < potentialSpeed) {
 				_speed += .05;
 			}
@@ -71,6 +72,11 @@ var Boat = (function() {
 		for (var sail in this.sails) {
 			this.sails[sail].color = hex;
 		}
+	}
+
+	boat.addGun = function(gun, position) {
+		this.guns.push(gun);
+		this.addChildAt(gun, 1);
 	}
 
 	boat.stopTurning = function(){
@@ -113,6 +119,11 @@ var Boat = (function() {
 		return _speed;
 	});
 
+	boat.__defineGetter__('knots', function(){
+		var knotConversion = 4;
+		return _speed*knotConversion;
+	});
+
 	boat.__defineGetter__('heading', function(){
 		var heading = boat.rotation%360;
 		return (heading < 0) ? heading+360:heading;;
@@ -146,6 +157,12 @@ var Boat = (function() {
 				adjustTrim();
 			}
 		}
+
+		for (var gun in boat.guns) {
+			var cannon = boat.guns[gun];
+			
+		}
+
 		bubbleTick += Math.round(boat.speed);
 		if (bubbleTick >= 7) {
 			bubbleTick = 0;

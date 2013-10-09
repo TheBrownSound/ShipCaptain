@@ -29,6 +29,14 @@ var Utils = function() {
 		return angle;
 	}
 
+	utils.getRelativeHeading = function(currentPosition, target) {
+		var xDiff = target.x - currentPosition.x;
+		var yDiff = target.y - currentPosition.y;
+		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
+		console.log('heading = ', heading);
+		return Utils.convertToHeading(heading);
+	}
+
 	utils.distanceBetweenTwoPoints = function(point1, point2) {
 		var xs = point2.x - point1.x;
 		xs = xs * xs;

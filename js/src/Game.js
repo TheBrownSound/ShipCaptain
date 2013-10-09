@@ -9,6 +9,7 @@
 // @depends boats/Boat.js
 // @depends boats/PlayerBoat.js
 // @depends boats/AIBoat.js
+// @depends boats/Pirate.js
 // @depends boats/Sails.js
 // @depends boats/Helm.js
 // @depends boats/guns/Gun.js
