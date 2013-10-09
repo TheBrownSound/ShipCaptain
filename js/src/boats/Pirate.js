@@ -1,11 +1,18 @@
 var Pirate = function() {
 	var boat = new AIBoat();
-	var portGun = new Gun(8);
-	var starboardGun = new Gun(8);
+	boat.setSailColor('#444');
 
-	
+	var portGun = new Gun(8, boat);
+	var starboardGun = new Gun(8, boat);
 
-	boat.addChild(portGun);
-	boat.addChild(starboardGun);
+	portGun.y = starboardGun.y = 100;
+	portGun.x = -10;
+	starboardGun.x = 10;
+	portGun.rotation = -90;
+	starboardGun.rotation = 90;
+
+	boat.addGun(portGun);
+	boat.addGun(starboardGun);
+
 	return boat;
 }

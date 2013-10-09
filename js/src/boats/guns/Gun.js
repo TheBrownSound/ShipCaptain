@@ -4,7 +4,7 @@ var Gun = function(size, owner) {
 
 	gun.addChild(cannon);
 
-	var reloadTime = 1000;
+	var reloadTime = 10000;
 	var loaded = true;
 
 	var width = size;
@@ -70,7 +70,11 @@ var Gun = function(size, owner) {
 	}
 
 	gun.isInRange = function(target) {
-		var relativeHeading = Utils.getRelativeHeading(this.globalToLocal(0,0), target);
+		var gunHeading = Utils.convertToHeading(owner.heading+this.rotation);
+		var targetHeading = Utils.getRelativeHeading(this.localToLocal(0,0,owner.parent), target);
+		var rangeThreshold = 20;
+		var headingDifference = Utils.headingDifference(gunHeading, targetHeading);
+		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
 
 	drawGun();

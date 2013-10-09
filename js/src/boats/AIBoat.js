@@ -2,6 +2,8 @@ var AIBoat = function() {
 	var boat = new Boat();
 
 	var destination = 0;
+	var boatInterval = 0;
+	var shootInterval = 0;
 
 	function sailToDestination(location) {
 		destination = location;
@@ -10,7 +12,7 @@ var AIBoat = function() {
 				turnToHeading(location);
 				break;
 			case 'object':
-				var heading = Utils.getRelativeHeading(boat, location.x,location.y);
+				var heading = Utils.getRelativeHeading(boat, location);
 				turnToHeading(heading);
 				break;
 		}
@@ -28,7 +30,7 @@ var AIBoat = function() {
 	}
 
 	boat.attack = function(enemy) {
-		setInterval(function(){
+		boatInterval = setInterval(function(){
 			var leadAmount = 120;
 			var attackPositions = {
 				left: enemy.localToLocal(-leadAmount, 0, enemy.parent),
@@ -37,23 +39,22 @@ var AIBoat = function() {
 			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
 			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
 			
-			//var attackMarker = Utils.getDebugMarker();
-
 			if (distanceFromRight > distanceFromLeft) {
-				//attackMarker.x = attackPositions.left.x;
-				//attackMarker.y = attackPositions.left.y;
-				
 				sailToDestination(attackPositions.left);
-			} else {
-				//attackMarker.x = attackPositions.right.x;
-				//attackMarker.y = attackPositions.right.y;
-				
+			} else {				
 				sailToDestination(attackPositions.right);
 			}
-
-			//enemy.parent.addChild(attackMarker);
 			
 		}, 2000);
+
+		shootInterval = setInterval(function(){
+			for (var gun in boat.guns) {
+				var cannon = boat.guns[gun];
+				if (cannon.isInRange(enemy)) {
+					cannon.shoot();
+				}
+			}
+		}, 100);
 	}
 
 	boat.evade = function(enemy) {
@@ -67,6 +68,11 @@ var AIBoat = function() {
 	boat.wander = function(heading) {
 		sailToDestination(heading);
 	}
+
+	boat.addEventListener('sunk', function(){
+		clearInterval(boatInterval);
+		clearInterval(shootInterval);
+	});
 
 	return boat;
 }

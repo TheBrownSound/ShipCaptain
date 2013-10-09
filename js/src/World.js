@@ -24,6 +24,7 @@ var World = function(){
 
 	function addBoat(boat) {
 		if (world.ships.length < 5) {
+			console.log('adding boat', boat);
 			boat.addEventListener('sunk', function(){
 				var boatIndex = world.ships.indexOf(boat);
 				if (boatIndex >= 0) {
@@ -36,7 +37,7 @@ var World = function(){
 	}
 
 	function addPirate() {
-		var pirate = new AIBoat();
+		var pirate = new Pirate();
 		var minDistance = 1000;
 
 		var xAmount = Utils.getRandomInt(minDistance,3000)
@@ -46,7 +47,6 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
-		pirate.setSailColor('#444');
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}
@@ -83,6 +83,9 @@ var World = function(){
 	setInterval(function(){
 		eventSpawner();
 	}, 10000);
+
+	world.addPirate = addPirate;
+
 	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }

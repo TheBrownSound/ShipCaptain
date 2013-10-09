@@ -229,6 +229,7 @@ var World = function(){
 
 	function addBoat(boat) {
 		if (world.ships.length < 5) {
+			console.log('adding boat', boat);
 			boat.addEventListener('sunk', function(){
 				var boatIndex = world.ships.indexOf(boat);
 				if (boatIndex >= 0) {
@@ -241,7 +242,7 @@ var World = function(){
 	}
 
 	function addPirate() {
-		var pirate = new AIBoat();
+		var pirate = new Pirate();
 		var minDistance = 1000;
 
 		var xAmount = Utils.getRandomInt(minDistance,3000)
@@ -251,7 +252,6 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
-		pirate.setSailColor('#444');
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}
@@ -288,6 +288,9 @@ var World = function(){
 	setInterval(function(){
 		eventSpawner();
 	}, 10000);
+
+	world.addPirate = addPirate;
+
 	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }
@@ -594,6 +597,8 @@ var AIBoat = function() {
 	var boat = new Boat();
 
 	var destination = 0;
+	var boatInterval = 0;
+	var shootInterval = 0;
 
 	function sailToDestination(location) {
 		destination = location;
@@ -602,7 +607,7 @@ var AIBoat = function() {
 				turnToHeading(location);
 				break;
 			case 'object':
-				var heading = Utils.getRelativeHeading(boat, location.x,location.y);
+				var heading = Utils.getRelativeHeading(boat, location);
 				turnToHeading(heading);
 				break;
 		}
@@ -620,7 +625,7 @@ var AIBoat = function() {
 	}
 
 	boat.attack = function(enemy) {
-		setInterval(function(){
+		boatInterval = setInterval(function(){
 			var leadAmount = 120;
 			var attackPositions = {
 				left: enemy.localToLocal(-leadAmount, 0, enemy.parent),
@@ -629,23 +634,22 @@ var AIBoat = function() {
 			var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
 			var distanceFromRight = Utils.distanceBetweenTwoPoints(attackPositions.right, {x:boat.x,y:boat.y});
 			
-			//var attackMarker = Utils.getDebugMarker();
-
 			if (distanceFromRight > distanceFromLeft) {
-				//attackMarker.x = attackPositions.left.x;
-				//attackMarker.y = attackPositions.left.y;
-				
 				sailToDestination(attackPositions.left);
-			} else {
-				//attackMarker.x = attackPositions.right.x;
-				//attackMarker.y = attackPositions.right.y;
-				
+			} else {				
 				sailToDestination(attackPositions.right);
 			}
-
-			//enemy.parent.addChild(attackMarker);
 			
 		}, 2000);
+
+		shootInterval = setInterval(function(){
+			for (var gun in boat.guns) {
+				var cannon = boat.guns[gun];
+				if (cannon.isInRange(enemy)) {
+					cannon.shoot();
+				}
+			}
+		}, 100);
 	}
 
 	boat.evade = function(enemy) {
@@ -660,17 +664,29 @@ var AIBoat = function() {
 		sailToDestination(heading);
 	}
 
+	boat.addEventListener('sunk', function(){
+		clearInterval(boatInterval);
+		clearInterval(shootInterval);
+	});
+
 	return boat;
 }
 var Pirate = function() {
 	var boat = new AIBoat();
-	var portGun = new Gun(8);
-	var starboardGun = new Gun(8);
+	boat.setSailColor('#444');
 
-	
+	var portGun = new Gun(8, boat);
+	var starboardGun = new Gun(8, boat);
 
-	boat.addChild(portGun);
-	boat.addChild(starboardGun);
+	portGun.y = starboardGun.y = 100;
+	portGun.x = -10;
+	starboardGun.x = 10;
+	portGun.rotation = -90;
+	starboardGun.rotation = 90;
+
+	boat.addGun(portGun);
+	boat.addGun(starboardGun);
+
 	return boat;
 }
 var Sail = (function(windOffset, sailRange, noSail) {
@@ -970,7 +986,7 @@ var Gun = function(size, owner) {
 
 	gun.addChild(cannon);
 
-	var reloadTime = 1000;
+	var reloadTime = 10000;
 	var loaded = true;
 
 	var width = size;
@@ -1036,7 +1052,11 @@ var Gun = function(size, owner) {
 	}
 
 	gun.isInRange = function(target) {
-		var relativeHeading = Utils.getRelativeHeading(this.globalToLocal(0,0), target);
+		var gunHeading = Utils.convertToHeading(owner.heading+this.rotation);
+		var targetHeading = Utils.getRelativeHeading(this.localToLocal(0,0,owner.parent), target);
+		var rangeThreshold = 20;
+		var headingDifference = Utils.headingDifference(gunHeading, targetHeading);
+		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
 
 	drawGun();
