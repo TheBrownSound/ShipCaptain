@@ -409,17 +409,12 @@ var Boat = (function() {
 
 	var hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm(boat);
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 	hull.x = -(WIDTH/2);
 
-	squareRig.y = 45;
-	mainSail.y = 55;
-
-	boat.sails = [squareRig,mainSail];
+	boat.sails = [];
 	boat.guns = [];
 
-	boat.addChild(hull, mainSail, squareRig);
+	boat.addChild(hull);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -443,8 +438,9 @@ var Boat = (function() {
 
 	function adjustTrim() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
-		squareRig.trim(windHeading);
-		mainSail.trim(windHeading);
+		boat.sails.map(function(sail){
+			sail.trim(windHeading);
+		});
 	}
 
 	function sink() {
@@ -460,6 +456,11 @@ var Boat = (function() {
 		}
 	}
 
+	boat.addSail = function(sail, position) {
+		this.sails.push(sail);
+		this.addChild(sail);
+	}
+
 	boat.addGun = function(gun, position) {
 		this.guns.push(gun);
 		this.addChildAt(gun, 1);
@@ -471,13 +472,15 @@ var Boat = (function() {
 	}
 
 	boat.furlSails = function() {
-		squareRig.reef();
-		mainSail.reef();
+		boat.sails.map(function(sail){
+			sail.reef();
+		});
 	}
 
 	boat.hoistSails = function() {
-		squareRig.hoist();
-		mainSail.hoist();
+		boat.sails.map(function(sail){
+			sail.hoist();
+		});
 		adjustTrim();
 	}
 
@@ -574,10 +577,44 @@ var PlayerBoat = function() {
 	var boat = new Boat();
 	boat.name = 'PlayerBoat';
 	boat.setSailColor('#FFF');
-	// GUN!
-	var gun1 = new Gun(10, boat);
 
-	gun1.y = 30;
+	var WIDTH = 56;
+	var LENGTH = 125;
+	
+	// Sails
+	//var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
+	//squareRig.y = 45;
+	mainSail.y = 55;
+	//boat.addSail(squareRig);
+	boat.addSail(mainSail);
+
+	// GUNS!
+	var foreGun = new Gun(10, boat);
+	var portGun = new Gun(8, boat);
+	var starboardGun = new Gun(8, boat);
+	foreGun.y = 30;
+	portGun.y = starboardGun.y = 100;
+	portGun.x = -10;
+	starboardGun.x = 10;
+	portGun.rotation = -90;
+	starboardGun.rotation = 90;
+
+	boat.addGun(foreGun);
+	boat.addGun(portGun);
+	boat.addGun(starboardGun);
+
+	function shootGuns() {
+		for (var gun in boat.guns) {
+			var cannon = boat.guns[gun];
+			for (var ship in Game.world.ships) {
+				var target = Game.world.ships[ship];
+				if (target != boat && cannon.isInRange(target)) {
+					cannon.shoot();
+				}
+			}
+		}
+	}
 
 	Game.addEventListener('onKeyDown', function(event) {
 		switch(event.key) {
@@ -588,7 +625,7 @@ var PlayerBoat = function() {
 				boat.turnRight();
 				break;
 			case 32: // Space
-				gun1.shoot();
+				shootGuns();
 		}
 	});
 
@@ -603,8 +640,6 @@ var PlayerBoat = function() {
 				break;
 		}
 	});
-
-	boat.addChildAt(gun1, 1);
 
 	return boat;
 }
@@ -747,15 +782,20 @@ var Pirate = function() {
 	var boat = new AIBoat();
 	boat.setSailColor('#444');
 
+	var LENGTH = 125;
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
+
 	var portGun = new Gun(8, boat);
 	var starboardGun = new Gun(8, boat);
 
+	mainSail.y = 55;
 	portGun.y = starboardGun.y = 100;
 	portGun.x = -10;
 	starboardGun.x = 10;
 	portGun.rotation = -90;
 	starboardGun.rotation = 90;
 
+	boat.addSail(mainSail);
 	boat.addGun(portGun);
 	boat.addGun(starboardGun);
 
