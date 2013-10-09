@@ -265,6 +265,7 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
+
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}
@@ -623,6 +624,14 @@ var AIBoat = function() {
 		} else if (_mode === 'wander') {
 			wander();
 		}
+		
+		/*
+		// Check player proximity
+		var distanceFromPlayer = Utils.distanceBetweenTwoPoints(boat, Game.world.playerBoat);
+		if (distanceFromPlayer < 500) {
+			boat.attack(Game.world.playerBoat);
+		}
+		*/
 	}
 
 	function checkSurroundings() {

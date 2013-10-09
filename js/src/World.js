@@ -47,6 +47,7 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
+
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}
