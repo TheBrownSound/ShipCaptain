@@ -9,8 +9,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	var sail = new createjs.Container();
 	sail.speed = 2.2;
-	sail.sailColor = '#FFF';
-	sail.lineColor = '#ded2b3';
+	sail.sailColor = '#ded5be';
+	sail.lineColor = '#2a2824';
 
 	function updateSail() {
 		//console.log('update sail');

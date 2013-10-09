@@ -595,24 +595,21 @@ var PlayerBoat = function() {
 	
 	// Sails
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:LENGTH*.6}, {x:23,y:LENGTH*.6});
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
-	squareRig.y = 45;
-	mainSail.y = 55;
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH*.7});
+	squareRig.y = 35;
+	mainSail.y = 40;
 	boat.addSail(squareRig);
 	boat.addSail(mainSail);
 
 	// GUNS!
-	var foreGun = new Gun(10, boat);
 	var portGun = new Gun(6, boat);
 	var starboardGun = new Gun(6, boat);
-	foreGun.y = 30;
 	portGun.y = starboardGun.y = 58;
 	portGun.x = -14;
 	starboardGun.x = 14;
 	portGun.rotation = -90;
 	starboardGun.rotation = 90;
 
-	boat.addGun(foreGun);
 	boat.addGun(portGun);
 	boat.addGun(starboardGun);
 
@@ -826,8 +823,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	var sail = new createjs.Container();
 	sail.speed = 2.2;
-	sail.sailColor = '#FFF';
-	sail.lineColor = '#ded2b3';
+	sail.sailColor = '#ded5be';
+	sail.lineColor = '#2a2824';
 
 	function updateSail() {
 		//console.log('update sail');
