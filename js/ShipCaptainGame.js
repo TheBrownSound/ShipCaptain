@@ -61,6 +61,10 @@ var Utils = function() {
 		return Math.random() * (max - min) + min;
 	}
 
+	utils.yesNo = function() {
+		return (this.getRandomInt(0,1) == 1) ? true:false;
+	}
+
 	utils.getDebugMarker = function(){
 		var marker = new createjs.Shape();
 		marker.graphics.beginFill('#F00');
@@ -609,14 +613,16 @@ var AIBoat = function() {
 	var _enemies = [];
 	var _currentTarget = false;
 
-	var moveInterval = setInterval(moveBoat, 2000);
-	var lookInterval = setInterval(checkSurroundings, 100);
+	var moveInterval = setInterval(moveBoat, 2000); //Adjust movement every 2 seconds
+	var lookInterval = setInterval(checkSurroundings, 100); //React 10 times every second
 
 	function moveBoat() {
 		if (_mode === 'combat' && _currentTarget) {
 			var attackPosition = getAttackPosition(_currentTarget);
 			sailToDestination(attackPosition);
-		} 
+		} else if (_mode === 'wander') {
+			wander();
+		}
 	}
 
 	function checkSurroundings() {
@@ -651,6 +657,20 @@ var AIBoat = function() {
 		var turnSpeed = Math.abs(turnAmount)*50;
 		createjs.Tween.get(boat, {override:true})
 			.to({rotation:boat.rotation+turnAmount}, turnSpeed, createjs.Ease.sineOut)
+	}
+
+	function wander() {
+		if (!_currentTarget) {
+			var duration = Utils.getRandomInt(30,120)/2;// halving turns the duration to seconds
+			_currentTarget = duration;
+			var randomHeading = Utils.getRandomInt(1,360);
+			sailToDestination(randomHeading);
+		} else {
+			_currentTarget--;
+			if (_currentTarget <= 0) {
+				_currentTarget = false;
+			}
+		}
 	}
 
 	function getAttackPosition(enemy) {
@@ -706,11 +726,6 @@ var AIBoat = function() {
 
 	boat.evade = function(enemy) {
 		_mode = 'evade';
-	}
-
-	boat.wander = function() {
-		var heading = Utils.getRandomInt(1,360);
-		sailToDestination(heading);
 	}
 
 	boat.addEventListener('sunk', function(){

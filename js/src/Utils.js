@@ -60,6 +60,10 @@ var Utils = function() {
 		return Math.random() * (max - min) + min;
 	}
 
+	utils.yesNo = function() {
+		return (this.getRandomInt(0,1) == 1) ? true:false;
+	}
+
 	utils.getDebugMarker = function(){
 		var marker = new createjs.Shape();
 		marker.graphics.beginFill('#F00');
