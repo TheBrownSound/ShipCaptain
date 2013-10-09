@@ -94,6 +94,11 @@ var Projectile = function(size, angle, owner) {
 	cannonBall.graphics.drawCircle(0,0,size/2);
 	cannonBall.graphics.endFill();
 
+	function removeProjectile() {
+		createjs.Ticker.removeEventListener("tick", update);
+		cannonBall.parent.removeChild(cannonBall);
+	}
+
 	function checkForHit() {
 		for (var ship in Game.world.ships) {
 			var boat = Game.world.ships[ship]
@@ -102,8 +107,9 @@ var Projectile = function(size, angle, owner) {
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
-					explode();
+					//boat.hit(damage, local);
 					boat.damage(size*2);
+					explode();
 					return;
 				}
 			}
@@ -111,7 +117,17 @@ var Projectile = function(size, angle, owner) {
 	}
 
 	function explode() {
-		createjs.Ticker.removeEventListener("tick", update);
+		for (var i = 0; i < 30; i++) {
+			var splinter = new Particles.Splinter();
+			splinter.x = cannonBall.x;
+			splinter.y = cannonBall.y;
+			cannonBall.parent.addChild(splinter);
+			splinter.animate();
+		};
+		removeProjectile();
+	}
+
+	function miss() {
 		for (var i = 0; i < 30; i++) {
 			var bubble = new Particles.Bubble();
 			bubble.x = cannonBall.x;
@@ -119,7 +135,7 @@ var Projectile = function(size, angle, owner) {
 			cannonBall.parent.addChild(bubble);
 			bubble.animate();
 		};
-		cannonBall.parent.removeChild(cannonBall);
+		removeProjectile();
 	}
 
 	function update() {
@@ -129,7 +145,7 @@ var Projectile = function(size, angle, owner) {
 			cannonBall.y -= Math.cos(angle*Math.PI/180)*velocity-boatYSpeed;
 			checkForHit();
 		} else {
-			explode();
+			miss();
 		}
 	}
 
