@@ -85,6 +85,11 @@ var World = function(){
 		eventSpawner();
 	}, 10000);
 
+	Game.stage.onMouseDown = function(e) {
+		var location = Game.world.playerBoat.globalToLocal(e.stageX,e.stageY);
+		console.log(location);
+	}
+
 	world.addPirate = addPirate;
 
 	createjs.Ticker.addEventListener("tick", update);

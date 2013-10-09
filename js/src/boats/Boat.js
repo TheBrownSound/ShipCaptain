@@ -113,6 +113,17 @@ var Boat = (function() {
 		_furled = !_furled;
 	}
 
+	boat.cannonHit = function(damageAmount, location) {
+		for (var i = 0; i < 30; i++) {
+			var splinter = new Particles.Splinter();
+			var pos = boat.localToLocal(location.x, location.y, boat.parent)
+			splinter.x = pos.x;
+			splinter.y = pos.y;
+			boat.parent.addChildAt(splinter, 1);
+			splinter.animate();
+		};
+	}
+
 	boat.damage = function(amount) {
 		if (_health > 0) {
 			console.log(_health);

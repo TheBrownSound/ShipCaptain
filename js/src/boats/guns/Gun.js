@@ -71,7 +71,7 @@ var Gun = function(size, owner) {
 
 	gun.isInRange = function(target) {
 		var gunHeading = Utils.convertToHeading(owner.heading+this.rotation);
-		var targetHeading = Utils.getRelativeHeading(this.localToLocal(0,0,owner.parent), target);
+		var targetHeading = Utils.getRelativeHeading(gun.localToLocal(0,0,owner.parent), target);
 		var rangeThreshold = 20;
 		var headingDifference = Utils.headingDifference(gunHeading, targetHeading);
 		return (Math.abs(headingDifference) <= rangeThreshold);
@@ -107,24 +107,12 @@ var Projectile = function(size, angle, owner) {
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
-					//boat.hit(damage, local);
-					boat.damage(size*2);
-					explode();
+					boat.cannonHit(velocity, local);
+					removeProjectile();
 					return;
 				}
 			}
 		};
-	}
-
-	function explode() {
-		for (var i = 0; i < 30; i++) {
-			var splinter = new Particles.Splinter();
-			splinter.x = cannonBall.x;
-			splinter.y = cannonBall.y;
-			cannonBall.parent.addChild(splinter);
-			splinter.animate();
-		};
-		removeProjectile();
 	}
 
 	function miss() {
