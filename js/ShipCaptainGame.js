@@ -387,7 +387,6 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var SPEED = 3;
 	var AGILITY = 1;
 
 	var _turningLeft = false;
@@ -420,18 +419,25 @@ var Boat = (function() {
 	boat.turnRight = helm.turnRight;
 
 	function speedCalc() {
+		var topSpeed = 0;
 		var potentialSpeed = 0;
-		boat.sails.map(function(sail){
+
+		for (var i = 0; i < boat.sails.length; i++) {
+			var sail = boat.sails[i];
+			topSpeed += sail.speed;
 			potentialSpeed += sail.power;
-		});
+		};
+
 		if (_health > 0) {
-			potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
+			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
+			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .002;
+				_speed -= .005;
 			} if (_speed < potentialSpeed) {
-				_speed += .05;
+				_speed += .01;
 			}
 		}
 	}
@@ -582,11 +588,11 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	//var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-22,y:LENGTH/2+20}, {x:22,y:LENGTH/2+20});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
-	//squareRig.y = 45;
+	squareRig.y = 45;
 	mainSail.y = 55;
-	//boat.addSail(squareRig);
+	boat.addSail(squareRig);
 	boat.addSail(mainSail);
 
 	// GUNS!
@@ -811,7 +817,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	var windToBoat = 0;
 
 	var sail = new createjs.Container();
-
+	sail.speed = 2.5;
 	sail.sailColor = '#FFF';
 	sail.lineColor = '#ded2b3';
 
@@ -913,6 +919,8 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
+	sail.speed = 3;
+
 	var sheet_luff = 20;
 	var yard_thickness = 6;
 

@@ -1,7 +1,6 @@
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var SPEED = 3;
 	var AGILITY = 1;
 
 	var _turningLeft = false;
@@ -34,18 +33,25 @@ var Boat = (function() {
 	boat.turnRight = helm.turnRight;
 
 	function speedCalc() {
+		var topSpeed = 0;
 		var potentialSpeed = 0;
-		boat.sails.map(function(sail){
+
+		for (var i = 0; i < boat.sails.length; i++) {
+			var sail = boat.sails[i];
+			topSpeed += sail.speed;
 			potentialSpeed += sail.power;
-		});
+		};
+
 		if (_health > 0) {
-			potentialSpeed = (potentialSpeed/boat.sails.length)*SPEED;
+			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
+			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
+			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
-				_speed -= .002;
+				_speed -= .005;
 			} if (_speed < potentialSpeed) {
-				_speed += .05;
+				_speed += .01;
 			}
 		}
 	}
