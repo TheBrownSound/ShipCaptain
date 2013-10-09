@@ -17,21 +17,22 @@ var World = function(){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-
 	map.addChild(mapCenter, island);
 	world.addChild(ocean, map);
 
 	addBoat(playerBoat);
 
 	function addBoat(boat) {
-		boat.addEventListener('sunk', function(){
-			var boatIndex = world.ships.indexOf(boat);
-			if (boatIndex >= 0) {
-				world.ships.splice(boatIndex, 1);
-			}
-		})
-		map.addChild(boat);
-		world.ships.push(boat);
+		if (world.ships.length < 5) {
+			boat.addEventListener('sunk', function(){
+				var boatIndex = world.ships.indexOf(boat);
+				if (boatIndex >= 0) {
+					world.ships.splice(boatIndex, 1);
+				}
+			})
+			map.addChild(boat);
+			world.ships.push(boat);
+		}
 	}
 
 	function addPirate() {
@@ -45,7 +46,7 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
-		pirate.setSailColor('#000');
+		pirate.setSailColor('#444');
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}

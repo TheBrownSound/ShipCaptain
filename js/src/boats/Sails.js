@@ -14,9 +14,6 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	function updateSail() {
 		//console.log('update sail');
-		var sailHeading = Utils.convertToHeading(sail.angle);
-		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
-		var leeway = 10;
 
 		if (_reefed) {
 			_power = Math.round( _power * 10) / 10;
@@ -26,6 +23,11 @@ var Sail = (function(windOffset, sailRange, noSail) {
 				_power += 0.1;
 			}
 		} else {
+			var leeway = 10;
+			var sailHeading = Utils.convertToHeading(sail.angle);
+
+			// TODO revisit angle from wind logic, its confusing.
+			var angleFromWind = Utils.oldHeadingDifference(windToBoat, sailHeading);
 			if (angleFromWind > noSail+leeway) {
 				_power = 0;
 			} else {

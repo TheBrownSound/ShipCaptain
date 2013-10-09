@@ -23,8 +23,16 @@ var Utils = function() {
 	}
 
 	utils.headingDifference = function(headingOne, headingTwo) {
-		var angle = (Math.abs(headingOne - headingTwo))%360;
-		if(angle > 180) {
+		var angle = (headingTwo - headingOne)%360;
+		if (angle > 180) {
+			angle = angle - 360;
+		}
+		return angle;
+	}
+
+	utils.oldHeadingDifference = function(headingOne, headingTwo) {
+		var angle = Math.abs((headingTwo - headingOne))%360;
+		if (angle > 180) {
 			angle = 360 - angle;
 		}
 		return angle;
@@ -32,10 +40,9 @@ var Utils = function() {
 
 	utils.getRelativeHeading = function(currentPosition, target) {
 		var xDiff = target.x - currentPosition.x;
-		var yDiff = target.y - currentPosition.y;
-		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
-		console.log('heading = ', heading);
-		return Utils.convertToHeading(heading);
+		var yDiff = currentPosition.y - target.y;
+		var heading = Math.round(Math.atan2(xDiff, yDiff) * (180 / Math.PI));
+		return this.convertToHeading(heading);
 	}
 
 	utils.distanceBetweenTwoPoints = function(point1, point2) {
@@ -215,21 +222,22 @@ var World = function(){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-
 	map.addChild(mapCenter, island);
 	world.addChild(ocean, map);
 
 	addBoat(playerBoat);
 
 	function addBoat(boat) {
-		boat.addEventListener('sunk', function(){
-			var boatIndex = world.ships.indexOf(boat);
-			if (boatIndex >= 0) {
-				world.ships.splice(boatIndex, 1);
-			}
-		})
-		map.addChild(boat);
-		world.ships.push(boat);
+		if (world.ships.length < 5) {
+			boat.addEventListener('sunk', function(){
+				var boatIndex = world.ships.indexOf(boat);
+				if (boatIndex >= 0) {
+					world.ships.splice(boatIndex, 1);
+				}
+			})
+			map.addChild(boat);
+			world.ships.push(boat);
+		}
 	}
 
 	function addPirate() {
@@ -243,7 +251,7 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
-		pirate.setSailColor('#000');
+		pirate.setSailColor('#444');
 		pirate.attack(playerBoat);
 		addBoat(pirate);
 	}
@@ -594,18 +602,11 @@ var AIBoat = function() {
 				turnToHeading(location);
 				break;
 			case 'object':
-				var heading = findHeadingToPoint(location.x,location.y);
+				var heading = Utils.getRelativeHeading(boat, location.x,location.y);
 				turnToHeading(heading);
 				break;
 		}
 		boat.hoistSails();
-	}
-
-	function findHeadingToPoint(xPos, yPos) {
-		var xDiff = xPos - boat.x;
-		var yDiff = yPos - boat.y;
-		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
-		return Utils.convertToHeading(heading);
 	}
 
 	function turnToHeading(heading) {
@@ -688,9 +689,6 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	function updateSail() {
 		//console.log('update sail');
-		var sailHeading = Utils.convertToHeading(sail.angle);
-		var angleFromWind = Utils.headingDifference(windToBoat, sailHeading);
-		var leeway = 10;
 
 		if (_reefed) {
 			_power = Math.round( _power * 10) / 10;
@@ -700,6 +698,11 @@ var Sail = (function(windOffset, sailRange, noSail) {
 				_power += 0.1;
 			}
 		} else {
+			var leeway = 10;
+			var sailHeading = Utils.convertToHeading(sail.angle);
+
+			// TODO revisit angle from wind logic, its confusing.
+			var angleFromWind = Utils.oldHeadingDifference(windToBoat, sailHeading);
 			if (angleFromWind > noSail+leeway) {
 				_power = 0;
 			} else {

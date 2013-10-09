@@ -22,8 +22,16 @@ var Utils = function() {
 	}
 
 	utils.headingDifference = function(headingOne, headingTwo) {
-		var angle = (Math.abs(headingOne - headingTwo))%360;
-		if(angle > 180) {
+		var angle = (headingTwo - headingOne)%360;
+		if (angle > 180) {
+			angle = angle - 360;
+		}
+		return angle;
+	}
+
+	utils.oldHeadingDifference = function(headingOne, headingTwo) {
+		var angle = Math.abs((headingTwo - headingOne))%360;
+		if (angle > 180) {
 			angle = 360 - angle;
 		}
 		return angle;
@@ -31,10 +39,9 @@ var Utils = function() {
 
 	utils.getRelativeHeading = function(currentPosition, target) {
 		var xDiff = target.x - currentPosition.x;
-		var yDiff = target.y - currentPosition.y;
-		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
-		console.log('heading = ', heading);
-		return Utils.convertToHeading(heading);
+		var yDiff = currentPosition.y - target.y;
+		var heading = Math.round(Math.atan2(xDiff, yDiff) * (180 / Math.PI));
+		return this.convertToHeading(heading);
 	}
 
 	utils.distanceBetweenTwoPoints = function(point1, point2) {

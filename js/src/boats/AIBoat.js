@@ -10,18 +10,11 @@ var AIBoat = function() {
 				turnToHeading(location);
 				break;
 			case 'object':
-				var heading = findHeadingToPoint(location.x,location.y);
+				var heading = Utils.getRelativeHeading(boat, location.x,location.y);
 				turnToHeading(heading);
 				break;
 		}
 		boat.hoistSails();
-	}
-
-	function findHeadingToPoint(xPos, yPos) {
-		var xDiff = xPos - boat.x;
-		var yDiff = yPos - boat.y;
-		var heading = Math.round(Math.atan2(xDiff, -yDiff) * (180 / Math.PI));
-		return Utils.convertToHeading(heading);
 	}
 
 	function turnToHeading(heading) {
