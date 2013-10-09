@@ -114,6 +114,7 @@ var Boat = (function() {
 	}
 
 	boat.cannonHit = function(damageAmount, location) {
+		boat.damage(damageAmount);
 		for (var i = 0; i < 30; i++) {
 			var splinter = new Particles.Splinter();
 			var pos = boat.localToLocal(location.x, location.y, boat.parent)
