@@ -709,14 +709,23 @@ var PlayerBoat = function() {
 
 	function checkProximity() {
 		if (_fireAtWill) {
-			for (var gun in boat.guns) {
-				var cannon = boat.guns[gun];
-				for (var ship in Game.world.ships) {
-					var target = Game.world.ships[ship];
-					if (target != boat && cannon.isInRange(target)) {
-						cannon.shoot();
+			for (var ship in Game.world.ships) {
+				var target = Game.world.ships[ship];
+				if (target != boat) {
+					var targetProximity = Utils.distanceBetweenTwoPoints(boat, target);
+					if (targetProximity < 500) {
+						attemptToFireOn(target)
 					}
 				}
+			}
+		}
+	}
+
+	function attemptToFireOn(target) {
+		for (var gun in boat.guns) {
+			var cannon = boat.guns[gun];
+			if (cannon.isInRange(target)) {
+				cannon.shoot();
 			}
 		}
 	}
