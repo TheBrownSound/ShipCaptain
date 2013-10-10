@@ -1,6 +1,7 @@
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
+	var _agility = 1;
 
 	var _turningLeft = false;
 	var _turningRight = false;
@@ -88,6 +89,20 @@ var Boat = (function() {
 		boat.dispatchEvent('sunk');
 	}
 
+	function getCurrentAgility() {
+		var limit = 2; // speed at which velocity no longer factors into agility
+		if (boat.speed < limit) {
+			var reducedAgility = (_speed/limit)*_agility;
+			if (reducedAgility < 0.3) {
+				return 0.3
+			} else {
+				return reducedAgility
+			}
+		} else {
+			return _agility;
+		}
+	}
+
 	boat.setSailColor = function(hex) {
 		for (var sail in this.sails) {
 			this.sails[sail].color = hex;
@@ -159,6 +174,10 @@ var Boat = (function() {
 		return _health;
 	});
 
+	boat.__defineGetter__('agility', function(){
+		return _agility;
+	});
+
 	boat.__defineGetter__('speed', function(){
 		return _speed;
 	});
@@ -193,8 +212,7 @@ var Boat = (function() {
 			//console.log(windChange);
 			oldWindHeading = Game.world.weather.wind.direction;
 			if (turnAmount !== 0) {
-				var newHeading = (boat.rotation+turnAmount)%360
-				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
+				boat.rotation += getCurrentAgility()*turnAmount;
 			}
 			
 			if (!_furled && _health > 0) {

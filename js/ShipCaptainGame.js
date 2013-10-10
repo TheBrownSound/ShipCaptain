@@ -450,6 +450,7 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
+	var _agility = 1;
 
 	var _turningLeft = false;
 	var _turningRight = false;
@@ -537,6 +538,20 @@ var Boat = (function() {
 		boat.dispatchEvent('sunk');
 	}
 
+	function getCurrentAgility() {
+		var limit = 2; // speed at which velocity no longer factors into agility
+		if (boat.speed < limit) {
+			var reducedAgility = (_speed/limit)*_agility;
+			if (reducedAgility < 0.3) {
+				return 0.3
+			} else {
+				return reducedAgility
+			}
+		} else {
+			return _agility;
+		}
+	}
+
 	boat.setSailColor = function(hex) {
 		for (var sail in this.sails) {
 			this.sails[sail].color = hex;
@@ -608,6 +623,10 @@ var Boat = (function() {
 		return _health;
 	});
 
+	boat.__defineGetter__('agility', function(){
+		return _agility;
+	});
+
 	boat.__defineGetter__('speed', function(){
 		return _speed;
 	});
@@ -642,8 +661,7 @@ var Boat = (function() {
 			//console.log(windChange);
 			oldWindHeading = Game.world.weather.wind.direction;
 			if (turnAmount !== 0) {
-				var newHeading = (boat.rotation+turnAmount)%360
-				boat.rotation = (newHeading < 0) ? newHeading+360:newHeading;
+				boat.rotation += getCurrentAgility()*turnAmount;
 			}
 			
 			if (!_furled && _health > 0) {
@@ -1170,20 +1188,24 @@ var ForeAft = function(length, anchorPoint) {
 	return sail;
 }
 var Helm = function(ship) {
-	var MAX_AMOUNT = 100;
-	var MIN_AMOUNT = 20;
-
+	// turn rates are degrees per second
 	var helm = {};
+
+	var _acceleration = 30;//frames it takes to get to full turn speed
+	var _momentum = 0;
 	var _direction = null;
 
-	function getTurnSpeed() {
-		var turnAmount = Math.round(ship.knots*20);
-		if (turnAmount < MAX_AMOUNT && turnAmount > MIN_AMOUNT) {
-			return turnAmount
-		} else if (turnAmount >= MAX_AMOUNT) {
-			return MAX_AMOUNT;
-		} else {
-			return MIN_AMOUNT;
+	function increaseTurnRate() {
+		_momentum++;
+		if (_momentum > _acceleration) {
+			_momentum = _acceleration;
+		}
+	}
+
+	function decreaseTurnRate() {
+		_momentum--;
+		if (_momentum < -_acceleration) {
+			_momentum = -_acceleration;
 		}
 	}
 
@@ -1196,18 +1218,18 @@ var Helm = function(ship) {
 	}
 
 	helm.stopTurning = function() {
-		_direction = null;
+		_direction = false;
 	}
 
 	helm.__defineGetter__('turnAmount', function(){
-		switch(_direction) {
-			case 'left':
-				return -getTurnSpeed()/MAX_AMOUNT;
-			case 'right':
-				return getTurnSpeed()/MAX_AMOUNT;
-			default: 
-				return 0;
+		// Assumes getter is getting called by a tick method
+		if (_direction == "left" || (!_direction && _momentum > 0)) {
+			decreaseTurnRate();
 		}
+		if (_direction == "right" || (!_direction && _momentum < 0)) {
+			increaseTurnRate();
+		}
+		return _momentum/_acceleration;
 	});
 
 	return helm;
