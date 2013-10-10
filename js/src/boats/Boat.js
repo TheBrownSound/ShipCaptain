@@ -65,9 +65,9 @@ var Boat = (function() {
 
 	function sink() {
 		console.log('sunk');
+		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
-		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	boat.setSailColor = function(hex) {
@@ -195,6 +195,7 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
+		
 		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
 		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
 		boat.x += xAmount;

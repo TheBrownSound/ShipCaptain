@@ -113,12 +113,12 @@ var Particles = function() {
 					scaleX: scale,
 					scaleY: scale,
 					alpha: 0
-				},1000,createjs.Ease.easeOut)
+				},3000,createjs.Ease.circOut)
 				.call(dissapate);
 			createjs.Tween.get(img,{loop:true})
 				.to({
 					rotation: swirl
-				},1000,createjs.Ease.linear);
+				},3000,createjs.Ease.circOut);
 		}
 
 		return smoke;
@@ -505,9 +505,9 @@ var Boat = (function() {
 
 	function sink() {
 		console.log('sunk');
+		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
-		createjs.Ticker.removeEventListener("tick", update);
 	}
 
 	boat.setSailColor = function(hex) {
@@ -635,6 +635,7 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
+		
 		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
 		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
 		boat.x += xAmount;

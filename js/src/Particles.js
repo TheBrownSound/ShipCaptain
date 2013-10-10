@@ -27,12 +27,12 @@ var Particles = function() {
 					scaleX: scale,
 					scaleY: scale,
 					alpha: 0
-				},1000,createjs.Ease.easeOut)
+				},3000,createjs.Ease.circOut)
 				.call(dissapate);
 			createjs.Tween.get(img,{loop:true})
 				.to({
 					rotation: swirl
-				},1000,createjs.Ease.linear);
+				},3000,createjs.Ease.circOut);
 		}
 
 		return smoke;
