@@ -676,6 +676,8 @@ var PlayerBoat = function() {
 	boat.name = 'PlayerBoat';
 	boat.setSailColor('#FFF');
 
+	var _fireAtWill = false;
+
 	var WIDTH = 56;
 	var LENGTH = 125;
 	
@@ -699,13 +701,17 @@ var PlayerBoat = function() {
 	boat.addGun(portGun);
 	boat.addGun(starboardGun);
 
-	function shootGuns() {
-		for (var gun in boat.guns) {
-			var cannon = boat.guns[gun];
-			for (var ship in Game.world.ships) {
-				var target = Game.world.ships[ship];
-				if (target != boat && cannon.isInRange(target)) {
-					cannon.shoot();
+	var proximityCheck = setInterval(checkProximity, 100);
+
+	function checkProximity() {
+		if (_fireAtWill) {
+			for (var gun in boat.guns) {
+				var cannon = boat.guns[gun];
+				for (var ship in Game.world.ships) {
+					var target = Game.world.ships[ship];
+					if (target != boat && cannon.isInRange(target)) {
+						cannon.shoot();
+					}
 				}
 			}
 		}
@@ -720,7 +726,7 @@ var PlayerBoat = function() {
 				boat.turnRight();
 				break;
 			case 32: // Space
-				shootGuns();
+				boat.toggleFireMode();
 		}
 	});
 
@@ -735,6 +741,12 @@ var PlayerBoat = function() {
 				break;
 		}
 	});
+
+	boat.toggleFireMode = function() {
+		_fireAtWill = !_fireAtWill;
+		document.getElementById('fireMode').innerHTML = (_fireAtWill) ? "Hold Fire":"Fire At Will";
+		return _fireAtWill;
+	}
 
 	return boat;
 }
