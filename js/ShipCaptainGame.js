@@ -606,6 +606,10 @@ var Boat = (function() {
 	}
 
 	// Getters
+	boat.__defineGetter__('health', function(){
+		return _health;
+	});
+
 	boat.__defineGetter__('speed', function(){
 		return _speed;
 	});
