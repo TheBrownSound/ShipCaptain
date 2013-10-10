@@ -321,8 +321,9 @@ var World = function(){
 
 		pirate.x = xDistance+playerBoat.x;
 		pirate.y = yDistance+playerBoat.y;
-
-		pirate.attack(playerBoat);
+		if (playerBoat.health > 0) {
+			pirate.attack(playerBoat);
+		}
 		addBoat(pirate);
 	}
 
@@ -449,7 +450,6 @@ var Weather = function(){
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var AGILITY = 1;
 
 	var _turningLeft = false;
 	var _turningRight = false;
@@ -612,7 +612,7 @@ var Boat = (function() {
 
 	boat.__defineGetter__('knots', function(){
 		var knotConversion = 4;
-		return _speed*knotConversion;
+		return Math.round(_speed*knotConversion);
 	});
 
 	boat.__defineGetter__('heading', function(){
@@ -634,7 +634,7 @@ var Boat = (function() {
 
 	function update() {
 		speedCalc();
-		var turnAmount = helm.turnAmount*AGILITY;
+		var turnAmount = helm.turnAmount;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
 		if (turnAmount !== 0 || windChange !== 0) {
 			//console.log(windChange);
@@ -647,11 +647,6 @@ var Boat = (function() {
 			if (!_furled && _health > 0) {
 				adjustTrim();
 			}
-		}
-
-		for (var gun in boat.guns) {
-			var cannon = boat.guns[gun];
-			
 		}
 
 		bubbleTick += Math.round(boat.speed);
@@ -693,8 +688,8 @@ var PlayerBoat = function() {
 	boat.addSail(mainSail);
 
 	// GUNS!
-	var portGun = new Gun(6, boat);
-	var starboardGun = new Gun(6, boat);
+	var portGun = new Gun(6, 18, boat);
+	var starboardGun = new Gun(6, 18, boat);
 	portGun.y = starboardGun.y = 58;
 	portGun.x = -14;
 	starboardGun.x = 14;
@@ -885,8 +880,8 @@ var Pirate = function() {
 	var LENGTH = 125;
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 
-	var portGun = new Gun(8, boat);
-	var starboardGun = new Gun(8, boat);
+	var portGun = new Gun(8, 32, boat);
+	var starboardGun = new Gun(8, 32, boat);
 
 	mainSail.y = 55;
 	portGun.y = starboardGun.y = 100;
@@ -1196,17 +1191,18 @@ var Helm = function(ship) {
 }
 
 
-var Gun = function(size, owner) {
+var Gun = function(caliber, length, owner) {
+	var maximumInaccuracy = 5; //degrees
 	var gun = new createjs.Container();
 	var cannon = new createjs.Shape();
 
 	gun.addChild(cannon);
 
-	var reloadTime = 10000;
+	var reloadTime = (caliber*1000)+(length*100);
 	var loaded = true;
 
-	var width = size;
-	var length = size*3;
+	var width = caliber;
+	var length = length || caliber*3;
 
 	function drawGun() {
 		var gfx = cannon.graphics
@@ -1230,7 +1226,7 @@ var Gun = function(size, owner) {
 	}
 
 	function recoil() {
-		cannon.y += size;
+		cannon.y += caliber;
 
 		// Roll back when reloaded
 		createjs.Tween.get(cannon, {override:true})
@@ -1239,13 +1235,16 @@ var Gun = function(size, owner) {
 	}
 
 	function fire() {
-		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
+		var angle = Utils.convertToHeading(owner.rotation+gun.rotation)
+		//var accuracy = (caliber/length)*maximumInaccuracy;
+
+		var ball = new Projectile(caliber*.75,angle, owner);
 		var pos = gun.localToLocal(0,-length,owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
 
-		for (var i = 0; i < size; i++) {
+		for (var i = 0; i < caliber; i++) {
 			var smoke = new Particles.Smoke(60);
 			smoke.x = pos.x;
 			smoke.y = pos.y;

@@ -1,7 +1,6 @@
 var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
-	var AGILITY = 1;
 
 	var _turningLeft = false;
 	var _turningRight = false;
@@ -164,7 +163,7 @@ var Boat = (function() {
 
 	boat.__defineGetter__('knots', function(){
 		var knotConversion = 4;
-		return _speed*knotConversion;
+		return Math.round(_speed*knotConversion);
 	});
 
 	boat.__defineGetter__('heading', function(){
@@ -186,7 +185,7 @@ var Boat = (function() {
 
 	function update() {
 		speedCalc();
-		var turnAmount = helm.turnAmount*AGILITY;
+		var turnAmount = helm.turnAmount;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
 		if (turnAmount !== 0 || windChange !== 0) {
 			//console.log(windChange);
@@ -199,11 +198,6 @@ var Boat = (function() {
 			if (!_furled && _health > 0) {
 				adjustTrim();
 			}
-		}
-
-		for (var gun in boat.guns) {
-			var cannon = boat.guns[gun];
-			
 		}
 
 		bubbleTick += Math.round(boat.speed);
