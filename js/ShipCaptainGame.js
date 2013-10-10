@@ -455,6 +455,7 @@ var Boat = (function() {
 	var _turningLeft = false;
 	var _turningRight = false;
 	var _speed = 0;
+	var _limit = 10;
 	var _heading = 0;
 	var _trim = 0;
 	var _furled = true;
@@ -541,7 +542,7 @@ var Boat = (function() {
 	function getCurrentAgility() {
 		var limit = 2; // speed at which velocity no longer factors into agility
 		if (boat.speed < limit) {
-			var reducedAgility = (_speed/limit)*_agility;
+			var reducedAgility = (boat.speed/limit)*_agility;
 			if (reducedAgility < 0.3) {
 				return 0.3
 			} else {
@@ -571,6 +572,24 @@ var Boat = (function() {
 	boat.stopTurning = function(){
 		helm.stopTurning();
 		boat.rotation = Math.round(boat.rotation);
+	}
+
+	boat.increaseSpeed = function() {
+		if (_limit <= 0) {
+			boat.hoistSails();
+		}
+		_limit++;
+		if (_limit > 10) {
+			_limit = 10;
+		}
+	}
+
+	boat.decreaseSpeed = function() {
+		_limit--;
+		if (_limit <= 0) {
+			_limit = 0;
+			boat.furlSails();
+		}
 	}
 
 	boat.furlSails = function() {
@@ -628,12 +647,12 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('speed', function(){
-		return _speed;
+		return _speed*(_limit/10);
 	});
 
 	boat.__defineGetter__('knots', function(){
 		var knotConversion = 4;
-		return Math.round(_speed*knotConversion);
+		return Math.round(boat.speed*knotConversion);
 	});
 
 	boat.__defineGetter__('heading', function(){
@@ -753,6 +772,12 @@ var PlayerBoat = function() {
 				break;
 			case 39: // Right arrow
 				boat.turnRight();
+				break;
+			case 38: // Up arrow
+				boat.increaseSpeed();
+				break;
+			case 40: // Down arrow
+				boat.decreaseSpeed();
 				break;
 			case 32: // Space
 				boat.toggleFireMode();
@@ -1458,12 +1483,6 @@ var Game = (function(){
 
 	function onKeyDown(event) {
 		switch(event.keyCode) {
-			case 38: // Up arrow
-				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction+10);
-				break;
-			case 40: // Down arrow
-				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction-10);
-				break;
 			default:
 				game.dispatchEvent({type:'onKeyDown', key:event.keyCode});
 		}

@@ -61,6 +61,12 @@ var PlayerBoat = function() {
 			case 39: // Right arrow
 				boat.turnRight();
 				break;
+			case 38: // Up arrow
+				boat.increaseSpeed();
+				break;
+			case 40: // Down arrow
+				boat.decreaseSpeed();
+				break;
 			case 32: // Space
 				boat.toggleFireMode();
 		}

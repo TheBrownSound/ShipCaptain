@@ -87,12 +87,6 @@ var Game = (function(){
 
 	function onKeyDown(event) {
 		switch(event.keyCode) {
-			case 38: // Up arrow
-				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction+10);
-				break;
-			case 40: // Down arrow
-				//Game.world.weather.wind.direction = Utils.convertToHeading(Game.world.weather.wind.direction-10);
-				break;
 			default:
 				game.dispatchEvent({type:'onKeyDown', key:event.keyCode});
 		}
