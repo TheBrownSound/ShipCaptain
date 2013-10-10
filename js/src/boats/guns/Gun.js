@@ -1,14 +1,15 @@
-var Gun = function(size, owner) {
+var Gun = function(caliber, length, owner) {
+	var maximumInaccuracy = 5; //degrees
 	var gun = new createjs.Container();
 	var cannon = new createjs.Shape();
 
 	gun.addChild(cannon);
 
-	var reloadTime = 10000;
+	var reloadTime = (caliber*1000)+(length*100);
 	var loaded = true;
 
-	var width = size;
-	var length = size*3;
+	var width = caliber;
+	var length = length || caliber*3;
 
 	function drawGun() {
 		var gfx = cannon.graphics
@@ -32,7 +33,7 @@ var Gun = function(size, owner) {
 	}
 
 	function recoil() {
-		cannon.y += size;
+		cannon.y += caliber;
 
 		// Roll back when reloaded
 		createjs.Tween.get(cannon, {override:true})
@@ -41,13 +42,16 @@ var Gun = function(size, owner) {
 	}
 
 	function fire() {
-		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
+		var angle = Utils.convertToHeading(owner.rotation+gun.rotation)
+		//var accuracy = (caliber/length)*maximumInaccuracy;
+
+		var ball = new Projectile(caliber*.75,angle, owner);
 		var pos = gun.localToLocal(0,-length,owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
 
-		for (var i = 0; i < size; i++) {
+		for (var i = 0; i < caliber; i++) {
 			var smoke = new Particles.Smoke(60);
 			smoke.x = pos.x;
 			smoke.y = pos.y;

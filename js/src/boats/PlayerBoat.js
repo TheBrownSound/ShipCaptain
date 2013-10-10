@@ -15,8 +15,8 @@ var PlayerBoat = function() {
 	boat.addSail(mainSail);
 
 	// GUNS!
-	var portGun = new Gun(6, boat);
-	var starboardGun = new Gun(6, boat);
+	var portGun = new Gun(6, 18, boat);
+	var starboardGun = new Gun(6, 18, boat);
 	portGun.y = starboardGun.y = 58;
 	portGun.x = -14;
 	starboardGun.x = 14;

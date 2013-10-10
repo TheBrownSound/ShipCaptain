@@ -5,8 +5,8 @@ var Pirate = function() {
 	var LENGTH = 125;
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 
-	var portGun = new Gun(8, boat);
-	var starboardGun = new Gun(8, boat);
+	var portGun = new Gun(8, 32, boat);
+	var starboardGun = new Gun(8, 32, boat);
 
 	mainSail.y = 55;
 	portGun.y = starboardGun.y = 100;
