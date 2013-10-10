@@ -99,26 +99,32 @@ var Particles = function() {
 			smoke.parent.removeChild(smoke);
 		}
 
-		smoke.animate = function() {
+		smoke.animate = function(momentum) {
+			momentum = momentum || 0;
 			var angle = Utils.getRandomInt(0,range);
 			var scale = Utils.getRandomFloat(.2,1);
 			var swirl = Utils.getRandomInt(-360, 360);
-			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(50,100));
-			smoke.scaleX = smoke.scaleY = 0;
+			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(momentum,momentum+100));
+			smoke.scaleX = smoke.scaleY = scale;
 
 			createjs.Tween.get(this,{loop:false})
 				.to({
 					x: smoke.x+move.x,
-					y: smoke.y-move.y,
-					scaleX: scale,
-					scaleY: scale,
-					alpha: 0
-				},3000,createjs.Ease.circOut)
+					y: smoke.y-move.y
+				},3000,createjs.Ease.circOut);
+
+			createjs.Tween.get(this,{loop:false})
+				.to({
+					scaleX: 0,
+					scaleY: 0
+				},3000,createjs.Ease.expoIn)
 				.call(dissapate);
-			createjs.Tween.get(img,{loop:true})
+			
+			createjs.Tween.get(img,{loop:false})
 				.to({
 					rotation: swirl
-				},3000,createjs.Ease.circOut);
+				},3000,createjs.Ease.circOut)
+				
 		}
 
 		return smoke;
@@ -142,7 +148,7 @@ var Particles = function() {
 			var angle = Utils.getRandomInt(0,range);
 			var scale = Utils.getRandomFloat(.2,1);
 			var spin = Utils.getRandomInt(-720, 720);
-			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(50,100));
+			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(0,100));
 			splinter.scaleX = splinter.scaleY = scale;
 
 			createjs.Tween.get(splinter,{loop:false})
@@ -151,8 +157,8 @@ var Particles = function() {
 					y: splinter.y-move.y,
 				},1500,createjs.Ease.quintOut)
 				.to({
-					scaleX: 0,
-					scaleY: 0,
+					scaleX: .1,
+					scaleY: .1,
 					alpha: 0
 				},2000,createjs.Ease.quadIn)
 				.call(sink);
@@ -505,6 +511,26 @@ var Boat = (function() {
 
 	function sink() {
 		console.log('sunk');
+
+		//Smoke
+		for (var i = 0; i < 40; i++) {
+			var smoke = new Particles.Smoke();
+			smoke.x = boat.x;
+			smoke.y = boat.y;
+			boat.parent.addChildAt(smoke, 1);
+			smoke.animate();
+		};
+
+		//Splinters
+		for (var i = 0; i < 20; i++) {
+			var splinter = new Particles.Splinter();
+			splinter.x = boat.x;
+			splinter.y = boat.y;
+			boat.parent.addChildAt(splinter, 1);
+			splinter.animate();
+		};
+		
+
 		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
@@ -571,6 +597,7 @@ var Boat = (function() {
 			console.log(_health);
 			_health -= amount;
 			if (_health <= 0) {
+				_health = 0;
 				sink();
 			}
 		}
@@ -635,7 +662,7 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
-		
+
 		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
 		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
 		boat.x += xAmount;

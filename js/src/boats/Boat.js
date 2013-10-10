@@ -65,6 +65,26 @@ var Boat = (function() {
 
 	function sink() {
 		console.log('sunk');
+
+		//Smoke
+		for (var i = 0; i < 40; i++) {
+			var smoke = new Particles.Smoke();
+			smoke.x = boat.x;
+			smoke.y = boat.y;
+			boat.parent.addChildAt(smoke, 1);
+			smoke.animate();
+		};
+
+		//Splinters
+		for (var i = 0; i < 20; i++) {
+			var splinter = new Particles.Splinter();
+			splinter.x = boat.x;
+			splinter.y = boat.y;
+			boat.parent.addChildAt(splinter, 1);
+			splinter.animate();
+		};
+		
+
 		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
@@ -131,6 +151,7 @@ var Boat = (function() {
 			console.log(_health);
 			_health -= amount;
 			if (_health <= 0) {
+				_health = 0;
 				sink();
 			}
 		}
@@ -195,7 +216,7 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
-		
+
 		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
 		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
 		boat.x += xAmount;
