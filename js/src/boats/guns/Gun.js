@@ -78,7 +78,7 @@ var Gun = function(caliber, length, owner) {
 	gun.isInRange = function(target) {
 		var gunHeading = Utils.convertToHeading(owner.heading+this.rotation);
 		var targetHeading = Utils.getRelativeHeading(gun.localToLocal(0,0,owner.parent), target);
-		var rangeThreshold = 20;
+		var rangeThreshold = 10;
 		var headingDifference = Utils.headingDifference(gunHeading, targetHeading);
 		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
@@ -113,7 +113,7 @@ var Projectile = function(size, angle, owner) {
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
-					boat.cannonHit(velocity, local);
+					boat.cannonHit(size+velocity, local);
 					removeProjectile();
 					return;
 				}

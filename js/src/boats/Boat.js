@@ -83,7 +83,6 @@ var Boat = (function() {
 			splinter.animate();
 		};
 		
-
 		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
@@ -134,7 +133,6 @@ var Boat = (function() {
 
 	boat.cannonHit = function(damageAmount, location) {
 		var dmg = Math.round(damageAmount);
-		boat.damage(dmg);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();
 			var pos = boat.localToLocal(location.x, location.y, boat.parent)
@@ -143,11 +141,11 @@ var Boat = (function() {
 			boat.parent.addChildAt(splinter, 1);
 			splinter.animate();
 		};
+		boat.damage(dmg);
 	}
 
 	boat.damage = function(amount) {
 		if (_health > 0) {
-			console.log(_health);
 			_health -= amount;
 			if (_health <= 0) {
 				_health = 0;

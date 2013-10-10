@@ -532,7 +532,6 @@ var Boat = (function() {
 			splinter.animate();
 		};
 		
-
 		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
 		boat.dispatchEvent('sunk');
@@ -583,7 +582,6 @@ var Boat = (function() {
 
 	boat.cannonHit = function(damageAmount, location) {
 		var dmg = Math.round(damageAmount);
-		boat.damage(dmg);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();
 			var pos = boat.localToLocal(location.x, location.y, boat.parent)
@@ -592,11 +590,11 @@ var Boat = (function() {
 			boat.parent.addChildAt(splinter, 1);
 			splinter.animate();
 		};
+		boat.damage(dmg);
 	}
 
 	boat.damage = function(amount) {
 		if (_health > 0) {
-			console.log(_health);
 			_health -= amount;
 			if (_health <= 0) {
 				_health = 0;
@@ -1296,7 +1294,7 @@ var Gun = function(caliber, length, owner) {
 	gun.isInRange = function(target) {
 		var gunHeading = Utils.convertToHeading(owner.heading+this.rotation);
 		var targetHeading = Utils.getRelativeHeading(gun.localToLocal(0,0,owner.parent), target);
-		var rangeThreshold = 20;
+		var rangeThreshold = 10;
 		var headingDifference = Utils.headingDifference(gunHeading, targetHeading);
 		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
@@ -1331,7 +1329,7 @@ var Projectile = function(size, angle, owner) {
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
 				var hit = boat.hitTest(local.x, local.y);
 				if (hit) {
-					boat.cannonHit(velocity, local);
+					boat.cannonHit(size+velocity, local);
 					removeProjectile();
 					return;
 				}
