@@ -42,17 +42,19 @@ var Gun = function(size, owner) {
 
 	function fire() {
 		var ball = new Projectile(size*.75,Utils.convertToHeading(owner.rotation+gun.rotation), owner);
-		var pos = gun.localToLocal(0,0,owner.parent);
+		var pos = gun.localToLocal(0,-length,owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
 		owner.parent.addChildAt(ball, 2);
 
-		for (var i = 0; i < size*2; i++) {
-			var smoke = new Particles.Smoke(90);
-			smoke.y = -length;
-			smoke.rotation = -45;
-			smoke.animate();
-			gun.addChild(smoke);
+		for (var i = 0; i < size; i++) {
+			var smoke = new Particles.Smoke(60);
+			smoke.x = pos.x;
+			smoke.y = pos.y;
+			smoke.rotation = owner.rotation+gun.rotation-30;
+			var momentum = Utils.getAxisSpeed(owner.heading,owner.speed);
+			smoke.animate(momentum);
+			owner.parent.addChild(smoke);
 		};
 
 		recoil();

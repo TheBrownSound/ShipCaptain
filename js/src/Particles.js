@@ -14,30 +14,32 @@ var Particles = function() {
 		}
 
 		smoke.animate = function(momentum) {
-			momentum = momentum || 0;
+			momentum = momentum || {x:0,y:0};
 			var angle = Utils.getRandomInt(0,range);
 			var scale = Utils.getRandomFloat(.2,1);
 			var swirl = Utils.getRandomInt(-360, 360);
-			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(momentum,momentum+100));
+			var move = Utils.getAxisSpeed(angle+this.rotation, Utils.getRandomInt(50,100));
 			smoke.scaleX = smoke.scaleY = scale;
+			
+			var duration = 3000;
 
 			createjs.Tween.get(this,{loop:false})
 				.to({
-					x: smoke.x+move.x,
-					y: smoke.y-move.y
-				},3000,createjs.Ease.circOut);
+					x: (smoke.x+move.x)+(momentum.x*30),//30 seems to be the magic number for 60fps
+					y: (smoke.y-move.y)-(momentum.y*30)
+				},duration,createjs.Ease.circOut);
 
 			createjs.Tween.get(this,{loop:false})
 				.to({
 					scaleX: 0,
 					scaleY: 0
-				},3000,createjs.Ease.expoIn)
+				},duration,createjs.Ease.expoIn)
 				.call(dissapate);
 			
 			createjs.Tween.get(img,{loop:false})
 				.to({
 					rotation: swirl
-				},3000,createjs.Ease.circOut)
+				},duration,createjs.Ease.circOut)
 				
 		}
 
