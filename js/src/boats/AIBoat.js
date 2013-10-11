@@ -75,8 +75,8 @@ var AIBoat = function() {
 	function getAttackPosition(enemy) {
 		var leadAmount = 120;
 		var attackPositions = {
-			left: enemy.localToLocal(-leadAmount, 0, boat.parent),
-			right: enemy.localToLocal(leadAmount, 0, boat.parent)
+			left: enemy.localToLocal(-leadAmount, -leadAmount, boat.parent),
+			right: enemy.localToLocal(leadAmount, -leadAmount, boat.parent)
 		}
 
 		var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});

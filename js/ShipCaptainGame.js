@@ -760,18 +760,31 @@ var PlayerBoat = function() {
 	boat.addSail(mainSail);
 
 	// GUNS!
-	var portGun = new Gun(4, 10, boat);
-	var starboardGun = new Gun(4, 10, boat);
-	portGun.boatLocation = "port";
-	starboardGun.boatLocation = "starboard";
-	portGun.y = starboardGun.y = 58;
-	portGun.x = -16;
-	starboardGun.x = 16;
-	portGun.rotation = -90;
-	starboardGun.rotation = 90;
 
-	boat.addGun(portGun);
-	boat.addGun(starboardGun);
+	var bowGun = new Gun(8, 30, boat);
+
+	var portGun1 = new Gun(4, 10, boat);
+	var portGun2 = new Gun(4, 10, boat);
+
+	var starboardGun1 = new Gun(4, 10, boat);
+	var starboardGun2 = new Gun(4, 10, boat);
+
+	bowGun.boatLocation = "bow";
+	portGun1.boatLocation = portGun2.boatLocation = "port";
+	starboardGun1.boatLocation = starboardGun2.boatLocation = "starboard";
+	bowGun.y = 28;
+	portGun1.y = starboardGun1.y = 58;
+	portGun2.y = starboardGun2.y = 96;
+	portGun1.x = portGun2.x = -16;
+	starboardGun1.x = starboardGun2.x = 16;
+	portGun1.rotation = portGun2.rotation = -90;
+	starboardGun1.rotation = starboardGun2.rotation = 90;
+
+	boat.addGun(bowGun);
+	boat.addGun(portGun1);
+	boat.addGun(portGun2);
+	boat.addGun(starboardGun1);
+	boat.addGun(starboardGun2);
 
 	var proximityCheck = setInterval(checkProximity, 100);
 
@@ -818,7 +831,7 @@ var PlayerBoat = function() {
 				boat.fireGuns("port");
 				break;
 			case 87: // W
-				boat.fireGuns("head");
+				boat.fireGuns("bow");
 				break;
 			case 69: // E
 				boat.fireGuns("starboard");
@@ -841,7 +854,7 @@ var PlayerBoat = function() {
 		for (var gun in boat.guns) {
 			var cannon = boat.guns[gun];
 			if (location === "all" || cannon.boatLocation === location) {
-				cannon.shoot();
+				setTimeout(cannon.shoot, Utils.getRandomInt(50,200));
 			}
 		}
 
@@ -932,8 +945,8 @@ var AIBoat = function() {
 	function getAttackPosition(enemy) {
 		var leadAmount = 120;
 		var attackPositions = {
-			left: enemy.localToLocal(-leadAmount, 0, boat.parent),
-			right: enemy.localToLocal(leadAmount, 0, boat.parent)
+			left: enemy.localToLocal(-leadAmount, -leadAmount, boat.parent),
+			right: enemy.localToLocal(leadAmount, -leadAmount, boat.parent)
 		}
 
 		var distanceFromLeft = Utils.distanceBetweenTwoPoints(attackPositions.left, {x:boat.x,y:boat.y});
