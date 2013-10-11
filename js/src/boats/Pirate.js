@@ -1,7 +1,6 @@
 var Pirate = function() {
 	var boat = new AIBoat();
 	
-
 	var LENGTH = 125;
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
 

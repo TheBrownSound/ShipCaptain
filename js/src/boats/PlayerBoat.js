@@ -17,13 +17,13 @@ var PlayerBoat = function() {
 	boat.addSail(mainSail);
 
 	// GUNS!
-	var portGun = new Gun(6, 18, boat);
-	var starboardGun = new Gun(6, 18, boat);
+	var portGun = new Gun(4, 10, boat);
+	var starboardGun = new Gun(4, 10, boat);
 	portGun.boatLocation = "port";
 	starboardGun.boatLocation = "starboard";
 	portGun.y = starboardGun.y = 58;
-	portGun.x = -14;
-	starboardGun.x = 14;
+	portGun.x = -16;
+	starboardGun.x = 16;
 	portGun.rotation = -90;
 	starboardGun.rotation = 90;
 
