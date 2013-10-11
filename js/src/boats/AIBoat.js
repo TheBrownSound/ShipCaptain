@@ -42,7 +42,7 @@ var AIBoat = function() {
 	}
 
 	function checkStatus() {
-		if ((boat.life/boat.health) < 0.2 && _mode != 'evade' &&_currentTarget) {
+		if ((boat.life/boat.health) < 0.2 && _mode != 'evade' && _currentTarget) {
 			console.log('evade target');
 			evadeTarget(_currentTarget);
 		}
@@ -130,10 +130,10 @@ var AIBoat = function() {
 		enemy.removeEventListener('sunk', removeEnemy);
 
 		if (enemy === _currentTarget) {
+			_currentTarget = false;
 			if (_enemies.length > 0) {
 				attackTarget(_enemies[0]);
 			} else {
-				_currentTarget = false;
 				_mode = 'wander';
 			}
 		}

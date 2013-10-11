@@ -66,6 +66,7 @@ var Boat = (function() {
 
 	function sink() {
 		console.log('sunk');
+		boat.dispatchEvent('sunk');
 
 		//Smoke
 		for (var i = 0; i < 40; i++) {
@@ -87,7 +88,6 @@ var Boat = (function() {
 		
 		createjs.Ticker.removeEventListener("tick", update);
 		boat.parent.removeChild(boat);
-		boat.dispatchEvent('sunk');
 	}
 
 	function getCurrentAgility() {
