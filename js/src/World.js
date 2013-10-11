@@ -22,6 +22,9 @@ var World = function(playerBoat){
 
 	addBoat(playerBoat);
 
+	//Start playing water sound
+	createjs.Sound.play("water");
+
 	function addBoat(boat) {
 		if (world.ships.length < 5) {
 			console.log('adding boat', boat);

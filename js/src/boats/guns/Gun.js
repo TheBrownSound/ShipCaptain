@@ -44,6 +44,7 @@ var Gun = function(caliber, length, owner) {
 	function fire() {
 		var angle = Utils.convertToHeading(owner.rotation+gun.rotation)
 		//var accuracy = (caliber/length)*maximumInaccuracy;
+		createjs.Sound.play("cannon");
 
 		var ball = new Projectile(caliber*.75,angle, owner);
 		var pos = gun.localToLocal(0,-length,owner.parent);

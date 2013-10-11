@@ -291,6 +291,9 @@ var World = function(playerBoat){
 
 	addBoat(playerBoat);
 
+	//Start playing water sound
+	createjs.Sound.play("water");
+
 	function addBoat(boat) {
 		if (world.ships.length < 5) {
 			console.log('adding boat', boat);
@@ -1333,6 +1336,7 @@ var Gun = function(caliber, length, owner) {
 	function fire() {
 		var angle = Utils.convertToHeading(owner.rotation+gun.rotation)
 		//var accuracy = (caliber/length)*maximumInaccuracy;
+		createjs.Sound.play("cannon");
 
 		var ball = new Projectile(caliber*.75,angle, owner);
 		var pos = gun.localToLocal(0,-length,owner.parent);
