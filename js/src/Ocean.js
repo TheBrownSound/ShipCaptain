@@ -22,7 +22,7 @@ var Ocean = function(width, height){
 	ocean.addChild(underwater, tide);
 
 	function moveTide() {
-		tide.x = ocean.position.x % 200;
+		tide.x = ocean.position.x % 100;
 		tide.y = ocean.position.y % 150;
 	}
 
