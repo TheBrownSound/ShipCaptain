@@ -639,6 +639,8 @@ var Boat = (function() {
 	}
 
 	boat.cannonHit = function(damageAmount, location) {
+		createjs.Sound.play("hit").setVolume(0.5);
+		createjs.Sound.play("small_explosion");
 		var dmg = Math.round(damageAmount);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();
@@ -1478,6 +1480,8 @@ var Game = (function(){
 
 		manifest = [
 			{src:"sounds/cannon_fire.mp3", id:"cannon", data:soundInstanceLimit},
+			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
+			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
 			{src:"images/tide_repeat.png", id:"waves"}
 		];

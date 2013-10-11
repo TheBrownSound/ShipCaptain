@@ -167,6 +167,8 @@ var Boat = (function() {
 	}
 
 	boat.cannonHit = function(damageAmount, location) {
+		createjs.Sound.play("hit").setVolume(0.5);
+		createjs.Sound.play("small_explosion");
 		var dmg = Math.round(damageAmount);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();

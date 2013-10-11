@@ -52,6 +52,8 @@ var Game = (function(){
 
 		manifest = [
 			{src:"sounds/cannon_fire.mp3", id:"cannon", data:soundInstanceLimit},
+			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
+			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
 			{src:"images/tide_repeat.png", id:"waves"}
 		];
