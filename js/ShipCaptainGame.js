@@ -267,7 +267,7 @@ var Viewport = function(container) {
 
 	return viewport;
 }
-// Main world class
+// Top Down world class
 var World = function(playerBoat){
 	var world = new createjs.Container();
 	world.name = 'world';
@@ -292,7 +292,7 @@ var World = function(playerBoat){
 	addBoat(playerBoat);
 
 	//Start playing water sound
-	createjs.Sound.play("water");
+	createjs.Sound.play("water", {loop:-1});
 
 	function addBoat(boat) {
 		if (world.ships.length < 5) {
@@ -1597,7 +1597,7 @@ var Game = (function(){
 	}
 
 	function fileLoaded(event) {
-		console.log('handleFileLoad: ', event);
+		//console.log('handleFileLoad: ', event);
 		_preloadAssets.push(event.item);
 	}
 
@@ -1605,7 +1605,7 @@ var Game = (function(){
 		console.log('startGame')
 		game.assets = {};
 		for (var i = 0; i < _preloadAssets.length; i++) {
-			console.log(_preloadAssets[i]);
+			//console.log(_preloadAssets[i]);
 			game.assets[_preloadAssets[i].id] = preloader.getResult(_preloadAssets[i].id);
 		};
 		console.log('Game.assets', game.assets);

@@ -1,4 +1,4 @@
-// Main world class
+// Top Down world class
 var World = function(playerBoat){
 	var world = new createjs.Container();
 	world.name = 'world';
@@ -23,7 +23,7 @@ var World = function(playerBoat){
 	addBoat(playerBoat);
 
 	//Start playing water sound
-	createjs.Sound.play("water");
+	createjs.Sound.play("water", {loop:-1});
 
 	function addBoat(boat) {
 		if (world.ships.length < 5) {

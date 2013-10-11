@@ -69,7 +69,7 @@ var Game = (function(){
 	}
 
 	function fileLoaded(event) {
-		console.log('handleFileLoad: ', event);
+		//console.log('handleFileLoad: ', event);
 		_preloadAssets.push(event.item);
 	}
 
@@ -77,7 +77,7 @@ var Game = (function(){
 		console.log('startGame')
 		game.assets = {};
 		for (var i = 0; i < _preloadAssets.length; i++) {
-			console.log(_preloadAssets[i]);
+			//console.log(_preloadAssets[i]);
 			game.assets[_preloadAssets[i].id] = preloader.getResult(_preloadAssets[i].id);
 		};
 		console.log('Game.assets', game.assets);
