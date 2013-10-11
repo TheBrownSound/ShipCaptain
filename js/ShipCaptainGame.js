@@ -927,9 +927,15 @@ var AIBoat = function() {
 	var lookInterval = setInterval(checkSurroundings, 100); //React 10 times every second
 
 	function moveBoat() {
-		if (_mode === 'combat' && _currentTarget) {
-			var attackPosition = getAttackPosition(_currentTarget);
-			sailToDestination(attackPosition);
+
+		if (_currentTarget) {
+			if (_mode === 'combat') {
+				var attackPosition = getAttackPosition(_currentTarget);
+				sailToDestination(attackPosition);
+			} else if (_mode === 'evade') {
+				var evadeHeading = Utils.getRandomInt(_currentTarget.heading-90, _currentTarget.heading+90)
+				sailToDestination(Utils.convertToHeading(evadeHeading));
+			}
 		} else if (_mode === 'wander') {
 			wander();
 		}
@@ -944,7 +950,7 @@ var AIBoat = function() {
 	}
 
 	function checkSurroundings() {
-		if (_mode === 'combat' && _currentTarget) {
+		if (_currentTarget) {
 			for (var gun in boat.guns) {
 				var cannon = boat.guns[gun];
 				if (cannon.isInRange(_currentTarget)) {
@@ -952,6 +958,13 @@ var AIBoat = function() {
 				}
 			}
 		} 
+	}
+
+	function checkStatus() {
+		if ((boat.life/boat.health) < 0.2 && _mode != 'evade' &&_currentTarget) {
+			console.log('evade target');
+			evadeTarget(_currentTarget);
+		}
 	}
 
 	function sailToDestination(location) {
@@ -1008,13 +1021,25 @@ var AIBoat = function() {
 		}
 	}
 
+	function getEvadePosition(enemy) {
+		var runAmount = 2000;
+
+	}
+
 	function clearChecks() {
 		clearInterval(moveInterval);
 		clearInterval(lookInterval);
+		boat.removeEventListener('damaged', checkStatus);
+		boat.removeEventListener('sunk', clearChecks);
 	}
 
 	function attackTarget(enemy) {
 		_mode = 'combat';
+		_currentTarget = enemy;
+	}
+
+	function evadeTarget(enemy) {
+		_mode = 'evade';
 		_currentTarget = enemy;
 	}
 
@@ -1046,9 +1071,8 @@ var AIBoat = function() {
 		_mode = 'evade';
 	}
 
-	boat.addEventListener('sunk', function(){
-		clearChecks();
-	});
+	boat.addEventListener('damaged', checkStatus);
+	boat.addEventListener('sunk', clearChecks);
 
 	return boat;
 }
