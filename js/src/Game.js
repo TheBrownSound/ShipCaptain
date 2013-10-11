@@ -38,11 +38,26 @@ var Game = (function(){
 		stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
 		stage.snapToPixelEnabled = true;
 
+		//Initialize sound
+		if (!createjs.Sound.initializeDefaultPlugins()) {
+			console.log('Sound plugin error!');
+			return;
+		}
+
+		var soundInstanceLimit = 100;// set our limit of sound instances
+		// check if we are using the HTMLAudioPlugin, and if so apply the MAX_INSTANCES to the above limit
+		if (createjs.Sound.activePlugin.toString() == "[HTMLAudioPlugin]") {
+			soundInstanceLimit = createjs.HTMLAudioPlugin.MAX_INSTANCES - 5;
+		}
+
 		manifest = [
+			{src:"sounds/cannon_fire.mp3", id:"cannon", data:soundInstanceLimit},
+			{src:"sounds/water.mp3", id:"water"},
 			{src:"images/tide_repeat.png", id:"waves"}
 		];
 
 		preloader = new createjs.LoadQueue(false);
+		preloader.installPlugin(createjs.Sound);
 		preloader.onFileLoad = fileLoaded;
 		preloader.onComplete = startGame;
 		preloader.loadManifest(manifest);
