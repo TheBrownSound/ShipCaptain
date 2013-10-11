@@ -414,6 +414,39 @@ var HealthMeter = function(boat) {
 
 	return meter;
 }
+
+var SpeedMeter = function(boat) {
+	var meter = new createjs.Container();
+	meter.width = 20;
+	meter.height = 100;
+
+	var bg = new createjs.Shape();
+	bg.graphics.beginFill('#333');
+	bg.graphics.rect(0,0,meter.width,meter.height);
+	bg.graphics.endFill();
+
+	var bar = new createjs.Shape();
+	bar.graphics.beginFill('#BADA55');
+	bar.graphics.rect(2,2,meter.width-4,meter.height-4);
+	bar.graphics.endFill();
+	bar.y = bar.regY = meter.height-4;
+
+	var speed = new createjs.Shape();
+	speed.graphics.beginFill('#BAD');
+	speed.graphics.rect(2,2,meter.width-4,meter.height-4);
+	speed.graphics.endFill();
+	speed.y = speed.regY = meter.height-4;
+
+	meter.addChild(bg,bar,speed);
+
+	function updateSpeed() {
+		bar.scaleY = boat.potentialSpeed/boat.topSpeed;
+		speed.scaleY = boat.speed/boat.topSpeed;
+	}
+
+	createjs.Ticker.addEventListener('tick', updateSpeed);
+	return meter;
+}
 var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
@@ -474,15 +507,16 @@ var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
 	var _agility = 1;
-
-	var _turningLeft = false;
-	var _turningRight = false;
+	
+	// Movement Properties
+	var _topSpeed = 0;
 	var _speed = 0;
 	var _limit = 10;
 	var _heading = 0;
-	var _trim = 0;
+	
 	var _furled = true;
 
+	// Health Properties
 	var _life = 100;
 	var _health = 100;
 
@@ -507,20 +541,18 @@ var Boat = (function() {
 	boat.turnRight = helm.turnRight;
 
 	function speedCalc() {
-		var topSpeed = 0;
 		var potentialSpeed = 0;
 
 		for (var i = 0; i < boat.sails.length; i++) {
 			var sail = boat.sails[i];
-			topSpeed += sail.speed;
 			potentialSpeed += sail.power;
 		};
 
 		if (_life > 0) {
-			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
-			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
+			potentialSpeed = (potentialSpeed/boat.sails.length)*_topSpeed;
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
+
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .005;
@@ -585,6 +617,14 @@ var Boat = (function() {
 
 	boat.addSail = function(sail, position) {
 		this.sails.push(sail);
+
+		// Recalculate top speed
+		var topSpeed = 0;
+		for (var i = 0; i < this.sails.length; i++) {
+			topSpeed += this.sails[i].speed;
+		};
+		var diminishingReturns = 1/Math.sqrt(this.sails.length);
+		_topSpeed = topSpeed*diminishingReturns;
 		this.addChild(sail);
 	}
 
@@ -620,6 +660,7 @@ var Boat = (function() {
 		boat.sails.map(function(sail){
 			sail.reef();
 		});
+		_limit = 0;
 	}
 
 	boat.hoistSails = function() {
@@ -675,6 +716,14 @@ var Boat = (function() {
 
 	boat.__defineGetter__('agility', function(){
 		return _agility;
+	});
+
+	boat.__defineGetter__('topSpeed', function(){
+		return _topSpeed;
+	});
+
+	boat.__defineGetter__('potentialSpeed', function(){
+		return _speed;
 	});
 
 	boat.__defineGetter__('speed', function(){
@@ -1480,8 +1529,11 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
+	// hud
 	var windGauge;
 	var healthMeter;
+	var speedMeter;
+	
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -1543,8 +1595,9 @@ var Game = (function(){
 
 		windGauge = new WindGauge();
 		healthMeter = new HealthMeter(playerBoat);
+		speedMeter = new SpeedMeter(playerBoat);
 
-		stage.addChild(viewport, windGauge, healthMeter);
+		stage.addChild(viewport, windGauge, healthMeter, speedMeter);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -1559,8 +1612,9 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			windGauge.x = healthMeter.x = stage.canvas.width - padding;
-			windGauge.y = padding;
+			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
+			speedMeter.y = healthMeter.y;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}

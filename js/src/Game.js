@@ -25,8 +25,11 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
+	// hud
 	var windGauge;
 	var healthMeter;
+	var speedMeter;
+	
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -88,8 +91,9 @@ var Game = (function(){
 
 		windGauge = new WindGauge();
 		healthMeter = new HealthMeter(playerBoat);
+		speedMeter = new SpeedMeter(playerBoat);
 
-		stage.addChild(viewport, windGauge, healthMeter);
+		stage.addChild(viewport, windGauge, healthMeter, speedMeter);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -104,8 +108,9 @@ var Game = (function(){
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
 			windGauge.x = healthMeter.x = stage.canvas.width - padding;
-			windGauge.y = padding;
+			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
+			speedMeter.y = healthMeter.y;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}

@@ -2,15 +2,16 @@ var Boat = (function() {
 	var WIDTH = 56;
 	var LENGTH = 125;
 	var _agility = 1;
-
-	var _turningLeft = false;
-	var _turningRight = false;
+	
+	// Movement Properties
+	var _topSpeed = 0;
 	var _speed = 0;
 	var _limit = 10;
 	var _heading = 0;
-	var _trim = 0;
+	
 	var _furled = true;
 
+	// Health Properties
 	var _life = 100;
 	var _health = 100;
 
@@ -35,20 +36,18 @@ var Boat = (function() {
 	boat.turnRight = helm.turnRight;
 
 	function speedCalc() {
-		var topSpeed = 0;
 		var potentialSpeed = 0;
 
 		for (var i = 0; i < boat.sails.length; i++) {
 			var sail = boat.sails[i];
-			topSpeed += sail.speed;
 			potentialSpeed += sail.power;
 		};
 
 		if (_life > 0) {
-			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
-			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
+			potentialSpeed = (potentialSpeed/boat.sails.length)*_topSpeed;
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
+
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .005;
@@ -113,6 +112,14 @@ var Boat = (function() {
 
 	boat.addSail = function(sail, position) {
 		this.sails.push(sail);
+
+		// Recalculate top speed
+		var topSpeed = 0;
+		for (var i = 0; i < this.sails.length; i++) {
+			topSpeed += this.sails[i].speed;
+		};
+		var diminishingReturns = 1/Math.sqrt(this.sails.length);
+		_topSpeed = topSpeed*diminishingReturns;
 		this.addChild(sail);
 	}
 
@@ -148,6 +155,7 @@ var Boat = (function() {
 		boat.sails.map(function(sail){
 			sail.reef();
 		});
+		_limit = 0;
 	}
 
 	boat.hoistSails = function() {
@@ -203,6 +211,14 @@ var Boat = (function() {
 
 	boat.__defineGetter__('agility', function(){
 		return _agility;
+	});
+
+	boat.__defineGetter__('topSpeed', function(){
+		return _topSpeed;
+	});
+
+	boat.__defineGetter__('potentialSpeed', function(){
+		return _speed;
 	});
 
 	boat.__defineGetter__('speed', function(){

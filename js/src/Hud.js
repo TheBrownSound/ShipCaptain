@@ -44,3 +44,36 @@ var HealthMeter = function(boat) {
 
 	return meter;
 }
+
+var SpeedMeter = function(boat) {
+	var meter = new createjs.Container();
+	meter.width = 20;
+	meter.height = 100;
+
+	var bg = new createjs.Shape();
+	bg.graphics.beginFill('#333');
+	bg.graphics.rect(0,0,meter.width,meter.height);
+	bg.graphics.endFill();
+
+	var bar = new createjs.Shape();
+	bar.graphics.beginFill('#BADA55');
+	bar.graphics.rect(2,2,meter.width-4,meter.height-4);
+	bar.graphics.endFill();
+	bar.y = bar.regY = meter.height-4;
+
+	var speed = new createjs.Shape();
+	speed.graphics.beginFill('#BAD');
+	speed.graphics.rect(2,2,meter.width-4,meter.height-4);
+	speed.graphics.endFill();
+	speed.y = speed.regY = meter.height-4;
+
+	meter.addChild(bg,bar,speed);
+
+	function updateSpeed() {
+		bar.scaleY = boat.potentialSpeed/boat.topSpeed;
+		speed.scaleY = boat.speed/boat.topSpeed;
+	}
+
+	createjs.Ticker.addEventListener('tick', updateSpeed);
+	return meter;
+}
