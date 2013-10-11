@@ -19,6 +19,8 @@ var PlayerBoat = function() {
 	// GUNS!
 	var portGun = new Gun(6, 18, boat);
 	var starboardGun = new Gun(6, 18, boat);
+	portGun.boatLocation = "port";
+	starboardGun.boatLocation = "starboard";
 	portGun.y = starboardGun.y = 58;
 	portGun.x = -14;
 	starboardGun.x = 14;
@@ -68,7 +70,15 @@ var PlayerBoat = function() {
 				boat.decreaseSpeed();
 				break;
 			case 32: // Space
-				boat.toggleFireMode();
+				boat.fireGuns("all");
+			case 81: // Q
+				boat.fireGuns("port");
+				break;
+			case 87: // W
+				boat.fireGuns("head");
+				break;
+			case 69: // E
+				boat.fireGuns("starboard");
 		}
 	});
 
@@ -83,6 +93,16 @@ var PlayerBoat = function() {
 				break;
 		}
 	});
+
+	boat.fireGuns = function(location) {
+		for (var gun in boat.guns) {
+			var cannon = boat.guns[gun];
+			if (location === "all" || cannon.boatLocation === location) {
+				cannon.shoot();
+			}
+		}
+
+	}
 
 	boat.toggleFireMode = function() {
 		_fireAtWill = !_fireAtWill;
