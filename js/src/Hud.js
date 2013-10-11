@@ -1,4 +1,4 @@
-var Gauge = function() {
+var WindGauge = function() {
 	var gauge = new createjs.Container();
 	gauge.width = gauge.height = 100;
 
@@ -18,4 +18,29 @@ var Gauge = function() {
 
 	createjs.Ticker.addEventListener('tick', updateGauge);
 	return gauge;
+}
+
+var HealthMeter = function(boat) {
+	var meter = new createjs.Container();
+	meter.width = 20;
+	meter.height = 100;
+
+	var bg = new createjs.Shape();
+	bg.graphics.beginFill('#333');
+	bg.graphics.rect(0,0,meter.width,meter.height);
+	bg.graphics.endFill();
+
+	var bar = new createjs.Shape();
+	bar.graphics.beginFill('#F00');
+	bar.graphics.rect(2,2,meter.width-4,meter.height-4);
+	bar.graphics.endFill();
+	bar.y = bar.regY = meter.height-4;
+
+	meter.addChild(bg,bar);
+
+	boat.addEventListener('damaged', function(damage) {
+		bar.scaleY = boat.life/boat.health;
+	});
+
+	return meter;
 }

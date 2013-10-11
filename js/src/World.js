@@ -1,13 +1,13 @@
 // Main world class
-var World = function(){
+var World = function(playerBoat){
 	var world = new createjs.Container();
 	world.name = 'world';
 	world.ships = [];
+	world.playerBoat = playerBoat;
 
 	var map = world.map = new createjs.Container();
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
-	var playerBoat = world.playerBoat = new PlayerBoat();
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;

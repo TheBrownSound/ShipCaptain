@@ -11,6 +11,7 @@ var Boat = (function() {
 	var _trim = 0;
 	var _furled = true;
 
+	var _life = 100;
 	var _health = 100;
 
 	var bubbleTick = 0;
@@ -43,7 +44,7 @@ var Boat = (function() {
 			potentialSpeed += sail.power;
 		};
 
-		if (_health > 0) {
+		if (_life > 0) {
 			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
 			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
@@ -179,18 +180,23 @@ var Boat = (function() {
 	}
 
 	boat.damage = function(amount) {
-		if (_health > 0) {
-			_health -= amount;
-			if (_health <= 0) {
-				_health = 0;
+		if (_life > 0) {
+			_life -= amount;
+			if (_life <= 0) {
+				_life = 0;
 				sink();
 			}
+			boat.dispatchEvent('damaged', amount);
 		}
 	}
 
 	// Getters
 	boat.__defineGetter__('health', function(){
 		return _health;
+	});
+
+	boat.__defineGetter__('life', function(){
+		return _life;
 	});
 
 	boat.__defineGetter__('agility', function(){

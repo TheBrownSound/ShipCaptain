@@ -218,12 +218,10 @@ var Viewport = function(container) {
 	var viewport = new createjs.Container();
 	viewport.name = 'viewport';
 
-	var gauge = new Gauge();
-
 	container.x = _width/2;
 	container.y = _height/2;
 
-	viewport.addChild(container, gauge);
+	viewport.addChild(container);
 
 	function changeScale(inc) {
 		currentScale += inc;
@@ -255,9 +253,6 @@ var Viewport = function(container) {
 		_width = width;
 		_height = height;
 
-		gauge.x = width - 75;
-		gauge.y = 75;
-
 		container.x = width/2;
 		container.y = height/2;
 	}
@@ -273,15 +268,15 @@ var Viewport = function(container) {
 	return viewport;
 }
 // Main world class
-var World = function(){
+var World = function(playerBoat){
 	var world = new createjs.Container();
 	world.name = 'world';
 	world.ships = [];
+	world.playerBoat = playerBoat;
 
 	var map = world.map = new createjs.Container();
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
-	var playerBoat = world.playerBoat = new PlayerBoat();
 
 	var island = new createjs.Bitmap("images/island.png");
 	island.y = -2000;
@@ -370,7 +365,7 @@ var World = function(){
 	createjs.Ticker.addEventListener("tick", update);
 	return world;
 }
-var Gauge = function() {
+var WindGauge = function() {
 	var gauge = new createjs.Container();
 	gauge.width = gauge.height = 100;
 
@@ -390,6 +385,31 @@ var Gauge = function() {
 
 	createjs.Ticker.addEventListener('tick', updateGauge);
 	return gauge;
+}
+
+var HealthMeter = function(boat) {
+	var meter = new createjs.Container();
+	meter.width = 20;
+	meter.height = 100;
+
+	var bg = new createjs.Shape();
+	bg.graphics.beginFill('#333');
+	bg.graphics.rect(0,0,meter.width,meter.height);
+	bg.graphics.endFill();
+
+	var bar = new createjs.Shape();
+	bar.graphics.beginFill('#F00');
+	bar.graphics.rect(2,2,meter.width-4,meter.height-4);
+	bar.graphics.endFill();
+	bar.y = bar.regY = meter.height-4;
+
+	meter.addChild(bg,bar);
+
+	boat.addEventListener('damaged', function(damage) {
+		bar.scaleY = boat.life/boat.health;
+	});
+
+	return meter;
 }
 var Ocean = function(width, height){
 	//Constants
@@ -460,6 +480,7 @@ var Boat = (function() {
 	var _trim = 0;
 	var _furled = true;
 
+	var _life = 100;
 	var _health = 100;
 
 	var bubbleTick = 0;
@@ -492,7 +513,7 @@ var Boat = (function() {
 			potentialSpeed += sail.power;
 		};
 
-		if (_health > 0) {
+		if (_life > 0) {
 			var diminishingReturns = 1/Math.sqrt(boat.sails.length);
 			potentialSpeed = (potentialSpeed/boat.sails.length)*(topSpeed*diminishingReturns);
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
@@ -628,18 +649,23 @@ var Boat = (function() {
 	}
 
 	boat.damage = function(amount) {
-		if (_health > 0) {
-			_health -= amount;
-			if (_health <= 0) {
-				_health = 0;
+		if (_life > 0) {
+			_life -= amount;
+			if (_life <= 0) {
+				_life = 0;
 				sink();
 			}
+			boat.dispatchEvent('damaged', amount);
 		}
 	}
 
 	// Getters
 	boat.__defineGetter__('health', function(){
 		return _health;
+	});
+
+	boat.__defineGetter__('life', function(){
+		return _life;
 	});
 
 	boat.__defineGetter__('agility', function(){
@@ -1421,7 +1447,8 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
-	var world;
+	var windGauge;
+	var healthMeter;
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -1457,14 +1484,17 @@ var Game = (function(){
 		};
 		console.log('Game.assets', game.assets);
 
-		var world = game.world = new World();
-		viewport = new Viewport(world);
+		var playerBoat = new PlayerBoat();
+		var world = game.world = new World(playerBoat);
 		
-
+		viewport = new Viewport(world);
 		viewport.width = stage.canvas.width;
 		viewport.height = stage.canvas.height;
 
-		stage.addChild(viewport);
+		windGauge = new WindGauge();
+		healthMeter = new HealthMeter(playerBoat);
+
+		stage.addChild(viewport, windGauge, healthMeter);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -1475,8 +1505,12 @@ var Game = (function(){
 
 	function sizeCanvas() {
 		if (viewport) {
+			var padding = 75;
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
+			windGauge.x = healthMeter.x = stage.canvas.width - padding;
+			windGauge.y = padding;
+			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}

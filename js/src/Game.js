@@ -3,7 +3,7 @@
 // @depends Particles.js
 // @depends Viewport.js
 // @depends World.js
-// @depends Gauge.js
+// @depends Hud.js
 // @depends Ocean.js
 // @depends Weather.js
 // @depends boats/Boat.js
@@ -25,7 +25,8 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
-	var world;
+	var windGauge;
+	var healthMeter;
 	var preloader;
 
 	game.init = function(canvasId) {
@@ -61,14 +62,17 @@ var Game = (function(){
 		};
 		console.log('Game.assets', game.assets);
 
-		var world = game.world = new World();
-		viewport = new Viewport(world);
+		var playerBoat = new PlayerBoat();
+		var world = game.world = new World(playerBoat);
 		
-
+		viewport = new Viewport(world);
 		viewport.width = stage.canvas.width;
 		viewport.height = stage.canvas.height;
 
-		stage.addChild(viewport);
+		windGauge = new WindGauge();
+		healthMeter = new HealthMeter(playerBoat);
+
+		stage.addChild(viewport, windGauge, healthMeter);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -79,8 +83,12 @@ var Game = (function(){
 
 	function sizeCanvas() {
 		if (viewport) {
+			var padding = 75;
 			stage.canvas.width = window.innerWidth;
 			stage.canvas.height = window.innerHeight;
+			windGauge.x = healthMeter.x = stage.canvas.width - padding;
+			windGauge.y = padding;
+			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}
