@@ -22,6 +22,10 @@ var Utils = function() {
 		}
 	}
 
+	utils.getTotalSpeed = function(xSpeed, ySpeed) {
+		return Math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
+	}
+
 	utils.headingDifference = function(headingOne, headingTwo) {
 		var angle = (headingTwo - headingOne)%360;
 		if (angle > 180) {
@@ -342,20 +346,21 @@ var World = function(playerBoat){
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
 
 		// collision detection
-		/*
 		for (var ship in world.ships) {
 			var boat = world.ships[ship];
 			for (var otherShip in world.ships) {
 				var otherBoat = world.ships[otherShip];
 				if (boat != otherBoat) {
-					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull);
+					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull, 0, true);
 					if (hitRect) {
-						boat.collision(hitRect);
+						var localPos = boat.globalToLocal(hitRect.x,hitRect.y)
+						hitRect.x = localPos.x;
+						hitRect.y = localPos.y;
+						boat.collision(otherBoat, hitRect);
 					}
 				}
 			}
 		}
-		*/
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -380,14 +385,16 @@ var World = function(playerBoat){
 
 	addBoat(testBoat);
 
-	var testRect = new createjs.Shape();
-	playerBoat.addChild(testRect);
+	//var testRect = new createjs.Shape();
+	//playerBoat.addChild(testRect);
 
 	Game.stage.onMouseDown = function(e) {
-		var location = Game.world.playerBoat.globalToLocal(e.stageX,e.stageY);
-		//console.log(location);
+		var location = world.globalToLocal(e.stageX,e.stageY);
+		console.log(location);
+		
 		testBoat.x = location.x;
 		testBoat.y = location.y;
+		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
 		var hitLocation = playerBoat.globalToLocal(hitRect.x,hitRect.y)
@@ -400,6 +407,7 @@ var World = function(playerBoat){
 		if (hitRect) {
 			playerBoat.collision({x:hitLocation.x,y:hitLocation.y});
 		}
+		*/
 	}
 
 	world.addPirate = addPirate;
@@ -550,6 +558,8 @@ var Boat = (function() {
 	// Movement Properties
 	var _topSpeed = 0;
 	var _speed = 0;
+	var _xspeed = 0;
+	var _yspeed = 0;
 	var _limit = 10;
 	var _heading = 0;
 	
@@ -600,6 +610,10 @@ var Boat = (function() {
 				_speed += .01;
 			}
 		}
+
+		var axisSpeed = Utils.getAxisSpeed(boat.heading, _speed);
+		_xspeed = axisSpeed.x
+		_yspeed = axisSpeed.y
 	}
 
 	function adjustTrim() {
@@ -737,9 +751,21 @@ var Boat = (function() {
 	var hitMarker = Utils.getDebugMarker();
 	boat.addChild(hitMarker);
 
-	boat.collision = function(location) {
+	boat.collision = function(ship, location) {
+		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
+		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+
+		crashVeloX = shipVelocity.x + boatVelocity.x
+		crashVeloY = shipVelocity.y + boatVelocity.y
+		console.log(crashVeloX);
+
+		//this.x += crashVeloX;
+		//this.y -= crashVeloY;
+		
+		/*
 		hitMarker.x = location.x;
 		hitMarker.y = location.y;
+		*/
 	}
 
 	boat.damage = function(amount) {
@@ -828,10 +854,9 @@ var Boat = (function() {
 			boat.parent.addChildAt(bubble, 0);
 		}
 
-		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
-		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
-		boat.x += xAmount;
-		boat.y -= yAmount;
+		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
+		boat.x += axisSpeed.x;
+		boat.y -= axisSpeed.y;
 
 		boat.dispatchEvent('moved');
 	}

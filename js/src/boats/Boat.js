@@ -6,6 +6,8 @@ var Boat = (function() {
 	// Movement Properties
 	var _topSpeed = 0;
 	var _speed = 0;
+	var _xspeed = 0;
+	var _yspeed = 0;
 	var _limit = 10;
 	var _heading = 0;
 	
@@ -56,6 +58,10 @@ var Boat = (function() {
 				_speed += .01;
 			}
 		}
+
+		var axisSpeed = Utils.getAxisSpeed(boat.heading, _speed);
+		_xspeed = axisSpeed.x
+		_yspeed = axisSpeed.y
 	}
 
 	function adjustTrim() {
@@ -193,9 +199,21 @@ var Boat = (function() {
 	var hitMarker = Utils.getDebugMarker();
 	boat.addChild(hitMarker);
 
-	boat.collision = function(location) {
+	boat.collision = function(ship, location) {
+		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
+		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+
+		crashVeloX = shipVelocity.x + boatVelocity.x
+		crashVeloY = shipVelocity.y + boatVelocity.y
+		console.log(crashVeloX);
+
+		//this.x += crashVeloX;
+		//this.y -= crashVeloY;
+		
+		/*
 		hitMarker.x = location.x;
 		hitMarker.y = location.y;
+		*/
 	}
 
 	boat.damage = function(amount) {
@@ -284,10 +302,9 @@ var Boat = (function() {
 			boat.parent.addChildAt(bubble, 0);
 		}
 
-		var xAmount = Math.sin(boat.heading*Math.PI/180)*boat.speed;
-		var yAmount = Math.cos(boat.heading*Math.PI/180)*boat.speed;
-		boat.x += xAmount;
-		boat.y -= yAmount;
+		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
+		boat.x += axisSpeed.x;
+		boat.y -= axisSpeed.y;
 
 		boat.dispatchEvent('moved');
 	}

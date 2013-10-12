@@ -21,6 +21,10 @@ var Utils = function() {
 		}
 	}
 
+	utils.getTotalSpeed = function(xSpeed, ySpeed) {
+		return Math.sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
+	}
+
 	utils.headingDifference = function(headingOne, headingTwo) {
 		var angle = (headingTwo - headingOne)%360;
 		if (angle > 180) {

@@ -73,20 +73,21 @@ var World = function(playerBoat){
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
 
 		// collision detection
-		/*
 		for (var ship in world.ships) {
 			var boat = world.ships[ship];
 			for (var otherShip in world.ships) {
 				var otherBoat = world.ships[otherShip];
 				if (boat != otherBoat) {
-					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull);
+					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull, 0, true);
 					if (hitRect) {
-						boat.collision(hitRect);
+						var localPos = boat.globalToLocal(hitRect.x,hitRect.y)
+						hitRect.x = localPos.x;
+						hitRect.y = localPos.y;
+						boat.collision(otherBoat, hitRect);
 					}
 				}
 			}
 		}
-		*/
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -111,14 +112,16 @@ var World = function(playerBoat){
 
 	addBoat(testBoat);
 
-	var testRect = new createjs.Shape();
-	playerBoat.addChild(testRect);
+	//var testRect = new createjs.Shape();
+	//playerBoat.addChild(testRect);
 
 	Game.stage.onMouseDown = function(e) {
-		var location = Game.world.playerBoat.globalToLocal(e.stageX,e.stageY);
-		//console.log(location);
+		var location = world.globalToLocal(e.stageX,e.stageY);
+		console.log(location);
+		
 		testBoat.x = location.x;
 		testBoat.y = location.y;
+		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
 		var hitLocation = playerBoat.globalToLocal(hitRect.x,hitRect.y)
@@ -131,6 +134,7 @@ var World = function(playerBoat){
 		if (hitRect) {
 			playerBoat.collision({x:hitLocation.x,y:hitLocation.y});
 		}
+		*/
 	}
 
 	world.addPirate = addPirate;
