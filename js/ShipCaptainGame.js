@@ -604,8 +604,8 @@ var Boat = (function() {
 
 		var potentialAxisSpeed = Utils.getAxisSpeed(boat.heading, potentialSpeed);
 
-		potentialAxisSpeed.x = Math.round( potentialAxisSpeed.x * 1000) / 1000;
-		potentialAxisSpeed.y = Math.round( potentialAxisSpeed.y * 1000) / 1000;
+		potentialAxisSpeed.x = Math.abs(Math.round( potentialAxisSpeed.x * 1000) / 1000);
+		potentialAxisSpeed.y = Math.abs(Math.round( potentialAxisSpeed.y * 1000) / 1000);
 
 		if (_xspeed != potentialAxisSpeed.x) {
 			if (_xspeed > potentialAxisSpeed.x) {
@@ -622,11 +622,6 @@ var Boat = (function() {
 				_yspeed += .01;
 			}
 		}
-
-		_xspeed += crashVelocity.x;
-		_yspeed += crashVelocity.y;
-
-		crashVelocity = {x:0,y:0};
 	}
 
 	function adjustTrim() {
@@ -727,7 +722,6 @@ var Boat = (function() {
 		boat.sails.map(function(sail){
 			sail.reef();
 		});
-		_limit = 0;
 	}
 
 	boat.hoistSails = function() {
