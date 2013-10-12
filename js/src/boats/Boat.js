@@ -19,13 +19,14 @@ var Boat = (function() {
 	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
-	boat.regY = LENGTH/2;
+	//boat.regY = LENGTH/2;
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
-	var hull = new createjs.Bitmap('images/small_boat.png');
+	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
 	var helm = new Helm(boat);
 	hull.x = -(WIDTH/2);
+	hull.y = -(LENGTH/2);
 
 	boat.sails = [];
 	boat.guns = [];
@@ -189,6 +190,14 @@ var Boat = (function() {
 		boat.damage(dmg);
 	}
 
+	var hitMarker = Utils.getDebugMarker();
+	boat.addChild(hitMarker);
+
+	boat.collision = function(location) {
+		hitMarker.x = location.x;
+		hitMarker.y = location.y;
+	}
+
 	boat.damage = function(amount) {
 		if (_life > 0) {
 			_life -= amount;
@@ -251,6 +260,7 @@ var Boat = (function() {
 		speedCalc();
 		var turnAmount = helm.turnAmount;
 		var windChange = oldWindHeading-Game.world.weather.wind.direction;
+		
 		if (turnAmount !== 0 || windChange !== 0) {
 			//console.log(windChange);
 			oldWindHeading = Game.world.weather.wind.direction;

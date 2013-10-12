@@ -67,7 +67,7 @@ var Utils = function() {
 	utils.getDebugMarker = function(){
 		var marker = new createjs.Shape();
 		marker.graphics.beginFill('#F00');
-		marker.graphics.drawCircle(0,0,10);
+		marker.graphics.drawCircle(0,0,2);
 		marker.graphics.endFill();
 		return marker;
 	}

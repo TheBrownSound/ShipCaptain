@@ -9,15 +9,14 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:LENGTH*.6}, {x:23,y:LENGTH*.6});
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH*.7});
-	squareRig.y = 35;
-	mainSail.y = 40;
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:-10}, {x:23,y:-10});
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
+	squareRig.y = -35;
+	mainSail.y = -30;
 	boat.addSail(squareRig);
 	boat.addSail(mainSail);
 
 	// GUNS!
-
 	var bowGun = new Gun(8, 30, boat);
 
 	var portGun1 = new Gun(4, 10, boat);
@@ -29,9 +28,9 @@ var PlayerBoat = function() {
 	bowGun.boatLocation = "bow";
 	portGun1.boatLocation = portGun2.boatLocation = "port";
 	starboardGun1.boatLocation = starboardGun2.boatLocation = "starboard";
-	bowGun.y = 28;
-	portGun1.y = starboardGun1.y = 58;
-	portGun2.y = starboardGun2.y = 96;
+	bowGun.y = -38;
+	portGun1.y = starboardGun1.y = 0;
+	portGun2.y = starboardGun2.y = 20;
 	portGun1.x = portGun2.x = -16;
 	starboardGun1.x = starboardGun2.x = 16;
 	portGun1.rotation = portGun2.rotation = -90;

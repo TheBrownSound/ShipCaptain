@@ -1,5 +1,7 @@
 // Top Down world class
 var World = function(playerBoat){
+	var _eventFrequency = 10000;
+
 	var world = new createjs.Container();
 	world.name = 'world';
 	world.ships = [];
@@ -22,38 +24,40 @@ var World = function(playerBoat){
 
 	addBoat(playerBoat);
 
+	//var eventTick = setInterval(eventSpawner, _eventFrequency);
+
 	//Start playing water sound
 	createjs.Sound.play("water", {loop:-1});
 
 	function addBoat(boat) {
-		if (world.ships.length < 5) {
-			console.log('adding boat', boat);
-			boat.addEventListener('sunk', function(){
-				var boatIndex = world.ships.indexOf(boat);
-				if (boatIndex >= 0) {
-					world.ships.splice(boatIndex, 1);
-				}
-			})
-			map.addChild(boat);
-			world.ships.push(boat);
-		}
+		console.log('adding boat', boat);
+		boat.addEventListener('sunk', function(){
+			var boatIndex = world.ships.indexOf(boat);
+			if (boatIndex >= 0) {
+				world.ships.splice(boatIndex, 1);
+			}
+		})
+		map.addChild(boat);
+		world.ships.push(boat);
 	}
 
 	function addPirate() {
-		var pirate = new Pirate();
-		var minDistance = 1000;
+		if (world.ships.length < 5) {
+			var pirate = new Pirate();
+			var minDistance = 1000;
 
-		var xAmount = Utils.getRandomInt(minDistance,3000)
-		var xDistance = (Utils.getRandomInt(0,1)) ? -xAmount:xAmount;
-		var yAmount = Utils.getRandomInt(minDistance,3000)
-		var yDistance = (Utils.getRandomInt(0,1)) ? -yAmount:yAmount;
+			var xAmount = Utils.getRandomInt(minDistance,3000)
+			var xDistance = (Utils.getRandomInt(0,1)) ? -xAmount:xAmount;
+			var yAmount = Utils.getRandomInt(minDistance,3000)
+			var yDistance = (Utils.getRandomInt(0,1)) ? -yAmount:yAmount;
 
-		pirate.x = xDistance+playerBoat.x;
-		pirate.y = yDistance+playerBoat.y;
-		if (playerBoat.health > 0) {
-			pirate.attack(playerBoat);
+			pirate.x = xDistance+playerBoat.x;
+			pirate.y = yDistance+playerBoat.y;
+			if (playerBoat.health > 0) {
+				pirate.attack(playerBoat);
+			}
+			addBoat(pirate);
 		}
-		addBoat(pirate);
 	}
 
 	function eventSpawner() {
@@ -67,6 +71,22 @@ var World = function(playerBoat){
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
+
+		// collision detection
+		/*
+		for (var ship in world.ships) {
+			var boat = world.ships[ship];
+			for (var otherShip in world.ships) {
+				var otherBoat = world.ships[otherShip];
+				if (boat != otherBoat) {
+					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull);
+					if (hitRect) {
+						boat.collision(hitRect);
+					}
+				}
+			}
+		}
+		*/
 
 		// Update relative positions
 		map.regX = playerBoat.x;
@@ -85,13 +105,32 @@ var World = function(playerBoat){
 		
 	}
 
-	setInterval(function(){
-		eventSpawner();
-	}, 10000);
+	var testBoat = new Boat();
+	testBoat.x = 300;
+	testBoat.y = 300;
+
+	addBoat(testBoat);
+
+	var testRect = new createjs.Shape();
+	playerBoat.addChild(testRect);
 
 	Game.stage.onMouseDown = function(e) {
 		var location = Game.world.playerBoat.globalToLocal(e.stageX,e.stageY);
-		console.log(location);
+		//console.log(location);
+		testBoat.x = location.x;
+		testBoat.y = location.y;
+		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
+		
+		var hitLocation = playerBoat.globalToLocal(hitRect.x,hitRect.y)
+		console.log(hitRect);
+		testRect.graphics.clear();
+		testRect.graphics.beginFill('#fff');
+		testRect.graphics.rect(hitLocation.x,hitLocation.y,hitRect.width,hitRect.height);
+		testRect.graphics.endFill();
+
+		if (hitRect) {
+			playerBoat.collision({x:hitLocation.x,y:hitLocation.y});
+		}
 	}
 
 	world.addPirate = addPirate;
