@@ -10,6 +10,7 @@ var Boat = (function() {
 	var _yspeed = 0;
 	var _limit = 10;
 	var _heading = 0;
+	var _bump = {x:0,y:0};
 	
 	var _furled = true;
 
@@ -79,6 +80,36 @@ var Boat = (function() {
 		});
 	}
 
+	function bumpDecay() {
+		if (_bump.x != 0) {
+			if (_bump.x > 0) {
+				_bump.x -= 0.01;
+				if (_bump.x < 0 ) {
+					_bump.x = 0;
+				}
+			} else if (_bump.x < 0) {
+				_bump.x += 0.01;
+				if (_bump.x > 0 ) {
+					_bump.x = 0;
+				}
+			}
+		}
+
+		if (_bump.y != 0) {
+			if (_bump.y > 0) {
+				_bump.y -= 0.01;
+				if (_bump.y < 0 ) {
+					_bump.y = 0;
+				}
+			} else if (_bump.y < 0) {
+				_bump.y += 0.01;
+				if (_bump.y > 0 ) {
+					_bump.y = 0;
+				}
+			}
+		}
+	}
+
 	function sink() {
 		console.log('sunk');
 		boat.dispatchEvent('sunk');
@@ -134,7 +165,7 @@ var Boat = (function() {
 			topSpeed += this.sails[i].speed;
 		};
 		var diminishingReturns = 1/Math.sqrt(this.sails.length);
-		_topSpeed = topSpeed*diminishingReturns;
+		_topSpeed = (topSpeed*diminishingReturns);
 		this.addChild(sail);
 	}
 
@@ -225,18 +256,18 @@ var Boat = (function() {
 
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
-		//var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
 
-		/*
+		
 		var crashVelocity = {
 			x: Game.getVelocityDifference(boatVelocity.x, shipVelocity.x),
 			y: Game.getVelocityDifference(boatVelocity.y, shipVelocity.y)
 		};
-		*/
-		this.x += shipVelocity.x;
-		this.y += shipVelocity.y;
 
-		//_yspeed -= crashVelocity.y;
+		_bump = shipVelocity;
+
+		//_xspeed += shipVelocity.x;
+		//_yspeed += shipVelocity.y;
 
 		//_speed -= Utils.getTotalSpeed(crashVelocity.x, crashVelocity.y);
 		/*
@@ -270,7 +301,7 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('topSpeed', function(){
-		return _topSpeed;
+		return _topSpeed*.75;
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
@@ -321,10 +352,14 @@ var Boat = (function() {
 			boat.parent.addChildAt(bubble, 0);
 		}
 
+
+
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
-		boat.x += axisSpeed.x;//+crashVelocity.x;
-		boat.y += axisSpeed.y;//+crashVelocity.y;
+		boat.x += axisSpeed.x+_bump.x;//+crashVelocity.x;
+		boat.y += axisSpeed.y+_bump.y;//+crashVelocity.y;
 		boat.rotation += getCurrentAgility()*helm.turnAmount;
+
+		bumpDecay();
 
 		boat.dispatchEvent('moved');
 	}
