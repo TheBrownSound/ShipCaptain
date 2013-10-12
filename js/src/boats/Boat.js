@@ -58,10 +58,6 @@ var Boat = (function() {
 				_speed += .01;
 			}
 		}
-
-		var axisSpeed = Utils.getAxisSpeed(boat.heading, _speed);
-		_xspeed = axisSpeed.x
-		_yspeed = axisSpeed.y
 	}
 
 	function adjustTrim() {
@@ -304,7 +300,7 @@ var Boat = (function() {
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x;
-		boat.y -= axisSpeed.y;
+		boat.y += axisSpeed.y;
 
 		boat.dispatchEvent('moved');
 	}

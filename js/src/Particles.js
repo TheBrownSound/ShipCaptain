@@ -26,7 +26,7 @@ var Particles = function() {
 			createjs.Tween.get(this,{loop:false})
 				.to({
 					x: (smoke.x+move.x)+(momentum.x*30),//30 seems to be the magic number for 60fps
-					y: (smoke.y-move.y)-(momentum.y*30)
+					y: (smoke.y+move.y)+(momentum.y*30)
 				},duration,createjs.Ease.circOut);
 
 			createjs.Tween.get(this,{loop:false})
@@ -70,7 +70,7 @@ var Particles = function() {
 			createjs.Tween.get(splinter,{loop:false})
 				.to({
 					x: splinter.x+move.x,
-					y: splinter.y-move.y,
+					y: splinter.y+move.y,
 				},1500,createjs.Ease.quintOut)
 				.to({
 					scaleX: .1,

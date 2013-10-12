@@ -18,7 +18,7 @@ var Utils = function() {
 	utils.getAxisSpeed = function(angle, speed) {
 		return {
 			x: Math.sin(angle*Math.PI/180)*speed,
-			y: Math.cos(angle*Math.PI/180)*speed
+			y: -(Math.cos(angle*Math.PI/180)*speed)
 		}
 	}
 
@@ -116,7 +116,7 @@ var Particles = function() {
 			createjs.Tween.get(this,{loop:false})
 				.to({
 					x: (smoke.x+move.x)+(momentum.x*30),//30 seems to be the magic number for 60fps
-					y: (smoke.y-move.y)-(momentum.y*30)
+					y: (smoke.y+move.y)+(momentum.y*30)
 				},duration,createjs.Ease.circOut);
 
 			createjs.Tween.get(this,{loop:false})
@@ -160,7 +160,7 @@ var Particles = function() {
 			createjs.Tween.get(splinter,{loop:false})
 				.to({
 					x: splinter.x+move.x,
-					y: splinter.y-move.y,
+					y: splinter.y+move.y,
 				},1500,createjs.Ease.quintOut)
 				.to({
 					scaleX: .1,
@@ -610,10 +610,6 @@ var Boat = (function() {
 				_speed += .01;
 			}
 		}
-
-		var axisSpeed = Utils.getAxisSpeed(boat.heading, _speed);
-		_xspeed = axisSpeed.x
-		_yspeed = axisSpeed.y
 	}
 
 	function adjustTrim() {
@@ -856,7 +852,7 @@ var Boat = (function() {
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x;
-		boat.y -= axisSpeed.y;
+		boat.y += axisSpeed.y;
 
 		boat.dispatchEvent('moved');
 	}
