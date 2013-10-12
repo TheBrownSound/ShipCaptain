@@ -18,7 +18,6 @@ var Boat = (function() {
 	var _health = 100;
 
 	var bubbleTick = 0;
-	var oldWindHeading = 0;
 
 	var boat = new createjs.Container();
 	//boat.regY = LENGTH/2;
@@ -51,13 +50,31 @@ var Boat = (function() {
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
 
-		if (_speed != potentialSpeed) {
-			if (_speed > potentialSpeed) {
-				_speed -= .005;
-			} if (_speed < potentialSpeed) {
-				_speed += .01;
+		var potentialAxisSpeed = Utils.getAxisSpeed(boat.heading, potentialSpeed);
+
+		potentialAxisSpeed.x = Math.round( potentialAxisSpeed.x * 1000) / 1000;
+		potentialAxisSpeed.y = Math.round( potentialAxisSpeed.y * 1000) / 1000;
+
+		if (_xspeed != potentialAxisSpeed.x) {
+			if (_xspeed > potentialAxisSpeed.x) {
+				_xspeed -= .005;
+			} if (_xspeed < potentialAxisSpeed.x) {
+				_xspeed += .01;
 			}
 		}
+
+		if (_yspeed != potentialAxisSpeed.y) {
+			if (_yspeed > potentialAxisSpeed.y) {
+				_yspeed -= .005;
+			} if (_yspeed < potentialAxisSpeed.y) {
+				_yspeed += .01;
+			}
+		}
+
+		_xspeed += crashVelocity.x;
+		_yspeed += crashVelocity.y;
+
+		crashVelocity = {x:0,y:0};
 	}
 
 	function adjustTrim() {
@@ -195,17 +212,39 @@ var Boat = (function() {
 	var hitMarker = Utils.getDebugMarker();
 	boat.addChild(hitMarker);
 
+	var crashVelocity = {x:0,y:0};
+
+	Game.getVelocityDifference = function(v1, v2) {
+		// Ever tried 1.2 - 1.1 in the console... awesome js >.<
+		var v1 = Math.round(v1 * 1000);
+		var v2 = Math.round(v2 * 1000);
+		var diff; 
+		if ( (v1 > 0 && v2 > 0) || (v1 < 0 && v2 < 0)) {
+			diff =  v1 - v2;
+		} else if (v1 > v2) {
+			diff =  v1 + v2;
+		} else {
+			diff = -(v1 + v2);
+		}
+		return diff / 1000;
+	}
+
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
-		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+		//var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
 
-		crashVeloX = shipVelocity.x + boatVelocity.x
-		crashVeloY = shipVelocity.y + boatVelocity.y
-		console.log(crashVeloX);
+		/*
+		var crashVelocity = {
+			x: Game.getVelocityDifference(boatVelocity.x, shipVelocity.x),
+			y: Game.getVelocityDifference(boatVelocity.y, shipVelocity.y)
+		};
+		*/
+		this.x += shipVelocity.x;
+		this.y += shipVelocity.y;
 
-		//this.x += crashVeloX;
-		//this.y -= crashVeloY;
-		
+		//_yspeed -= crashVelocity.y;
+
+		//_speed -= Utils.getTotalSpeed(crashVelocity.x, crashVelocity.y);
 		/*
 		hitMarker.x = location.x;
 		hitMarker.y = location.y;
@@ -241,11 +280,11 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
-		return _speed;
+		return Utils.getTotalSpeed(_xspeed,_yspeed);
 	});
 
 	boat.__defineGetter__('speed', function(){
-		return _speed*(_limit/10);
+		return boat.potentialSpeed*(_limit/10);
 	});
 
 	boat.__defineGetter__('knots', function(){
@@ -272,19 +311,9 @@ var Boat = (function() {
 
 	function update() {
 		speedCalc();
-		var turnAmount = helm.turnAmount;
-		var windChange = oldWindHeading-Game.world.weather.wind.direction;
-		
-		if (turnAmount !== 0 || windChange !== 0) {
-			//console.log(windChange);
-			oldWindHeading = Game.world.weather.wind.direction;
-			if (turnAmount !== 0) {
-				boat.rotation += getCurrentAgility()*turnAmount;
-			}
-			
-			if (!_furled && _health > 0) {
-				adjustTrim();
-			}
+
+		if (!_furled && _health > 0) {
+			adjustTrim();
 		}
 
 		bubbleTick += Math.round(boat.speed);
@@ -299,8 +328,9 @@ var Boat = (function() {
 		}
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
-		boat.x += axisSpeed.x;
-		boat.y += axisSpeed.y;
+		boat.x += axisSpeed.x;//+crashVelocity.x;
+		boat.y += axisSpeed.y;//+crashVelocity.y;
+		boat.rotation += getCurrentAgility()*helm.turnAmount;
 
 		boat.dispatchEvent('moved');
 	}
