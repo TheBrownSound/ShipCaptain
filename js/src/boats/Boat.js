@@ -237,34 +237,18 @@ var Boat = (function() {
 	var hitMarker = Utils.getDebugMarker();
 	boat.addChild(hitMarker);
 
-	var crashVelocity = {x:0,y:0};
+	Game.getImpactVelocity = function (speed1,speed2){
 
-	Game.getVelocityDifference = function(v1, v2) {
-		// Ever tried 1.2 - 1.1 in the console... awesome js >.<
-		var v1 = Math.round(v1 * 1000);
-		var v2 = Math.round(v2 * 1000);
-		var diff; 
-		if ( (v1 > 0 && v2 > 0) || (v1 < 0 && v2 < 0)) {
-			diff =  v1 - v2;
-		} else if (v1 > v2) {
-			diff =  v1 + v2;
-		} else {
-			diff = -(v1 + v2);
-		}
-		return diff / 1000;
 	}
 
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
 
-		
-		var crashVelocity = {
-			x: Game.getVelocityDifference(boatVelocity.x, shipVelocity.x),
-			y: Game.getVelocityDifference(boatVelocity.y, shipVelocity.y)
+		_bump = {
+			x: -(boatVelocity.x - shipVelocity.x),
+			y: -(boatVelocity.y - shipVelocity.y)
 		};
-
-		_bump = shipVelocity;
 
 		//_xspeed += shipVelocity.x;
 		//_yspeed += shipVelocity.y;
