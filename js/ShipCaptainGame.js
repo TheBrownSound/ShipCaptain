@@ -217,7 +217,7 @@ var Viewport = function(container) {
 	var _width = 400;
 	var _height = 300;
 	var currentScale = 1;
-	var scaleIncrements = [.25, .5, 1];
+	var scaleIncrements = [.5, 1];
 
 	var viewport = new createjs.Container();
 	viewport.name = 'viewport';
