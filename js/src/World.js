@@ -122,8 +122,8 @@ var World = function(playerBoat){
 
 		var pirate = addPirate();
 		if (pirate) {
-			pirate.x = location.x;
-			pirate.y = location.y;
+			pirate.x = playerBoat.x+location.x;
+			pirate.y = playerBoat.y+location.y;
 		}
 		
 		
