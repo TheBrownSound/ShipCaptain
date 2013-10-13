@@ -10,7 +10,7 @@ var Boat = (function() {
 	var _yspeed = 0;
 	var _limit = 10;
 	var _heading = 0;
-	var _bump = {x:0,y:0};
+	var _bump = {x:0,y:0,rotation:0};
 	
 	var _furled = true;
 
@@ -105,6 +105,19 @@ var Boat = (function() {
 				_bump.y += 0.01;
 				if (_bump.y > 0 ) {
 					_bump.y = 0;
+				}
+			}
+		}
+		if (_bump.rotation != 0) {
+			if (_bump.rotation > 0) {
+				_bump.rotation -= 0.01;
+				if (_bump.rotation < 0 ) {
+					_bump.rotation = 0;
+				}
+			} else if (_bump.rotation < 0) {
+				_bump.rotation += 0.01;
+				if (_bump.rotation > 0 ) {
+					_bump.rotation = 0;
 				}
 			}
 		}
@@ -240,15 +253,26 @@ var Boat = (function() {
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
-		var impactX = -(boatVelocity.x - shipVelocity.x)
-		var impactY = -(boatVelocity.y - shipVelocity.y)
+		var impactXForce = -(boatVelocity.x - shipVelocity.x);
+		var impactYForce = -(boatVelocity.y - shipVelocity.y);
+
+		impactLocation = {
+			x: location.x+(location.width/2),
+			y: location.y+(location.height/2)
+		}
+
+		hitMarker.x = impactLocation.x
+		hitMarker.y = impactLocation.y
+
+		impactRoation = impactLocation.x/impactLocation.y;
 
 		_bump = {
-			x: impactX,
-			y: impactY
+			x: impactXForce,
+			y: impactYForce,
+			rotation: impactRoation
 		};
 
-		var impactForce = Math.abs(Utils.getTotalSpeed(impactX,impactY));
+		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
 		
 		if (impactForce > 1) {
 			boat.damage(impactForce);
@@ -335,9 +359,9 @@ var Boat = (function() {
 
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
-		boat.x += axisSpeed.x+_bump.x;//+crashVelocity.x;
-		boat.y += axisSpeed.y+_bump.y;//+crashVelocity.y;
-		boat.rotation += getCurrentAgility()*helm.turnAmount;
+		boat.x += axisSpeed.x+_bump.x;
+		boat.y += axisSpeed.y+_bump.y;
+		boat.rotation += getCurrentAgility()*helm.turnAmount+_bump.rotation;
 
 		bumpDecay();
 
