@@ -817,6 +817,8 @@ var Boat = (function() {
 		hitMarker.y = impactLocation.y
 
 		impactRoation = impactLocation.x/impactLocation.y;
+		boat.x += impactXForce;
+		boat.y += impactYForce;
 
 		_bump = {
 			x: impactXForce,
@@ -827,6 +829,7 @@ var Boat = (function() {
 		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
 		
 		if (impactForce > 1) {
+			console.log(impactForce);
 			boat.damage(impactForce);
 			var hitSound = createjs.Sound.play("hit");
 			hitSound.volume = 0.1;
