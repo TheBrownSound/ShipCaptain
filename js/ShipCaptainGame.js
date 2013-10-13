@@ -330,6 +330,7 @@ var World = function(playerBoat){
 				pirate.attack(playerBoat);
 			}
 			addBoat(pirate);
+			return pirate;
 		}
 	}
 
@@ -389,11 +390,16 @@ var World = function(playerBoat){
 	//playerBoat.addChild(testRect);
 
 	Game.stage.onMouseDown = function(e) {
-		var location = world.globalToLocal(e.stageX,e.stageY);
+		var location = playerBoat.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
+
+		var pirate = addPirate();
+		if (pirate) {
+			pirate.x = location.x;
+			pirate.y = location.y;
+		}
 		
-		testBoat.x = location.x;
-		testBoat.y = location.y;
+		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
@@ -789,8 +795,8 @@ var Boat = (function() {
 		boat.damage(dmg);
 	}
 
-	var hitMarker = Utils.getDebugMarker();
-	boat.addChild(hitMarker);
+	//var hitMarker = Utils.getDebugMarker();
+	//boat.addChild(hitMarker);
 
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
@@ -803,8 +809,8 @@ var Boat = (function() {
 			y: location.y+(location.height/2)
 		}
 
-		hitMarker.x = impactLocation.x
-		hitMarker.y = impactLocation.y
+		//hitMarker.x = impactLocation.x
+		//hitMarker.y = impactLocation.y
 
 		impactRoation = (impactLocation.x/impactLocation.y)*.5;
 		boat.x += impactXForce;
@@ -1205,13 +1211,13 @@ var Pirate = function() {
 	var boat = new AIBoat();
 	
 	var LENGTH = 125;
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:LENGTH-10});
+	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
 
 	var mainGun = new Gun(8, 32, boat);
 
-	mainSail.y = 32;
+	mainSail.y = -30;
 	mainGun.x = -8;
-	mainGun.y = 30;
+	mainGun.y = -25;
 
 	boat.addSail(mainSail);
 	boat.setSailColor('#444');

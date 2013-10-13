@@ -237,8 +237,8 @@ var Boat = (function() {
 		boat.damage(dmg);
 	}
 
-	var hitMarker = Utils.getDebugMarker();
-	boat.addChild(hitMarker);
+	//var hitMarker = Utils.getDebugMarker();
+	//boat.addChild(hitMarker);
 
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
@@ -251,8 +251,8 @@ var Boat = (function() {
 			y: location.y+(location.height/2)
 		}
 
-		hitMarker.x = impactLocation.x
-		hitMarker.y = impactLocation.y
+		//hitMarker.x = impactLocation.x
+		//hitMarker.y = impactLocation.y
 
 		impactRoation = (impactLocation.x/impactLocation.y)*.5;
 		boat.x += impactXForce;

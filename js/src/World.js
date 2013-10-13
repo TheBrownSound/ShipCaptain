@@ -57,6 +57,7 @@ var World = function(playerBoat){
 				pirate.attack(playerBoat);
 			}
 			addBoat(pirate);
+			return pirate;
 		}
 	}
 
@@ -116,11 +117,16 @@ var World = function(playerBoat){
 	//playerBoat.addChild(testRect);
 
 	Game.stage.onMouseDown = function(e) {
-		var location = world.globalToLocal(e.stageX,e.stageY);
+		var location = playerBoat.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
+
+		var pirate = addPirate();
+		if (pirate) {
+			pirate.x = location.x;
+			pirate.y = location.y;
+		}
 		
-		testBoat.x = location.x;
-		testBoat.y = location.y;
+		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
