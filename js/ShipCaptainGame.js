@@ -1042,7 +1042,7 @@ var PlayerBoat = function() {
 
 	boat.startRepairs = function() {
 		var repairInterval = setInterval(function(){
-			if (boat.health <= boat.life) {
+			if (boat.health < boat.life) {
 				boat.repair(2);
 			} else {
 				clearInterval(repairInterval);
