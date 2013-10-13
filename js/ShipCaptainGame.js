@@ -789,27 +789,24 @@ var Boat = (function() {
 	var hitMarker = Utils.getDebugMarker();
 	boat.addChild(hitMarker);
 
-	Game.getImpactVelocity = function (speed1,speed2){
-
-	}
-
 	boat.collision = function(ship, location) {
 		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+		var impactX = -(boatVelocity.x - shipVelocity.x)
+		var impactY = -(boatVelocity.y - shipVelocity.y)
 
 		_bump = {
-			x: -(boatVelocity.x - shipVelocity.x),
-			y: -(boatVelocity.y - shipVelocity.y)
+			x: impactX,
+			y: impactY
 		};
 
-		//_xspeed += shipVelocity.x;
-		//_yspeed += shipVelocity.y;
-
-		//_speed -= Utils.getTotalSpeed(crashVelocity.x, crashVelocity.y);
-		/*
-		hitMarker.x = location.x;
-		hitMarker.y = location.y;
-		*/
+		var impactForce = Math.abs(Utils.getTotalSpeed(impactX,impactY));
+		
+		if (impactForce > 1) {
+			boat.damage(impactForce);
+			var hitSound = createjs.Sound.play("hit");
+			hitSound.volume = 0.1;
+		}
 	}
 
 	boat.damage = function(amount) {
@@ -887,7 +884,6 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
-
 
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
