@@ -254,16 +254,16 @@ var Boat = (function() {
 		hitMarker.x = impactLocation.x
 		hitMarker.y = impactLocation.y
 
-		impactRoation = impactLocation.x/impactLocation.y;
+		impactRoation = (impactLocation.x/impactLocation.y)*.5;
 		boat.x += impactXForce;
 		boat.y += impactYForce;
 		_speed -= impactForce;
 		if (_speed < 0 ) _speed = 0;
 
 		_bump = {
-			x: impactXForce,
-			y: impactYForce,
-			rotation: impactRoation
+			x: impactXForce*.5,
+			y: impactYForce*.5,
+			rotation: impactRoation*impactForce
 		};
 
 		if (impactForce > 1) {
