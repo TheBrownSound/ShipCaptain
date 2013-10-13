@@ -6,8 +6,6 @@ var Boat = (function() {
 	// Movement Properties
 	var _topSpeed = 0;
 	var _speed = 0;
-	var _xspeed = 0;
-	var _yspeed = 0;
 	var _limit = 10;
 	var _heading = 0;
 	var _bump = {x:0,y:0,rotation:0};
@@ -56,19 +54,11 @@ var Boat = (function() {
 		potentialAxisSpeed.x = Math.abs(Math.round( potentialAxisSpeed.x * 1000) / 1000);
 		potentialAxisSpeed.y = Math.abs(Math.round( potentialAxisSpeed.y * 1000) / 1000);
 
-		if (_xspeed != potentialAxisSpeed.x) {
-			if (_xspeed > potentialAxisSpeed.x) {
-				_xspeed -= .005;
-			} if (_xspeed < potentialAxisSpeed.x) {
-				_xspeed += .01;
-			}
-		}
-
-		if (_yspeed != potentialAxisSpeed.y) {
-			if (_yspeed > potentialAxisSpeed.y) {
-				_yspeed -= .005;
-			} if (_yspeed < potentialAxisSpeed.y) {
-				_yspeed += .01;
+		if (_speed != potentialSpeed) {
+			if (_speed > potentialSpeed) {
+				_speed -= .005;
+			} if (_speed < potentialSpeed) {
+				_speed += .01;
 			}
 		}
 	}
@@ -255,7 +245,7 @@ var Boat = (function() {
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
 		var impactXForce = -(boatVelocity.x - shipVelocity.x);
 		var impactYForce = -(boatVelocity.y - shipVelocity.y);
-
+		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
 		impactLocation = {
 			x: location.x+(location.width/2),
 			y: location.y+(location.height/2)
@@ -267,6 +257,8 @@ var Boat = (function() {
 		impactRoation = impactLocation.x/impactLocation.y;
 		boat.x += impactXForce;
 		boat.y += impactYForce;
+		_speed -= impactForce;
+		if (_speed < 0 ) _speed = 0;
 
 		_bump = {
 			x: impactXForce,
@@ -274,8 +266,6 @@ var Boat = (function() {
 			rotation: impactRoation
 		};
 
-		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
-		
 		if (impactForce > 1) {
 			console.log(impactForce);
 			boat.damage(impactForce);
@@ -313,11 +303,11 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
-		return Utils.getTotalSpeed(_xspeed,_yspeed);
+		return _speed;
 	});
 
 	boat.__defineGetter__('speed', function(){
-		return boat.potentialSpeed*(_limit/10);
+		return _speed*(_limit/10);
 	});
 
 	boat.__defineGetter__('knots', function(){
