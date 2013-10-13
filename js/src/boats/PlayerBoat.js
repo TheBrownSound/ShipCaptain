@@ -106,6 +106,16 @@ var PlayerBoat = function() {
 		}
 	});
 
+	boat.startRepairs = function() {
+		var repairInterval = setInterval(function(){
+			if (boat.health <= boat.life) {
+				boat.repair(2);
+			} else {
+				clearInterval(repairInterval);
+			}
+		}, 1000);
+	}
+
 	boat.fireGuns = function(location) {
 		for (var gun in boat.guns) {
 			var cannon = boat.guns[gun];
@@ -113,7 +123,6 @@ var PlayerBoat = function() {
 				setTimeout(cannon.shoot, Utils.getRandomInt(50,200));
 			}
 		}
-
 	}
 
 	boat.toggleFireMode = function() {

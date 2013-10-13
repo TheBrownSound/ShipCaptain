@@ -461,8 +461,8 @@ var HealthMeter = function(boat) {
 
 	meter.addChild(bg,bar);
 
-	boat.addEventListener('damaged', function(damage) {
-		bar.scaleY = boat.life/boat.health;
+	boat.addEventListener('healthChanged', function(amount) {
+		bar.scaleY = boat.health/boat.life;
 	});
 
 	return meter;
@@ -602,7 +602,7 @@ var Boat = (function() {
 			potentialSpeed += sail.power;
 		};
 
-		if (_life > 0) {
+		if (_health > 0) {
 			potentialSpeed = (potentialSpeed/boat.sails.length)*_topSpeed;
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
@@ -832,14 +832,24 @@ var Boat = (function() {
 		}
 	}
 
+	boat.repair = function(amount) {
+		if (_health < _life) {
+			_health += amount;
+			if (_health > _life) {
+				_health = _life;
+			}
+			boat.dispatchEvent('healthChanged', amount);
+		}
+	}
+
 	boat.damage = function(amount) {
-		if (_life > 0) {
-			_life -= amount;
-			if (_life <= 0) {
-				_life = 0;
+		if (_health > 0) {
+			_health -= amount;
+			if (_health <= 0) {
+				_health = 0;
 				sink();
 			}
-			boat.dispatchEvent('damaged', amount);
+			boat.dispatchEvent('healthChanged', amount);
 		}
 	}
 
@@ -1030,6 +1040,16 @@ var PlayerBoat = function() {
 		}
 	});
 
+	boat.startRepairs = function() {
+		var repairInterval = setInterval(function(){
+			if (boat.health <= boat.life) {
+				boat.repair(2);
+			} else {
+				clearInterval(repairInterval);
+			}
+		}, 1000);
+	}
+
 	boat.fireGuns = function(location) {
 		for (var gun in boat.guns) {
 			var cannon = boat.guns[gun];
@@ -1037,7 +1057,6 @@ var PlayerBoat = function() {
 				setTimeout(cannon.shoot, Utils.getRandomInt(50,200));
 			}
 		}
-
 	}
 
 	boat.toggleFireMode = function() {

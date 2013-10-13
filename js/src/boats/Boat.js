@@ -44,7 +44,7 @@ var Boat = (function() {
 			potentialSpeed += sail.power;
 		};
 
-		if (_life > 0) {
+		if (_health > 0) {
 			potentialSpeed = (potentialSpeed/boat.sails.length)*_topSpeed;
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
@@ -274,14 +274,24 @@ var Boat = (function() {
 		}
 	}
 
+	boat.repair = function(amount) {
+		if (_health < _life) {
+			_health += amount;
+			if (_health > _life) {
+				_health = _life;
+			}
+			boat.dispatchEvent('healthChanged', amount);
+		}
+	}
+
 	boat.damage = function(amount) {
-		if (_life > 0) {
-			_life -= amount;
-			if (_life <= 0) {
-				_life = 0;
+		if (_health > 0) {
+			_health -= amount;
+			if (_health <= 0) {
+				_health = 0;
 				sink();
 			}
-			boat.dispatchEvent('damaged', amount);
+			boat.dispatchEvent('healthChanged', amount);
 		}
 	}
 

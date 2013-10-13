@@ -38,8 +38,8 @@ var HealthMeter = function(boat) {
 
 	meter.addChild(bg,bar);
 
-	boat.addEventListener('damaged', function(damage) {
-		bar.scaleY = boat.life/boat.health;
+	boat.addEventListener('healthChanged', function(amount) {
+		bar.scaleY = boat.health/boat.life;
 	});
 
 	return meter;
