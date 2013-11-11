@@ -500,6 +500,65 @@ var SpeedMeter = function(boat) {
 	createjs.Ticker.addEventListener('tick', updateSpeed);
 	return meter;
 }
+
+var ShootButton = function(type) {
+	var _width = 60;
+	var _height = 60;
+	var btn = new createjs.Container();
+
+	var overlay = new createjs.Bitmap('images/cannon_button.png');
+	overlay.x = overlay.y = overlay.regX = overlay.regY = 30;
+	if (type == 'port') {
+		overlay.rotation = -90;
+	} else if (type == 'starboard') {
+		overlay.rotation = 90;
+	}
+
+	var background = new createjs.Shape();
+
+	background.graphics.beginFill('#604535');
+	background.graphics.drawRect(6,6,48,48);
+	background.graphics.endFill();
+
+	var reloadMeter = new createjs.Shape();
+	reloadMeter.x = 6;
+	reloadMeter.y = 54;
+	reloadMeter.regY = 48;
+	reloadMeter.graphics.beginFill('#F00');
+	reloadMeter.graphics.drawRect(0,0,48,48);
+	reloadMeter.graphics.endFill();
+	reloadMeter.alpha = .5;
+
+	btn.addChild(background, reloadMeter, overlay);
+
+	btn.__defineGetter__('width', function() {
+		return _width;
+	});
+
+	btn.__defineGetter__('height', function() {
+		return _height;
+	});
+
+	Game.world.playerBoat.addEventListener('gunsfired', function(event) {
+		if (event.target.location == 'all' || event.target.location == type) {
+			console.log('rawr', event, type);
+			reloadMeter.scaleY = 0;
+			
+			createjs.Tween.get(reloadMeter,{loop:false})
+				.to({
+					scaleY: 1
+				},event.target.reloadTime,createjs.Ease.linear);
+		}
+	});
+
+	btn.addEventListener("click", handleClick);
+	function handleClick(event) {
+		event.nativeEvent.stopImmediatePropagation();
+		console.log('event', event);
+		Game.world.playerBoat.fireGuns(type);
+	}
+	return btn;
+}
 var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
@@ -550,7 +609,7 @@ var Weather = function(){
 	var weather = {
 		wind: {
 			speed: 10,
-			direction: 45
+			direction: 0
 		}
 	};
 
@@ -582,14 +641,15 @@ var Boat = (function() {
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
+	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
 	var helm = new Helm(boat);
-	hull.x = -(WIDTH/2);
-	hull.y = -(LENGTH/2);
+	hull.x = mast.x = -(WIDTH/2);
+	hull.y = mast.y = -(LENGTH/2);
 
 	boat.sails = [];
 	boat.guns = [];
 
-	boat.addChild(hull);
+	boat.addChild(hull, mast);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -727,7 +787,12 @@ var Boat = (function() {
 		};
 		var diminishingReturns = 1/Math.sqrt(this.sails.length);
 		_topSpeed = (topSpeed*diminishingReturns);
-		this.addChild(sail);
+		if (sail.type == "sqare") {
+			this.addChildAt(sail);
+		} else {
+			this.addChildAt(sail, 1);
+		}
+		
 	}
 
 	boat.addGun = function(gun, position) {
@@ -945,10 +1010,13 @@ var PlayerBoat = function() {
 	// Sails
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:-10}, {x:23,y:-10});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
+	var telltail = new TellTail(10);
 	squareRig.y = -35;
-	mainSail.y = -30;
+	mainSail.y = -26;
+	telltail.y = -30;
 	boat.addSail(squareRig);
 	boat.addSail(mainSail);
+	boat.addChild(telltail);
 
 	// GUNS!
 	var bowGun = new Gun(8, 30, boat);
@@ -979,6 +1047,7 @@ var PlayerBoat = function() {
 	var proximityCheck = setInterval(checkProximity, 100);
 
 	function checkProximity() {
+		telltail.rotation = (Game.world.weather.wind.direction - boat.heading)+180;
 		if (_fireAtWill) {
 			for (var ship in Game.world.ships) {
 				var target = Game.world.ships[ship];
@@ -1051,12 +1120,25 @@ var PlayerBoat = function() {
 	}
 
 	boat.fireGuns = function(location) {
+		var gunsFired = [];
 		for (var gun in boat.guns) {
 			var cannon = boat.guns[gun];
 			if (location === "all" || cannon.boatLocation === location) {
+				gunsFired.push(cannon);
 				setTimeout(cannon.shoot, Utils.getRandomInt(50,200));
 			}
 		}
+		var reload = 0;
+		for (var gun in gunsFired) {
+			if (gunsFired[gun].reloadTime > reload) {
+				reload = gunsFired[gun].reloadTime;
+			}
+			
+		}
+		boat.dispatchEvent('gunsfired', {
+			location: location,
+			reloadTime: reload
+		});
 	}
 
 	boat.toggleFireMode = function() {
@@ -1542,6 +1624,43 @@ var Helm = function(ship) {
 }
 
 
+var TellTail = function(length, color) {
+	length = length || 10;
+	color = color || '#FF0000'
+	
+	var waveVariation = 3;
+	var waveAmount = 0;
+	var direction = 'forward'
+	
+	var tail = new createjs.Shape();
+	var gfx = tail.graphics;
+
+	function updateTail() {
+		if (waveAmount >= waveVariation) {
+			direction = 'reverse';
+		} else if (waveAmount <= -waveVariation) {
+			direction = 'forward';
+		}
+
+		if (direction === 'reverse') {
+			waveAmount--;
+		} else {
+			waveAmount++;
+		}
+
+		var waveFactor = waveAmount;
+		gfx.clear();
+		gfx.beginStroke(color);
+		gfx.setStrokeStyle(2, 1);
+		gfx.moveTo(0,0);
+		//gfx.lineTo(0, length);
+		gfx.bezierCurveTo(waveFactor, length/2, -waveFactor, length/2, -waveFactor/2, length);
+		gfx.endStroke();
+	}
+
+	createjs.Ticker.addEventListener('tick', updateTail);
+	return tail;
+}
 var Gun = function(caliber, length, owner) {
 	var maximumInaccuracy = 5; //degrees
 	var gun = new createjs.Container();
@@ -1628,6 +1747,10 @@ var Gun = function(caliber, length, owner) {
 		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
 
+	gun.__defineGetter__('reloadTime', function() {
+		return reloadTime;
+	});
+
 	drawGun();
 
 	return gun;
@@ -1703,10 +1826,12 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
+	
 	// hud
 	var windGauge;
 	var healthMeter;
 	var speedMeter;
+	var fireLeft, fireUp, fireRight;
 	
 	var preloader;
 
@@ -1771,7 +1896,11 @@ var Game = (function(){
 		healthMeter = new HealthMeter(playerBoat);
 		speedMeter = new SpeedMeter(playerBoat);
 
-		stage.addChild(viewport, windGauge, healthMeter, speedMeter);
+		fireLeft = new ShootButton('port');
+		fireUp = new ShootButton('bow');
+		fireRight = new ShootButton('starboard');
+
+		stage.addChild(viewport, windGauge, healthMeter, speedMeter, fireLeft, fireUp, fireRight);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -1789,6 +1918,12 @@ var Game = (function(){
 			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
 			speedMeter.y = healthMeter.y;
+
+			fireUp.x = (stage.canvas.width-fireUp.width)/2;
+			fireRight.x = fireUp.x + 70;
+			fireLeft.x = fireUp.x - 70
+			fireLeft.y = fireUp.y = fireRight.y = stage.canvas.height-fireUp.height-10;
+
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}

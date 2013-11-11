@@ -12,6 +12,7 @@
 // @depends boats/Pirate.js
 // @depends boats/Sails.js
 // @depends boats/Helm.js
+// @depends boats/Telltail.js
 // @depends boats/guns/Gun.js
 
 
@@ -25,10 +26,12 @@ var Game = (function(){
 
 	var stage;
 	var viewport;
+	
 	// hud
 	var windGauge;
 	var healthMeter;
 	var speedMeter;
+	var fireLeft, fireUp, fireRight;
 	
 	var preloader;
 
@@ -93,7 +96,11 @@ var Game = (function(){
 		healthMeter = new HealthMeter(playerBoat);
 		speedMeter = new SpeedMeter(playerBoat);
 
-		stage.addChild(viewport, windGauge, healthMeter, speedMeter);
+		fireLeft = new ShootButton('port');
+		fireUp = new ShootButton('bow');
+		fireRight = new ShootButton('starboard');
+
+		stage.addChild(viewport, windGauge, healthMeter, speedMeter, fireLeft, fireUp, fireRight);
 		
 		//Ticker
 		createjs.Ticker.setFPS(60);
@@ -111,6 +118,12 @@ var Game = (function(){
 			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;
 			speedMeter.y = healthMeter.y;
+
+			fireUp.x = (stage.canvas.width-fireUp.width)/2;
+			fireRight.x = fireUp.x + 70;
+			fireLeft.x = fireUp.x - 70
+			fireLeft.y = fireUp.y = fireRight.y = stage.canvas.height-fireUp.height-10;
+
 			viewport.canvasSizeChanged(stage.canvas.width, stage.canvas.height);
 		}
 	}

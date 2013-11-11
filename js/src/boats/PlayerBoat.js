@@ -11,10 +11,13 @@ var PlayerBoat = function() {
 	// Sails
 	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:-10}, {x:23,y:-10});
 	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
+	var telltail = new TellTail(10);
 	squareRig.y = -35;
-	mainSail.y = -30;
+	mainSail.y = -26;
+	telltail.y = -30;
 	boat.addSail(squareRig);
 	boat.addSail(mainSail);
+	boat.addChild(telltail);
 
 	// GUNS!
 	var bowGun = new Gun(8, 30, boat);
@@ -45,6 +48,7 @@ var PlayerBoat = function() {
 	var proximityCheck = setInterval(checkProximity, 100);
 
 	function checkProximity() {
+		telltail.rotation = (Game.world.weather.wind.direction - boat.heading)+180;
 		if (_fireAtWill) {
 			for (var ship in Game.world.ships) {
 				var target = Game.world.ships[ship];
@@ -117,12 +121,25 @@ var PlayerBoat = function() {
 	}
 
 	boat.fireGuns = function(location) {
+		var gunsFired = [];
 		for (var gun in boat.guns) {
 			var cannon = boat.guns[gun];
 			if (location === "all" || cannon.boatLocation === location) {
+				gunsFired.push(cannon);
 				setTimeout(cannon.shoot, Utils.getRandomInt(50,200));
 			}
 		}
+		var reload = 0;
+		for (var gun in gunsFired) {
+			if (gunsFired[gun].reloadTime > reload) {
+				reload = gunsFired[gun].reloadTime;
+			}
+			
+		}
+		boat.dispatchEvent('gunsfired', {
+			location: location,
+			reloadTime: reload
+		});
 	}
 
 	boat.toggleFireMode = function() {

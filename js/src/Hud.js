@@ -77,3 +77,62 @@ var SpeedMeter = function(boat) {
 	createjs.Ticker.addEventListener('tick', updateSpeed);
 	return meter;
 }
+
+var ShootButton = function(type) {
+	var _width = 60;
+	var _height = 60;
+	var btn = new createjs.Container();
+
+	var overlay = new createjs.Bitmap('images/cannon_button.png');
+	overlay.x = overlay.y = overlay.regX = overlay.regY = 30;
+	if (type == 'port') {
+		overlay.rotation = -90;
+	} else if (type == 'starboard') {
+		overlay.rotation = 90;
+	}
+
+	var background = new createjs.Shape();
+
+	background.graphics.beginFill('#604535');
+	background.graphics.drawRect(6,6,48,48);
+	background.graphics.endFill();
+
+	var reloadMeter = new createjs.Shape();
+	reloadMeter.x = 6;
+	reloadMeter.y = 54;
+	reloadMeter.regY = 48;
+	reloadMeter.graphics.beginFill('#F00');
+	reloadMeter.graphics.drawRect(0,0,48,48);
+	reloadMeter.graphics.endFill();
+	reloadMeter.alpha = .5;
+
+	btn.addChild(background, reloadMeter, overlay);
+
+	btn.__defineGetter__('width', function() {
+		return _width;
+	});
+
+	btn.__defineGetter__('height', function() {
+		return _height;
+	});
+
+	Game.world.playerBoat.addEventListener('gunsfired', function(event) {
+		if (event.target.location == 'all' || event.target.location == type) {
+			console.log('rawr', event, type);
+			reloadMeter.scaleY = 0;
+			
+			createjs.Tween.get(reloadMeter,{loop:false})
+				.to({
+					scaleY: 1
+				},event.target.reloadTime,createjs.Ease.linear);
+		}
+	});
+
+	btn.addEventListener("click", handleClick);
+	function handleClick(event) {
+		event.nativeEvent.stopImmediatePropagation();
+		console.log('event', event);
+		Game.world.playerBoat.fireGuns(type);
+	}
+	return btn;
+}

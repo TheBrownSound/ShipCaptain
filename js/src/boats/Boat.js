@@ -24,14 +24,15 @@ var Boat = (function() {
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
+	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
 	var helm = new Helm(boat);
-	hull.x = -(WIDTH/2);
-	hull.y = -(LENGTH/2);
+	hull.x = mast.x = -(WIDTH/2);
+	hull.y = mast.y = -(LENGTH/2);
 
 	boat.sails = [];
 	boat.guns = [];
 
-	boat.addChild(hull);
+	boat.addChild(hull, mast);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -169,7 +170,12 @@ var Boat = (function() {
 		};
 		var diminishingReturns = 1/Math.sqrt(this.sails.length);
 		_topSpeed = (topSpeed*diminishingReturns);
-		this.addChild(sail);
+		if (sail.type == "sqare") {
+			this.addChildAt(sail);
+		} else {
+			this.addChildAt(sail, 1);
+		}
+		
 	}
 
 	boat.addGun = function(gun, position) {

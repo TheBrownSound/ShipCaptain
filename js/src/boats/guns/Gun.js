@@ -84,6 +84,10 @@ var Gun = function(caliber, length, owner) {
 		return (Math.abs(headingDifference) <= rangeThreshold);
 	}
 
+	gun.__defineGetter__('reloadTime', function() {
+		return reloadTime;
+	});
+
 	drawGun();
 
 	return gun;
