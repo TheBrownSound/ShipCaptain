@@ -118,9 +118,7 @@ var ShootButton = function(type) {
 
 	Game.world.playerBoat.addEventListener('gunsfired', function(event) {
 		if (event.target.location == 'all' || event.target.location == type) {
-			console.log('rawr', event, type);
 			reloadMeter.scaleY = 0;
-			
 			createjs.Tween.get(reloadMeter,{loop:false})
 				.to({
 					scaleY: 1
