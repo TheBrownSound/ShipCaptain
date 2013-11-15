@@ -246,11 +246,15 @@ var Boat = (function() {
 	//var hitMarker = Utils.getDebugMarker();
 	//boat.addChild(hitMarker);
 
-	boat.collision = function(ship, location) {
-		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
+	boat.collision = function(object, location) {
+		var objVelocity = {x:0,y:0};
+		if (object.type === 'boat') {
+			objVelocity = Utils.getAxisSpeed(object.heading, object.speed);
+		}
+
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
-		var impactXForce = -(boatVelocity.x - shipVelocity.x);
-		var impactYForce = -(boatVelocity.y - shipVelocity.y);
+		var impactXForce = -(boatVelocity.x - objVelocity.x);
+		var impactYForce = -(boatVelocity.y - objVelocity.y);
 		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
 		impactLocation = {
 			x: location.x+(location.width/2),

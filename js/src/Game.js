@@ -14,6 +14,8 @@
 // @depends boats/Helm.js
 // @depends boats/Telltail.js
 // @depends boats/guns/Gun.js
+// @depends static/Place.js
+// @depends static/Island.js
 
 
 // Parent Game Logic

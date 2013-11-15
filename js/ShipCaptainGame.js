@@ -277,6 +277,7 @@ var World = function(playerBoat){
 
 	var world = new createjs.Container();
 	world.name = 'world';
+	world.places = [];
 	world.ships = [];
 	world.playerBoat = playerBoat;
 
@@ -284,7 +285,7 @@ var World = function(playerBoat){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 
-	var island = new createjs.Bitmap("images/island.png");
+	var island = new Island();
 	island.y = -2000;
 
 	var mapCenter = new createjs.Shape();
@@ -292,10 +293,11 @@ var World = function(playerBoat){
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
-	map.addChild(mapCenter, island);
+	map.addChild(mapCenter);
 	world.addChild(ocean, map);
 
 	addBoat(playerBoat);
+	addPlace(island);
 
 	//var eventTick = setInterval(eventSpawner, _eventFrequency);
 
@@ -312,6 +314,11 @@ var World = function(playerBoat){
 		})
 		map.addChild(boat);
 		world.ships.push(boat);
+	}
+
+	function addPlace(obj) {
+		map.addChildAt(obj, 0);
+		world.places.push(obj);
 	}
 
 	function addPirate() {
@@ -341,24 +348,36 @@ var World = function(playerBoat){
 			addPirate();
 		}
 	}
+
+	function triggerCollision(boat, object, collisionRect) {
+		var localPos = boat.globalToLocal(collisionRect.x,collisionRect.y)
+		collisionRect.x = localPos.x;
+		collisionRect.y = localPos.y;
+		boat.collision(object, collisionRect);
+	}
 	
 	function update() {
 		document.getElementById('heading').innerHTML = "Heading: "+Math.round(playerBoat.heading);
 		document.getElementById('knots').innerHTML = "Knots: "+Math.round(playerBoat.knots);
 
-		// collision detection
+		// boat collision detection
 		for (var ship in world.ships) {
 			var boat = world.ships[ship];
 			for (var otherShip in world.ships) {
 				var otherBoat = world.ships[otherShip];
 				if (boat != otherBoat) {
-					var hitRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull, 0, true);
-					if (hitRect) {
-						var localPos = boat.globalToLocal(hitRect.x,hitRect.y)
-						hitRect.x = localPos.x;
-						hitRect.y = localPos.y;
-						boat.collision(otherBoat, hitRect);
+					var crashRect = ndgmr.checkPixelCollision(boat.hull,otherBoat.hull, 0, true);
+					if (crashRect) {
+						triggerCollision(boat, otherBoat, crashRect);
 					}
+				}
+			}
+
+			for (var place in world.places) {
+				var object = world.places[place];
+				var hitBox = ndgmr.checkPixelCollision(boat.hull,object.hitBox, 0.5, true);
+				if (hitBox) {
+					triggerCollision(boat, object, hitBox);
 				}
 			}
 		}
@@ -861,11 +880,15 @@ var Boat = (function() {
 	//var hitMarker = Utils.getDebugMarker();
 	//boat.addChild(hitMarker);
 
-	boat.collision = function(ship, location) {
-		var shipVelocity = Utils.getAxisSpeed(ship.heading, ship.speed);
+	boat.collision = function(object, location) {
+		var objVelocity = {x:0,y:0};
+		if (object.type === 'boat') {
+			objVelocity = Utils.getAxisSpeed(object.heading, object.speed);
+		}
+
 		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
-		var impactXForce = -(boatVelocity.x - shipVelocity.x);
-		var impactYForce = -(boatVelocity.y - shipVelocity.y);
+		var impactXForce = -(boatVelocity.x - objVelocity.x);
+		var impactYForce = -(boatVelocity.y - objVelocity.y);
 		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
 		impactLocation = {
 			x: location.x+(location.width/2),
@@ -1811,6 +1834,22 @@ var Projectile = function(size, angle, owner) {
 
 	createjs.Ticker.addEventListener("tick", update);
 	return cannonBall;
+}
+var Place = function() {
+	var place = new createjs.Container();
+	place.type = "stationary";
+	return place;
+}
+var Island = function() {
+	var island = new Place();
+	var img = new createjs.Bitmap("images/island.png");
+	island.addChild(img);
+
+	island.__defineGetter__('hitBox', function(){
+		return img;
+	});
+
+	return island;
 }
 
 
