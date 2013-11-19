@@ -183,7 +183,7 @@ var Particles = function() {
 		var _floatVariance = 100;
 		var bubble = new createjs.Shape();
 		
-		bubble.graphics.beginFill('#95cbdc');
+		bubble.graphics.beginFill('#639ebe');
 		bubble.graphics.drawCircle(-5,-5,10);
 		bubble.graphics.endFill();
 	
@@ -195,7 +195,7 @@ var Particles = function() {
 		bubble.animate = function() {
 			var floatX = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.x;
 			var floatY = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.y;
-			var scale = Utils.getRandomFloat(1,3);
+			var scale = Utils.getRandomFloat(.5,2);
 		
 			createjs.Tween.get(bubble,{loop:false})
 				.set({scaleX:0.1,scaleY:0.1}, bubble)
@@ -286,7 +286,7 @@ var World = function(playerBoat){
 	var weather = world.weather = new Weather();
 
 	var island = new Island();
-	island.y = -2000;
+	island.y = -200;
 
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');
@@ -580,8 +580,12 @@ var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
 
-	var _tideXVelocity = 0;
-	var _tideYVelocity = 0;
+	var _tideTopX = .1;
+	var _tideTopY = .2;
+	var _tideMidX = 0;
+	var _tideMidY = -.1;
+	var _tideBotX = -.2;
+	var _tideBotY = .2;
 
 	var ocean = new createjs.Container();
 	ocean.width = width;
@@ -590,18 +594,37 @@ var Ocean = function(width, height){
 
 	var crossWidth = width*3 + height*3;
 
-	var tide = new createjs.Shape();
-	var g = tide.graphics;
-	g.beginBitmapFill(Game.assets['waves']);
-	g.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
+	var tideTop = new createjs.Shape();
+	var tideMid = new createjs.Shape();
+	var tideBot = new createjs.Shape();
+	
+	tideTop.graphics.beginBitmapFill(Game.assets['tide_top']);
+	tideTop.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
+
+	tideMid.graphics.beginBitmapFill(Game.assets['tide_mid']);
+	tideMid.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
+
+	tideBot.graphics.beginBitmapFill(Game.assets['tide_bot']);
+	tideBot.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
 
 	var underwater = new createjs.Container();
 
-	ocean.addChild(underwater, tide);
+	ocean.addChild(underwater, tideBot, tideMid, tideTop);
 
 	function moveTide() {
-		tide.x = ocean.position.x % 100;
-		tide.y = ocean.position.y % 150;
+		_tideTopX += _tideTopX;
+		_tideTopY += _tideTopY;
+		_tideMidX += _tideMidX;
+		_tideMidY += _tideMidY;
+		_tideBotX += _tideBotX;
+		_tideBotY += _tideBotY;
+
+		tideTop.x = (ocean.position.x) % 400;
+		tideTop.y = (ocean.position.y) % 400;
+		tideMid.x = (ocean.position.x*.8) % 400;
+		tideMid.y = (ocean.position.y*.8) % 400;
+		tideBot.x = (ocean.position.x*.6) % 400;
+		tideBot.y = (ocean.position.y*.6) % 400;
 	}
 
 	ocean.spawnBubble = function() {
@@ -1040,26 +1063,23 @@ var PlayerBoat = function() {
 	boat.addChild(telltail);
 
 	// GUNS!
-	var bowGun = new Gun(8, 30, boat);
-
 	var portGun1 = new Gun(4, 10, boat);
 	var portGun2 = new Gun(4, 10, boat);
 
 	var starboardGun1 = new Gun(4, 10, boat);
 	var starboardGun2 = new Gun(4, 10, boat);
 
-	bowGun.boatLocation = "bow";
 	portGun1.boatLocation = portGun2.boatLocation = "port";
 	starboardGun1.boatLocation = starboardGun2.boatLocation = "starboard";
-	bowGun.y = -38;
-	portGun1.y = starboardGun1.y = 0;
-	portGun2.y = starboardGun2.y = 20;
-	portGun1.x = portGun2.x = -16;
-	starboardGun1.x = starboardGun2.x = 16;
-	portGun1.rotation = portGun2.rotation = -90;
-	starboardGun1.rotation = starboardGun2.rotation = 90;
+	portGun1.y = starboardGun1.y = -16;
+	portGun2.y = starboardGun2.y = 21;
+	portGun1.x = portGun2.x = -20;
+	starboardGun1.x = starboardGun2.x = 22;
+	portGun1.rotation = -80
+	portGun2.rotation = -95;
+	starboardGun1.rotation = 80
+	starboardGun2.rotation = 95;
 
-	boat.addGun(bowGun);
 	boat.addGun(portGun1);
 	boat.addGun(portGun2);
 	boat.addGun(starboardGun1);
@@ -1842,11 +1862,12 @@ var Place = function() {
 }
 var Island = function() {
 	var island = new Place();
-	var img = new createjs.Bitmap("images/island.png");
-	island.addChild(img);
+	var top = new createjs.Bitmap("images/island.png");
+	var bottom = new createjs.Bitmap("images/island_bottom.png")
+	island.addChild(bottom, top);
 
 	island.__defineGetter__('hitBox', function(){
-		return img;
+		return top;
 	});
 
 	return island;
@@ -1898,7 +1919,9 @@ var Game = (function(){
 			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
 			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
-			{src:"images/tide_repeat.png", id:"waves"}
+			{src:"images/tide_top.png", id:"tide_top"},
+			{src:"images/tide_mid.png", id:"tide_mid"},
+			{src:"images/tide_bot.png", id:"tide_bot"}
 		];
 
 		preloader = new createjs.LoadQueue(false);

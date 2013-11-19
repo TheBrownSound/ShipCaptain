@@ -13,7 +13,7 @@ var World = function(playerBoat){
 	var weather = world.weather = new Weather();
 
 	var island = new Island();
-	island.y = -2000;
+	island.y = -200;
 
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');

@@ -93,7 +93,7 @@ var Particles = function() {
 		var _floatVariance = 100;
 		var bubble = new createjs.Shape();
 		
-		bubble.graphics.beginFill('#95cbdc');
+		bubble.graphics.beginFill('#639ebe');
 		bubble.graphics.drawCircle(-5,-5,10);
 		bubble.graphics.endFill();
 	
@@ -105,7 +105,7 @@ var Particles = function() {
 		bubble.animate = function() {
 			var floatX = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.x;
 			var floatY = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.y;
-			var scale = Utils.getRandomFloat(1,3);
+			var scale = Utils.getRandomFloat(.5,2);
 		
 			createjs.Tween.get(bubble,{loop:false})
 				.set({scaleX:0.1,scaleY:0.1}, bubble)

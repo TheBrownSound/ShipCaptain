@@ -20,26 +20,23 @@ var PlayerBoat = function() {
 	boat.addChild(telltail);
 
 	// GUNS!
-	var bowGun = new Gun(8, 30, boat);
-
 	var portGun1 = new Gun(4, 10, boat);
 	var portGun2 = new Gun(4, 10, boat);
 
 	var starboardGun1 = new Gun(4, 10, boat);
 	var starboardGun2 = new Gun(4, 10, boat);
 
-	bowGun.boatLocation = "bow";
 	portGun1.boatLocation = portGun2.boatLocation = "port";
 	starboardGun1.boatLocation = starboardGun2.boatLocation = "starboard";
-	bowGun.y = -38;
-	portGun1.y = starboardGun1.y = 0;
-	portGun2.y = starboardGun2.y = 20;
-	portGun1.x = portGun2.x = -16;
-	starboardGun1.x = starboardGun2.x = 16;
-	portGun1.rotation = portGun2.rotation = -90;
-	starboardGun1.rotation = starboardGun2.rotation = 90;
+	portGun1.y = starboardGun1.y = -16;
+	portGun2.y = starboardGun2.y = 21;
+	portGun1.x = portGun2.x = -20;
+	starboardGun1.x = starboardGun2.x = 22;
+	portGun1.rotation = -80
+	portGun2.rotation = -95;
+	starboardGun1.rotation = 80
+	starboardGun2.rotation = 95;
 
-	boat.addGun(bowGun);
 	boat.addGun(portGun1);
 	boat.addGun(portGun2);
 	boat.addGun(starboardGun1);

@@ -63,7 +63,9 @@ var Game = (function(){
 			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
 			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
-			{src:"images/tide_repeat.png", id:"waves"}
+			{src:"images/tide_top.png", id:"tide_top"},
+			{src:"images/tide_mid.png", id:"tide_mid"},
+			{src:"images/tide_bot.png", id:"tide_bot"}
 		];
 
 		preloader = new createjs.LoadQueue(false);
