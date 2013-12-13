@@ -6,12 +6,11 @@ var Boat = (function() {
 	// Movement Properties
 	var _topSpeed = 0;
 	var _speed = 0;
-	var _limit = 10;
+	var _limit = 0;
+
 	var _heading = 0;
 	var _bump = {x:0,y:0,rotation:0};
 	
-	var _furled = true;
-
 	// Health Properties
 	var _life = 100;
 	var _health = 100;
@@ -39,14 +38,15 @@ var Boat = (function() {
 
 	function speedCalc() {
 		var potentialSpeed = 0;
-
+		/*
 		for (var i = 0; i < boat.sails.length; i++) {
 			var sail = boat.sails[i];
 			potentialSpeed += sail.power;
 		};
+		*/
 
 		if (_health > 0) {
-			potentialSpeed = (potentialSpeed/boat.sails.length)*_topSpeed;
+			potentialSpeed = (_limit/10)*_topSpeed;
 			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
 		}
 
@@ -58,7 +58,7 @@ var Boat = (function() {
 		if (_speed != potentialSpeed) {
 			if (_speed > potentialSpeed) {
 				_speed -= .005;
-			} if (_speed < potentialSpeed) {
+			} else if (_speed < potentialSpeed) {
 				_speed += .01;
 			}
 		}
@@ -68,6 +68,12 @@ var Boat = (function() {
 		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
 		boat.sails.map(function(sail){
 			sail.trim(windHeading);
+		});
+	}
+
+	function updateSails() {
+		boat.sails.map(function(sail){
+			sail.power = _limit/10;
 		});
 	}
 
@@ -154,6 +160,8 @@ var Boat = (function() {
 		}
 	}
 
+	
+
 	boat.setSailColor = function(hex) {
 		for (var sail in this.sails) {
 			this.sails[sail].color = hex;
@@ -189,45 +197,22 @@ var Boat = (function() {
 	}
 
 	boat.increaseSpeed = function() {
-		if (_limit <= 0) {
-			boat.hoistSails();
-		}
 		_limit++;
 		if (_limit > 10) {
 			_limit = 10;
 		}
+		updateSails();
 	}
 
 	boat.decreaseSpeed = function() {
 		_limit--;
 		if (_limit <= 0) {
 			_limit = 0;
-			boat.furlSails();
 		}
+		updateSails();
 	}
 
-	boat.furlSails = function() {
-		boat.sails.map(function(sail){
-			sail.reef();
-		});
-	}
-
-	boat.hoistSails = function() {
-		boat.sails.map(function(sail){
-			sail.hoist();
-		});
-		adjustTrim();
-	}
-
-	boat.toggleSails = function() {
-		if (_furled) {
-			this.hoistSails();
-		} else {
-			this.furlSails();
-		}
-		_furled = !_furled;
-	}
-
+	
 	boat.cannonHit = function(damageAmount, location) {
 		createjs.Sound.play("hit").setVolume(0.5);
 		createjs.Sound.play("small_explosion");
@@ -319,15 +304,15 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('topSpeed', function(){
-		return _topSpeed*.75;
+		return _topSpeed;
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
-		return _speed;
+		return _speed*(_limit/10);
 	});
 
 	boat.__defineGetter__('speed', function(){
-		return _speed*(_limit/10);
+		return _speed;
 	});
 
 	boat.__defineGetter__('knots', function(){
@@ -355,7 +340,7 @@ var Boat = (function() {
 	function update() {
 		speedCalc();
 
-		if (!_furled && _health > 0) {
+		if (_health > 0) {
 			adjustTrim();
 		}
 

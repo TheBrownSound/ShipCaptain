@@ -15,8 +15,8 @@ var PlayerBoat = function() {
 	squareRig.y = -35;
 	mainSail.y = -26;
 	telltail.y = -30;
-	boat.addSail(squareRig);
 	boat.addSail(mainSail);
+	boat.addSail(squareRig);
 	boat.addChild(telltail);
 
 	// GUNS!
@@ -97,9 +97,6 @@ var PlayerBoat = function() {
 
 	Game.addEventListener('onKeyUp', function(event) {
 		switch(event.key) {
-			case 83: // S Key
-				boat.toggleSails();
-				break;
 			case 37: // Right arrow
 			case 39: // Left arrow
 				boat.stopTurning();

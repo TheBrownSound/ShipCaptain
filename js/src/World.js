@@ -123,7 +123,6 @@ var World = function(playerBoat){
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
-		
 	}
 
 	var testBoat = new Boat();

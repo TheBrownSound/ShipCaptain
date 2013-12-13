@@ -3,8 +3,6 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	var _maxAngle = 50;
 	var trimAngle = 180-windOffset;
 	var _power = 0;
-	var _reefed = true;
-
 	var windToBoat = 0;
 
 	var sail = new createjs.Container();
@@ -12,75 +10,35 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	sail.sailColor = '#ded5be';
 	sail.lineColor = '#2a2824';
 
-	function updateSail() {
-		//console.log('update sail');
-
-		if (_reefed) {
-			_power = Math.round( _power * 10) / 10;
-			if (_power > 0) {
-				_power -= 0.1;
-			} else if (_power < 0) {
-				_power += 0.1;
-			}
-		} else {
-			var leeway = 10;
-			var sailHeading = Utils.convertToHeading(sail.angle);
-
-			// TODO revisit angle from wind logic, its confusing.
-			var angleFromWind = Utils.oldHeadingDifference(windToBoat, sailHeading);
-			if (angleFromWind > noSail+leeway) {
-				_power = 0;
-			} else {
-				var distanceFromTrim = Math.abs(trimAngle-angleFromWind);
-				var power = (noSail - distanceFromTrim)/noSail;
-				_power = Math.round( power * 100) / 100; //Rounds to two decimals
-			}
-		}
-		
-		if (sail.drawSail) {
-			sail.drawSail();
-		} 
-	}
-
 	function trimTo(angle) {
-		createjs.Tween.get(sail, {override:true})
-			.to({rotation:angle}, 2000, createjs.Ease.linear);
-	}
-
-	sail.hoist = function() {
-		_reefed = false;
-	}
-
-	sail.reef = function() {
-		_reefed = true;
-		trimTo(0);
+		var animate = createjs.Tween.get(sail, {override:true});
+		animate.to({rotation:angle}, 2000, createjs.Ease.linear);
+		animate.addEventListener("change", function(event){
+			if (sail.changed) sail.changed(false);
+		});
 	}
 
 	sail.trim = function(windHeading) {
-		if (!_reefed) {
-			windToBoat = windHeading;
-			//console.log('Trim for wind: ', windHeading);
-			var nosail = (Math.abs(Utils.convertToNumber(windHeading)) > noSail);
-			if (nosail) { // in irons
-				sail.angle = 0;
-			} else {
-				var offset = (windHeading > 180) ? trimAngle : -trimAngle;
-				sail.angle = Utils.convertToNumber(windHeading+offset);
-			}
+		windToBoat = windHeading;
+		//console.log('Trim for wind: ', windHeading);
+		var nosail = (Math.abs(Utils.convertToNumber(windHeading)) > noSail);
+		if (nosail || _power <= 0) { // in irons
+			sail.angle = 0;
+		} else {
+			var offset = (windHeading > 180) ? trimAngle : -trimAngle;
+			sail.angle = Utils.convertToNumber(windHeading+offset);
 		}
 	}
 
 	sail.__defineSetter__('angle', function(desiredAngle){
 		// console.log('set angle: ', desiredAngle);
-		if (!_reefed) {
-			var actualAngle = desiredAngle;
-			if (desiredAngle < -sailRange) {
-				actualAngle = -sailRange;
-			} else if (desiredAngle > sailRange) {
-				actualAngle = sailRange;
-			}
-			trimTo(actualAngle)
+		var actualAngle = desiredAngle;
+		if (desiredAngle < -sailRange) {
+			actualAngle = -sailRange;
+		} else if (desiredAngle > sailRange) {
+			actualAngle = sailRange;
 		}
+		trimTo(actualAngle);
 	});
 
 	sail.__defineGetter__('angle', function(){
@@ -91,8 +49,9 @@ var Sail = (function(windOffset, sailRange, noSail) {
 		return _power;
 	});
 
-	sail.__defineGetter__('reefed', function(){
-		return _reefed;
+	sail.__defineSetter__('power', function(perc){
+		_power = perc;
+		if (sail.powerChanged) sail.powerChanged();
 	});
 
 	sail.__defineGetter__('tack', function(){
@@ -101,9 +60,9 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	sail.__defineSetter__('color', function(hex){
 		sail.sailColor = hex;
+		if (sail.changed) sail.changed(true);
 	});
 
-	createjs.Ticker.addEventListener('tick', updateSail);
 	return sail;
 });
 
@@ -119,8 +78,9 @@ var SquareRig = function(length, anchor1, anchor2) {
 	var bunchSize = length/bunches;
 	
 	var sheet = new	createjs.Shape();
+	var furl = new createjs.Shape();
 	var yard = new createjs.Shape();
-	var ties = new createjs.Shape();
+	
 
 	var anchorPoint1 = new createjs.Shape();
 	var anchorPoint2 = new createjs.Shape();
@@ -135,15 +95,40 @@ var SquareRig = function(length, anchor1, anchor2) {
 	yard.graphics.endFill();
 	
 	// Draw Ties
-	ties.graphics.beginFill(sail.lineColor);
+	yard.graphics.beginFill(sail.lineColor);
 	for (var i = 0; i < bunches-1; i++) {
-		ties.graphics.drawRoundRect((-length/2+bunchSize)+(bunchSize*i), -(yard_thickness+2)/2, 2, yard_thickness+2, 2);
+		yard.graphics.drawRoundRect((-length/2+bunchSize)+(bunchSize*i), -(yard_thickness+2)/2, 2, yard_thickness+2, 2);
 	};
-	ties.graphics.endFill();
+	yard.graphics.endFill();
 
-	sail.addChild(anchorPoint1, anchorPoint2, sheet, yard, ties);
+	sail.addChild(anchorPoint1, anchorPoint2, furl, sheet, yard);
 
-	function drawLines() {
+	function drawSail() {
+		console.log('getting drawn')
+		var s = sheet.graphics;
+		var f = furl.graphics;
+		s.clear();
+		f.clear();
+
+		var luffAmount = -18;
+		s.beginFill(sail.sailColor);
+		s.moveTo(-(length/2), -2);
+		s.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
+		s.curveTo(0, luffAmount*2, length*.4, luffAmount);
+		s.curveTo(length*.4, luffAmount/2, length/2, -2);
+		s.curveTo(0,luffAmount, -(length/2), -2);
+		s.endFill();
+
+		f.beginFill(sail.sailColor);
+		for (var i = 0; i < bunches; i++) {
+			f.drawEllipse((-length/2)+(bunchSize*i),-bunchSize/4, bunchSize, bunchSize/2);
+		};
+		f.endFill();
+
+		//sail.drawLines();
+	}
+
+	sail.drawLines = function() {
 		var g1 = anchorPoint1.graphics;
 		var g2 = anchorPoint2.graphics;
 		g1.clear();
@@ -162,29 +147,29 @@ var SquareRig = function(length, anchor1, anchor2) {
 		g2.endStroke();
 	}
 
-	sail.drawSail = function() {
-		var g = sheet.graphics;
-		g.clear();
-		if (this.reefed && this.power == 0) {
-			g.beginFill(this.sailColor);
-			for (var i = 0; i < bunches; i++) {
-				g.drawEllipse((-length/2)+(bunchSize*i),-bunchSize/4, bunchSize, bunchSize/2);
-			};
-			g.endFill();
+	sail.changed = function(fullRedraw) {
+		if (fullRedraw) {
+			drawSail();
 		} else {
-			var luffAmount = -(sail.power*sheet_luff);
-			g.beginFill(this.sailColor);
-			g.moveTo(-(length/2), -2);
-			g.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
-			g.curveTo(0, luffAmount*2, length*.4, luffAmount);
-			g.curveTo(length*.4, luffAmount/2, length/2, -2);
-			g.curveTo(0,luffAmount, -(length/2), -2);
-			g.endFill();
+			sail.drawLines();
 		}
-		
-		drawLines();
 	}
 
+	sail.powerChanged = function() {
+		console.log('power!')
+		if (sail.power <= 0) {
+			createjs.Tween.get(furl, {override:true})
+			.to({scaleY:1}, 400, createjs.Ease.linear)
+			scaleY = 1;
+		} else {
+			createjs.Tween.get(furl, {override:true})
+			.to({scaleY:0}, 400, createjs.Ease.linear)
+		}
+		createjs.Tween.get(sheet, {override:true})
+			.to({scaleY:sail.power+.1}, 400, createjs.Ease.linear)
+	}
+
+	drawSail();
 	return sail;
 }
 
@@ -192,7 +177,9 @@ var ForeAft = function(length, anchorPoint) {
 	var sail = new Sail(45, 45, 135);
 	sail.name = 'fore-aft';
 
+	var tack;
 	var sheet = new	createjs.Shape();
+	var furl = new	createjs.Shape();
 	var boom = new createjs.Shape();
 
 	var anchorLine = new createjs.Shape();
@@ -202,7 +189,7 @@ var ForeAft = function(length, anchorPoint) {
 	boom.graphics.drawRoundRect(-3, 0, 6, length, 4);
 	boom.graphics.endFill();
 
-	sail.addChild(anchorLine, boom, sheet);
+	sail.addChild(anchorLine, boom, furl, sheet);
 
 	function drawLine() {
 		var g = anchorLine.graphics;
@@ -216,33 +203,61 @@ var ForeAft = function(length, anchorPoint) {
 		g.endStroke();
 	}
 
-	sail.drawSail = function() {
-		var g = sheet.graphics;
-		g.clear();
-		if (this.reefed && this.power == 0) {
-			var bunches = 4;
-			var bunchSize = length/bunches;
-			g.beginFill(this.sailColor);
-			for (var i = 0; i < bunches; i++) {
-				g.drawEllipse(-bunchSize/4,bunchSize*i, bunchSize/2, bunchSize);
-			};
-			g.endFill();
-			g.beginFill(this.lineColor);
-			for (var i = 0; i < bunches-1; i++) {
-				g.drawRoundRect(-bunchSize/8,bunchSize*i+bunchSize-2, bunchSize/4, 2, 2);
-			};
-			g.endFill();
-		} else {
-			var power = (sail.tack == 'port') ? this.power : -this.power;
-			g.beginFill(this.sailColor);
-			g.moveTo(0, 0);
-			g.curveTo(power*-40, length*.7, 0, length);
-			g.curveTo(power*-10, length/2, 0,0);
-			g.endFill();
-		}
+	function drawSail() {
+		var s = sheet.graphics;
+		var f = furl.graphics;
+		s.clear();
+		f.clear();
+
+		s.beginFill(sail.sailColor);
+		s.moveTo(0, 0);
+		s.curveTo(-40, length*.7, 0, length);
+		s.curveTo(-10, length/2, 0,0);
+		s.endFill();
+
+		var bunches = 4;
+		var bunchSize = length/bunches;
+		f.beginFill(sail.sailColor);
+		for (var i = 0; i < bunches; i++) {
+			f.drawEllipse(-bunchSize/4,bunchSize*i, bunchSize/2, bunchSize);
+		};
+		f.endFill();
+		f.beginFill(sail.lineColor);
+		for (var i = 0; i < bunches-1; i++) {
+			f.drawRoundRect(-bunchSize/8,bunchSize*i+bunchSize-2, bunchSize/4, 2, 2);
+		};
+		f.endFill();
 		
-		drawLine();
+		//drawLine();
 	}
 
+	sail.changed = function(fullRedraw) {
+		if (fullRedraw) {
+			drawSail();
+		} else {
+			drawLine();
+			if (tack != sail.tack) {
+				tack = sail.tack;
+				sail.powerChanged();
+			}
+		}
+	}
+
+	sail.powerChanged = function() {
+		if (sail.power <= 0) {
+			createjs.Tween.get(furl, {override:true})
+			.to({scaleX:1}, 400, createjs.Ease.linear)
+			scaleY = 1;
+		} else {
+			createjs.Tween.get(furl, {override:true})
+			.to({scaleX:0}, 400, createjs.Ease.linear)
+		}
+
+		var scale = (sail.tack == 'port') ? sail.power : -sail.power;
+		createjs.Tween.get(sheet, {override:true})
+			.to({scaleX:scale}, 400, createjs.Ease.linear)
+	}
+
+	drawSail();
 	return sail;
 }
