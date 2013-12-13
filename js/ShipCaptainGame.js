@@ -415,25 +415,12 @@ var World = function(playerBoat){
 	Game.stage.addEventListener('stagemousedown', function(e) {
 		var location = map.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
-		/*
+		
 		var pirate = addPirate();
 		if (pirate) {
-			pirate.x = playerBoat.x+location.x;
-			pirate.y = playerBoat.y+location.y;
+			pirate.x = location.x;
+			pirate.y = location.y;
 		}
-	*/
-		testRect.graphics.beginFill('#fff');
-		testRect.graphics.drawCircle(location.x,location.y, 4);
-		testRect.graphics.endFill();
-
-		for (var ship in Game.world.ships) {
-			var boat = Game.world.ships[ship];
-			var local = boat.hull.globalToLocal(e.stageX, e.stageY);
-			console.log(local.x, local.y);
-			var hit = boat.hull.hitTest(local.x, local.y);
-			console.log('hit:', hit);
-		};
-		
 		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
@@ -513,11 +500,12 @@ var SpeedMeter = function(boat) {
 	bg.graphics.rect(0,0,meter.width,meter.height);
 	bg.graphics.endFill();
 
-	var bar = new createjs.Shape();
-	bar.graphics.beginFill('#BADA55');
-	bar.graphics.rect(2,2,meter.width-4,meter.height-4);
-	bar.graphics.endFill();
-	bar.y = bar.regY = meter.height-4;
+	var arrows = new createjs.Shape();
+	arrows.graphics.beginFill('#F00');
+	arrows.graphics.rect(2,2,meter.width-4,2);
+	arrows.graphics.endFill();
+	arrows.y = meter.height-4;
+	arrows.regY = 1;
 
 	var speed = new createjs.Shape();
 	speed.graphics.beginFill('#BAD');
@@ -525,10 +513,10 @@ var SpeedMeter = function(boat) {
 	speed.graphics.endFill();
 	speed.y = speed.regY = meter.height-4;
 
-	meter.addChild(bg,bar,speed);
+	meter.addChild(bg,speed,arrows);
 
 	function updateSpeed() {
-		bar.scaleY = boat.potentialSpeed/boat.topSpeed;
+		arrows.y = ((boat.potentialSpeed/boat.topSpeed)*-(meter.height-4))+(meter.height-4);
 		speed.scaleY = boat.speed/boat.topSpeed;
 	}
 
@@ -954,7 +942,7 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
-		return _speed*(_limit/10);
+		return _topSpeed*(_limit/10);
 	});
 
 	boat.__defineGetter__('speed', function(){

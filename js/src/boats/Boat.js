@@ -308,7 +308,7 @@ var Boat = (function() {
 	});
 
 	boat.__defineGetter__('potentialSpeed', function(){
-		return _speed*(_limit/10);
+		return _topSpeed*(_limit/10);
 	});
 
 	boat.__defineGetter__('speed', function(){

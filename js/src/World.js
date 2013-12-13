@@ -137,25 +137,12 @@ var World = function(playerBoat){
 	Game.stage.addEventListener('stagemousedown', function(e) {
 		var location = map.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
-		/*
+		
 		var pirate = addPirate();
 		if (pirate) {
-			pirate.x = playerBoat.x+location.x;
-			pirate.y = playerBoat.y+location.y;
+			pirate.x = location.x;
+			pirate.y = location.y;
 		}
-	*/
-		testRect.graphics.beginFill('#fff');
-		testRect.graphics.drawCircle(location.x,location.y, 4);
-		testRect.graphics.endFill();
-
-		for (var ship in Game.world.ships) {
-			var boat = Game.world.ships[ship];
-			var local = boat.hull.globalToLocal(e.stageX, e.stageY);
-			console.log(local.x, local.y);
-			var hit = boat.hull.hitTest(local.x, local.y);
-			console.log('hit:', hit);
-		};
-		
 		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
