@@ -18,20 +18,23 @@ var Boat = (function() {
 	var bubbleTick = 0;
 
 	var boat = new createjs.Container();
-	//boat.regY = LENGTH/2;
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
 	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
+	var till = boat.till = new createjs.Bitmap('images/rudder.png');
 	var helm = new Helm(boat);
 	hull.x = mast.x = -(WIDTH/2);
 	hull.y = mast.y = -(LENGTH/2);
+	till.y = 58;
+	till.regX = 2;
+	till.regY = 24;
 
 	boat.sails = [];
 	boat.guns = [];
 
-	boat.addChild(hull, mast);
+	boat.addChild(hull, till, mast);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -358,6 +361,7 @@ var Boat = (function() {
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x+_bump.x;
 		boat.y += axisSpeed.y+_bump.y;
+		till.rotation = -(helm.turnAmount*20);
 		boat.rotation += getCurrentAgility()*helm.turnAmount+_bump.rotation;
 
 		bumpDecay();
@@ -365,6 +369,7 @@ var Boat = (function() {
 		boat.dispatchEvent('moved');
 	}
 
-	createjs.Ticker.addEventListener("tick", update);
+	var updateInterval = setInterval(update, Math.floor(1000/60))
+	//createjs.Ticker.addEventListener("tick", update);
 	return boat;
 });

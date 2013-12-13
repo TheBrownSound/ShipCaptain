@@ -304,7 +304,7 @@ var World = function(playerBoat){
 	addBoat(playerBoat);
 	addPlace(island);
 
-	//var eventTick = setInterval(eventSpawner, _eventFrequency);
+	var eventTick = setInterval(eventSpawner, _eventFrequency);
 
 	//Start playing water sound
 	createjs.Sound.play("water", {loop:-1});
@@ -347,10 +347,24 @@ var World = function(playerBoat){
 	}
 
 	function eventSpawner() {
-		var spawnEvent = (Utils.getRandomInt(0,10) === 10);
+		var spawnEvent = (Utils.getRandomInt(0,5) === 0);
 		console.log('Spawn event: ', spawnEvent);
 		if (spawnEvent) {
-			addPirate();
+			var location = getEventLocation();
+			var boat = addPirate();
+			if (boat) {
+				boat.x = location.x;
+				boat.y = location.y;
+			}
+		}
+	}
+
+	function getEventLocation() {
+		var distance = 400;
+		var speed = Utils.getAxisSpeed(playerBoat.heading, playerBoat.speed);
+		return {
+			x: playerBoat.x+(speed.x*distance),
+			y: playerBoat.y+(speed.y*distance)
 		}
 	}
 
@@ -652,20 +666,23 @@ var Boat = (function() {
 	var bubbleTick = 0;
 
 	var boat = new createjs.Container();
-	//boat.regY = LENGTH/2;
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
 
 	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
 	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
+	var till = boat.till = new createjs.Bitmap('images/rudder.png');
 	var helm = new Helm(boat);
 	hull.x = mast.x = -(WIDTH/2);
 	hull.y = mast.y = -(LENGTH/2);
+	till.y = 58;
+	till.regX = 2;
+	till.regY = 24;
 
 	boat.sails = [];
 	boat.guns = [];
 
-	boat.addChild(hull, mast);
+	boat.addChild(hull, till, mast);
 
 	boat.turnLeft = helm.turnLeft;
 	boat.turnRight = helm.turnRight;
@@ -992,6 +1009,7 @@ var Boat = (function() {
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x+_bump.x;
 		boat.y += axisSpeed.y+_bump.y;
+		till.rotation = -(helm.turnAmount*20);
 		boat.rotation += getCurrentAgility()*helm.turnAmount+_bump.rotation;
 
 		bumpDecay();
@@ -999,7 +1017,8 @@ var Boat = (function() {
 		boat.dispatchEvent('moved');
 	}
 
-	createjs.Ticker.addEventListener("tick", update);
+	var updateInterval = setInterval(update, Math.floor(1000/60))
+	//createjs.Ticker.addEventListener("tick", update);
 	return boat;
 });
 var PlayerBoat = function() {
@@ -1491,7 +1510,6 @@ var SquareRig = function(length, anchor1, anchor2) {
 	}
 
 	sail.powerChanged = function() {
-		console.log('power!')
 		if (sail.power <= 0) {
 			createjs.Tween.get(furl, {override:true})
 			.to({scaleY:1}, 400, createjs.Ease.linear)
@@ -1564,7 +1582,7 @@ var ForeAft = function(length, anchorPoint) {
 		};
 		f.endFill();
 
-		sheet.scaleY = 0;
+		sheet.scaleX = 0;
 		
 		//drawLine();
 	}

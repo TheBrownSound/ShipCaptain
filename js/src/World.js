@@ -26,7 +26,7 @@ var World = function(playerBoat){
 	addBoat(playerBoat);
 	addPlace(island);
 
-	//var eventTick = setInterval(eventSpawner, _eventFrequency);
+	var eventTick = setInterval(eventSpawner, _eventFrequency);
 
 	//Start playing water sound
 	createjs.Sound.play("water", {loop:-1});
@@ -69,10 +69,24 @@ var World = function(playerBoat){
 	}
 
 	function eventSpawner() {
-		var spawnEvent = (Utils.getRandomInt(0,10) === 10);
+		var spawnEvent = (Utils.getRandomInt(0,5) === 0);
 		console.log('Spawn event: ', spawnEvent);
 		if (spawnEvent) {
-			addPirate();
+			var location = getEventLocation();
+			var boat = addPirate();
+			if (boat) {
+				boat.x = location.x;
+				boat.y = location.y;
+			}
+		}
+	}
+
+	function getEventLocation() {
+		var distance = 400;
+		var speed = Utils.getAxisSpeed(playerBoat.heading, playerBoat.speed);
+		return {
+			x: playerBoat.x+(speed.x*distance),
+			y: playerBoat.y+(speed.y*distance)
 		}
 	}
 

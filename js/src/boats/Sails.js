@@ -155,7 +155,6 @@ var SquareRig = function(length, anchor1, anchor2) {
 	}
 
 	sail.powerChanged = function() {
-		console.log('power!')
 		if (sail.power <= 0) {
 			createjs.Tween.get(furl, {override:true})
 			.to({scaleY:1}, 400, createjs.Ease.linear)
@@ -228,7 +227,7 @@ var ForeAft = function(length, anchorPoint) {
 		};
 		f.endFill();
 
-		sheet.scaleY = 0;
+		sheet.scaleX = 0;
 		
 		//drawLine();
 	}
