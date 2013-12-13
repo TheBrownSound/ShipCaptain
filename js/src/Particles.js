@@ -89,15 +89,15 @@ var Particles = function() {
 		return splinter;
 	}
 
-	particles.Bubble = function() {
+	particles.Bubble = function(fast) {
 		var _floatVariance = 100;
 		var bubble = new createjs.Shape();
 		
-		bubble.graphics.beginFill('#639ebe');
-		bubble.graphics.drawCircle(-5,-5,10);
+		bubble.graphics.beginFill('#8bb7d0');
+		bubble.graphics.drawCircle(-3,-3,6);
 		bubble.graphics.endFill();
 	
-		bubble.scaleX = bubble.scaleY = .1;
+		
 		function pop() {
 			bubble.parent.removeChild(bubble);
 		}
@@ -105,17 +105,22 @@ var Particles = function() {
 		bubble.animate = function() {
 			var floatX = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.x;
 			var floatY = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.y;
-			var scale = Utils.getRandomFloat(.5,2);
-		
+			var scale = Utils.getRandomFloat(.1,1);
+			bubble.scaleX = bubble.scaleY = scale;
+			
+			var speed = (fast) ? 2000:4000;
+			var easeType = (fast) ? createjs.Ease.expoOut:createjs.Ease.sineOut;
 			createjs.Tween.get(bubble,{loop:false})
-				.set({scaleX:0.1,scaleY:0.1}, bubble)
 				.to({
 					x: floatX,
-					y: floatY,
-					scaleX: scale,
-					scaleY: scale,
-					alpha: 0
-				},3000,createjs.Ease.easeOut)
+					y: floatY
+				},speed,easeType);
+
+			createjs.Tween.get(bubble,{loop:false})
+				.to({
+					scaleX: 0,
+					scaleY: 0
+				},speed,createjs.Ease.easeIn)
 				.call(pop);
 		}
 		return bubble;

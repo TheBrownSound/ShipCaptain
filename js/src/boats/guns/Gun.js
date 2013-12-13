@@ -128,7 +128,7 @@ var Projectile = function(size, angle, owner) {
 
 	function miss() {
 		for (var i = 0; i < 30; i++) {
-			var bubble = new Particles.Bubble();
+			var bubble = new Particles.Bubble(true);
 			bubble.x = cannonBall.x;
 			bubble.y = cannonBall.y;
 			cannonBall.parent.addChild(bubble);

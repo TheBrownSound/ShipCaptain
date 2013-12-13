@@ -179,15 +179,15 @@ var Particles = function() {
 		return splinter;
 	}
 
-	particles.Bubble = function() {
+	particles.Bubble = function(fast) {
 		var _floatVariance = 100;
 		var bubble = new createjs.Shape();
 		
-		bubble.graphics.beginFill('#639ebe');
-		bubble.graphics.drawCircle(-5,-5,10);
+		bubble.graphics.beginFill('#8bb7d0');
+		bubble.graphics.drawCircle(-3,-3,6);
 		bubble.graphics.endFill();
 	
-		bubble.scaleX = bubble.scaleY = .1;
+		
 		function pop() {
 			bubble.parent.removeChild(bubble);
 		}
@@ -195,17 +195,22 @@ var Particles = function() {
 		bubble.animate = function() {
 			var floatX = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.x;
 			var floatY = Utils.getRandomFloat(-_floatVariance,_floatVariance)+bubble.y;
-			var scale = Utils.getRandomFloat(.5,2);
-		
+			var scale = Utils.getRandomFloat(.1,1);
+			bubble.scaleX = bubble.scaleY = scale;
+			
+			var speed = (fast) ? 2000:4000;
+			var easeType = (fast) ? createjs.Ease.expoOut:createjs.Ease.sineOut;
 			createjs.Tween.get(bubble,{loop:false})
-				.set({scaleX:0.1,scaleY:0.1}, bubble)
 				.to({
 					x: floatX,
-					y: floatY,
-					scaleX: scale,
-					scaleY: scale,
-					alpha: 0
-				},3000,createjs.Ease.easeOut)
+					y: floatY
+				},speed,easeType);
+
+			createjs.Tween.get(bubble,{loop:false})
+				.to({
+					scaleX: 0,
+					scaleY: 0
+				},speed,createjs.Ease.easeIn)
 				.call(pop);
 		}
 		return bubble;
@@ -580,13 +585,6 @@ var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
 
-	var _tideTopX = .1;
-	var _tideTopY = .2;
-	var _tideMidX = 0;
-	var _tideMidY = -.1;
-	var _tideBotX = -.2;
-	var _tideBotY = .2;
-
 	var ocean = new createjs.Container();
 	ocean.width = width;
 	ocean.height = height;
@@ -594,37 +592,18 @@ var Ocean = function(width, height){
 
 	var crossWidth = width*3 + height*3;
 
-	var tideTop = new createjs.Shape();
-	var tideMid = new createjs.Shape();
-	var tideBot = new createjs.Shape();
+	var tide = new createjs.Shape();
 	
-	tideTop.graphics.beginBitmapFill(Game.assets['tide_top']);
-	tideTop.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
-	tideMid.graphics.beginBitmapFill(Game.assets['tide_mid']);
-	tideMid.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
-	tideBot.graphics.beginBitmapFill(Game.assets['tide_bot']);
-	tideBot.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
+	tide.graphics.beginBitmapFill(Game.assets['tide']);
+	tide.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
 
 	var underwater = new createjs.Container();
 
-	ocean.addChild(underwater, tideBot, tideMid, tideTop);
+	ocean.addChild(underwater, tide);
 
 	function moveTide() {
-		_tideTopX += _tideTopX;
-		_tideTopY += _tideTopY;
-		_tideMidX += _tideMidX;
-		_tideMidY += _tideMidY;
-		_tideBotX += _tideBotX;
-		_tideBotY += _tideBotY;
-
-		tideTop.x = (ocean.position.x) % 400;
-		tideTop.y = (ocean.position.y) % 400;
-		tideMid.x = (ocean.position.x*.8) % 400;
-		tideMid.y = (ocean.position.y*.8) % 400;
-		tideBot.x = (ocean.position.x*.6) % 400;
-		tideBot.y = (ocean.position.y*.6) % 400;
+		tide.x = (ocean.position.x) % 400;
+		tide.y = (ocean.position.y) % 400;
 	}
 
 	ocean.spawnBubble = function() {
@@ -1832,7 +1811,7 @@ var Projectile = function(size, angle, owner) {
 
 	function miss() {
 		for (var i = 0; i < 30; i++) {
-			var bubble = new Particles.Bubble();
+			var bubble = new Particles.Bubble(true);
 			bubble.x = cannonBall.x;
 			bubble.y = cannonBall.y;
 			cannonBall.parent.addChild(bubble);
@@ -1919,9 +1898,7 @@ var Game = (function(){
 			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
 			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
-			{src:"images/tide_top.png", id:"tide_top"},
-			{src:"images/tide_mid.png", id:"tide_mid"},
-			{src:"images/tide_bot.png", id:"tide_bot"}
+			{src:"images/tide.png", id:"tide"}
 		];
 
 		preloader = new createjs.LoadQueue(false);

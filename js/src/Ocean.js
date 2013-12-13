@@ -2,13 +2,6 @@ var Ocean = function(width, height){
 	//Constants
 	var MAX_TIDE_SPEED = 10;
 
-	var _tideTopX = .1;
-	var _tideTopY = .2;
-	var _tideMidX = 0;
-	var _tideMidY = -.1;
-	var _tideBotX = -.2;
-	var _tideBotY = .2;
-
 	var ocean = new createjs.Container();
 	ocean.width = width;
 	ocean.height = height;
@@ -16,37 +9,18 @@ var Ocean = function(width, height){
 
 	var crossWidth = width*3 + height*3;
 
-	var tideTop = new createjs.Shape();
-	var tideMid = new createjs.Shape();
-	var tideBot = new createjs.Shape();
+	var tide = new createjs.Shape();
 	
-	tideTop.graphics.beginBitmapFill(Game.assets['tide_top']);
-	tideTop.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
-	tideMid.graphics.beginBitmapFill(Game.assets['tide_mid']);
-	tideMid.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
-	tideBot.graphics.beginBitmapFill(Game.assets['tide_bot']);
-	tideBot.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
+	tide.graphics.beginBitmapFill(Game.assets['tide']);
+	tide.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
 
 	var underwater = new createjs.Container();
 
-	ocean.addChild(underwater, tideBot, tideMid, tideTop);
+	ocean.addChild(underwater, tide);
 
 	function moveTide() {
-		_tideTopX += _tideTopX;
-		_tideTopY += _tideTopY;
-		_tideMidX += _tideMidX;
-		_tideMidY += _tideMidY;
-		_tideBotX += _tideBotX;
-		_tideBotY += _tideBotY;
-
-		tideTop.x = (ocean.position.x) % 400;
-		tideTop.y = (ocean.position.y) % 400;
-		tideMid.x = (ocean.position.x*.8) % 400;
-		tideMid.y = (ocean.position.y*.8) % 400;
-		tideBot.x = (ocean.position.x*.6) % 400;
-		tideBot.y = (ocean.position.y*.6) % 400;
+		tide.x = (ocean.position.x) % 400;
+		tide.y = (ocean.position.y) % 400;
 	}
 
 	ocean.spawnBubble = function() {
