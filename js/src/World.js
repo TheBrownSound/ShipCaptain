@@ -120,9 +120,9 @@ var World = function(playerBoat){
 		var xSpeed = Math.sin(playerBoat.heading*Math.PI/180)*-playerBoat.speed;
 		var ySpeed = Math.cos(playerBoat.heading*Math.PI/180)*playerBoat.speed;
 		createjs.Tween.get(map, {override:true})
-			.to({x:xSpeed*100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 		createjs.Tween.get(ocean, {override:true})
-			.to({x:xSpeed*100, y:ySpeed*100}, 1000, createjs.Ease.sineOut)
+			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 		
 	}
 
