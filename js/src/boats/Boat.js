@@ -219,7 +219,7 @@ var Boat = (function() {
 		var dmg = Math.round(damageAmount);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();
-			var pos = boat.localToLocal(location.x, location.y, boat.parent)
+			var pos = boat.hull.localToLocal(location.x, location.y, boat.parent)
 			splinter.x = pos.x;
 			splinter.y = pos.y;
 			boat.parent.addChildAt(splinter, 1);

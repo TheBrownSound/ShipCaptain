@@ -409,18 +409,30 @@ var World = function(playerBoat){
 
 	addBoat(testBoat);
 
-	//var testRect = new createjs.Shape();
-	//playerBoat.addChild(testRect);
+	var testRect = new createjs.Shape();
+	map.addChild(testRect);
 
-	Game.stage.addEventListener('mousedown', function(e) {
-		var location = playerBoat.globalToLocal(e.stageX,e.stageY);
+	Game.stage.addEventListener('stagemousedown', function(e) {
+		var location = map.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
-
+		/*
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = playerBoat.x+location.x;
 			pirate.y = playerBoat.y+location.y;
 		}
+	*/
+		testRect.graphics.beginFill('#fff');
+		testRect.graphics.drawCircle(location.x,location.y, 4);
+		testRect.graphics.endFill();
+
+		for (var ship in Game.world.ships) {
+			var boat = Game.world.ships[ship];
+			var local = boat.hull.globalToLocal(e.stageX, e.stageY);
+			console.log(local.x, local.y);
+			var hit = boat.hull.hitTest(local.x, local.y);
+			console.log('hit:', hit);
+		};
 		
 		
 		/*
@@ -853,7 +865,7 @@ var Boat = (function() {
 		var dmg = Math.round(damageAmount);
 		for (var i = 0; i < dmg; i++) {
 			var splinter = new Particles.Splinter();
-			var pos = boat.localToLocal(location.x, location.y, boat.parent)
+			var pos = boat.hull.localToLocal(location.x, location.y, boat.parent)
 			splinter.x = pos.x;
 			splinter.y = pos.y;
 			boat.parent.addChildAt(splinter, 1);
@@ -1802,8 +1814,8 @@ var Projectile = function(size, angle, owner) {
 			var boat = Game.world.ships[ship];
 			if (boat != owner) {
 				var globalPos = cannonBall.localToGlobal(0,0);
-				var local = boat.globalToLocal(globalPos.x, globalPos.y);
-				var hit = boat.hitTest(local.x, local.y);
+				var local = boat.hull.globalToLocal(globalPos.x, globalPos.y);
+				var hit = boat.hull.hitTest(local.x, local.y);
 				if (hit) {
 					boat.cannonHit(size+velocity, local);
 					removeProjectile();
