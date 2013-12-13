@@ -430,12 +430,14 @@ var World = function(playerBoat){
 		var location = map.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
 		
+		//Spawn test pirate
+		/*
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = location.x;
 			pirate.y = location.y;
 		}
-		
+		*/
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
