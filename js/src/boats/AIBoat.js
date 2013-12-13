@@ -13,12 +13,24 @@ var AIBoat = function() {
 			if (_mode === 'combat') {
 				var attackPosition = getAttackPosition(_currentTarget);
 				sailToDestination(attackPosition);
+				if (_currentTarget.speed > boat.speed) {
+					boat.increaseSpeed();
+				} else if (_currentTarget.speed < boat.speed) {
+					boat.decreaseSpeed();
+				}
 			} else if (_mode === 'evade') {
 				var evadeHeading = Utils.getRandomInt(_currentTarget.heading-90, _currentTarget.heading+90)
 				sailToDestination(Utils.convertToHeading(evadeHeading));
+				boat.increaseSpeed();
 			}
 		} else if (_mode === 'wander') {
 			wander();
+			var speedChange = Utils.getRandomInt(0,10);
+			if (speedChange == 0) {
+				boat.decreaseSpeed();
+			} else if (speedChange == 1) {
+				boat.increaseSpeed();
+			}
 		}
 		
 		/*
@@ -38,7 +50,7 @@ var AIBoat = function() {
 					cannon.shoot();
 				}
 			}
-		} 
+		}
 	}
 
 	function checkStatus() {
@@ -58,7 +70,6 @@ var AIBoat = function() {
 				turnToHeading(heading);
 				break;
 		}
-		boat.hoistSails();
 	}
 
 	function turnToHeading(heading) {

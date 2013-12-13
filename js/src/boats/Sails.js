@@ -1,14 +1,14 @@
 var Sail = (function(windOffset, sailRange, noSail) {
 	var _optimalAngle =  180;
 	var _maxAngle = 50;
-	var trimAngle = 180-windOffset;
 	var _power = 0;
+	var trimAngle = 180-windOffset;
 	var windToBoat = 0;
 
 	var sail = new createjs.Container();
-	sail.speed = 2.2;
+	sail.speed = 1.8;
 	sail.sailColor = '#ded5be';
-	sail.lineColor = '#2a2824';
+	sail.lineColor = '#231F20';
 
 	function trimTo(angle) {
 		var animate = createjs.Tween.get(sail, {override:true});
@@ -69,10 +69,10 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
-	sail.speed = 2.5;
+	sail.speed = 2.0;
 
 	var sheet_luff = 20;
-	var yard_thickness = 6;
+	var yard_thickness = 4;
 
 	var bunches = 5;
 	var bunchSize = length/bunches;
@@ -80,7 +80,6 @@ var SquareRig = function(length, anchor1, anchor2) {
 	var sheet = new	createjs.Shape();
 	var furl = new createjs.Shape();
 	var yard = new createjs.Shape();
-	
 
 	var anchorPoint1 = new createjs.Shape();
 	var anchorPoint2 = new createjs.Shape();
@@ -90,7 +89,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 	anchorPoint1.y = anchorPoint2.y = 0;
 
 	// Draw Yard
-	yard.graphics.beginFill('#52352A');
+	yard.graphics.beginFill('#382822');
 	yard.graphics.drawRoundRect(-(length/2),-3, length, yard_thickness, yard_thickness/2);
 	yard.graphics.endFill();
 	
@@ -110,7 +109,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 		s.clear();
 		f.clear();
 
-		var luffAmount = -18;
+		var luffAmount = -14;
 		s.beginFill(sail.sailColor);
 		s.moveTo(-(length/2), -2);
 		s.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
@@ -169,6 +168,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 			.to({scaleY:sail.power+.1}, 400, createjs.Ease.linear)
 	}
 
+	sheet.scaleY = 0;
 	drawSail();
 	return sail;
 }
@@ -185,8 +185,8 @@ var ForeAft = function(length, anchorPoint) {
 	var anchorLine = new createjs.Shape();
 	anchorLine.y = length-10;
 
-	boom.graphics.beginFill('#52352A');
-	boom.graphics.drawRoundRect(-3, 0, 6, length, 4);
+	boom.graphics.beginFill('#382822');
+	boom.graphics.drawRoundRect(-3, 0, 4, length, 4);
 	boom.graphics.endFill();
 
 	sail.addChild(anchorLine, boom, furl, sheet);
@@ -211,8 +211,8 @@ var ForeAft = function(length, anchorPoint) {
 
 		s.beginFill(sail.sailColor);
 		s.moveTo(0, 0);
-		s.curveTo(-40, length*.7, 0, length);
-		s.curveTo(-10, length/2, 0,0);
+		s.curveTo(-20, length*.7, 0, length);
+		s.curveTo(-6, length/2, 0,0);
 		s.endFill();
 
 		var bunches = 4;
@@ -227,6 +227,8 @@ var ForeAft = function(length, anchorPoint) {
 			f.drawRoundRect(-bunchSize/8,bunchSize*i+bunchSize-2, bunchSize/4, 2, 2);
 		};
 		f.endFill();
+
+		sheet.scaleY = 0;
 		
 		//drawLine();
 	}

@@ -412,7 +412,7 @@ var World = function(playerBoat){
 	//var testRect = new createjs.Shape();
 	//playerBoat.addChild(testRect);
 
-	Game.stage.onMouseDown = function(e) {
+	Game.stage.addEventListener('mousedown', function(e) {
 		var location = playerBoat.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
 
@@ -437,7 +437,7 @@ var World = function(playerBoat){
 			playerBoat.collision({x:hitLocation.x,y:hitLocation.y});
 		}
 		*/
-	}
+	});
 
 	world.addPirate = addPirate;
 
@@ -1013,13 +1013,10 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:-10}, {x:23,y:-10});
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-20,y:32}, {x:21,y:32});
 	var telltail = new TellTail(10);
-	squareRig.y = -35;
-	mainSail.y = -26;
-	telltail.y = -30;
-	boat.addSail(mainSail);
+	squareRig.y = -4;
+	telltail.y = -4;
 	boat.addSail(squareRig);
 	boat.addChild(telltail);
 
@@ -1163,12 +1160,24 @@ var AIBoat = function() {
 			if (_mode === 'combat') {
 				var attackPosition = getAttackPosition(_currentTarget);
 				sailToDestination(attackPosition);
+				if (_currentTarget.speed > boat.speed) {
+					boat.increaseSpeed();
+				} else if (_currentTarget.speed < boat.speed) {
+					boat.decreaseSpeed();
+				}
 			} else if (_mode === 'evade') {
 				var evadeHeading = Utils.getRandomInt(_currentTarget.heading-90, _currentTarget.heading+90)
 				sailToDestination(Utils.convertToHeading(evadeHeading));
+				boat.increaseSpeed();
 			}
 		} else if (_mode === 'wander') {
 			wander();
+			var speedChange = Utils.getRandomInt(0,10);
+			if (speedChange == 0) {
+				boat.decreaseSpeed();
+			} else if (speedChange == 1) {
+				boat.increaseSpeed();
+			}
 		}
 		
 		/*
@@ -1188,7 +1197,7 @@ var AIBoat = function() {
 					cannon.shoot();
 				}
 			}
-		} 
+		}
 	}
 
 	function checkStatus() {
@@ -1208,7 +1217,6 @@ var AIBoat = function() {
 				turnToHeading(heading);
 				break;
 		}
-		boat.hoistSails();
 	}
 
 	function turnToHeading(heading) {
@@ -1329,14 +1337,14 @@ var Pirate = function() {
 var Sail = (function(windOffset, sailRange, noSail) {
 	var _optimalAngle =  180;
 	var _maxAngle = 50;
-	var trimAngle = 180-windOffset;
 	var _power = 0;
+	var trimAngle = 180-windOffset;
 	var windToBoat = 0;
 
 	var sail = new createjs.Container();
-	sail.speed = 2.2;
+	sail.speed = 1.8;
 	sail.sailColor = '#ded5be';
-	sail.lineColor = '#2a2824';
+	sail.lineColor = '#231F20';
 
 	function trimTo(angle) {
 		var animate = createjs.Tween.get(sail, {override:true});
@@ -1397,10 +1405,10 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
-	sail.speed = 2.5;
+	sail.speed = 2.0;
 
 	var sheet_luff = 20;
-	var yard_thickness = 6;
+	var yard_thickness = 4;
 
 	var bunches = 5;
 	var bunchSize = length/bunches;
@@ -1408,7 +1416,6 @@ var SquareRig = function(length, anchor1, anchor2) {
 	var sheet = new	createjs.Shape();
 	var furl = new createjs.Shape();
 	var yard = new createjs.Shape();
-	
 
 	var anchorPoint1 = new createjs.Shape();
 	var anchorPoint2 = new createjs.Shape();
@@ -1418,7 +1425,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 	anchorPoint1.y = anchorPoint2.y = 0;
 
 	// Draw Yard
-	yard.graphics.beginFill('#52352A');
+	yard.graphics.beginFill('#382822');
 	yard.graphics.drawRoundRect(-(length/2),-3, length, yard_thickness, yard_thickness/2);
 	yard.graphics.endFill();
 	
@@ -1438,7 +1445,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 		s.clear();
 		f.clear();
 
-		var luffAmount = -18;
+		var luffAmount = -14;
 		s.beginFill(sail.sailColor);
 		s.moveTo(-(length/2), -2);
 		s.curveTo(-(length*.4), luffAmount/2, -(length*.4), luffAmount);
@@ -1497,6 +1504,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 			.to({scaleY:sail.power+.1}, 400, createjs.Ease.linear)
 	}
 
+	sheet.scaleY = 0;
 	drawSail();
 	return sail;
 }
@@ -1513,8 +1521,8 @@ var ForeAft = function(length, anchorPoint) {
 	var anchorLine = new createjs.Shape();
 	anchorLine.y = length-10;
 
-	boom.graphics.beginFill('#52352A');
-	boom.graphics.drawRoundRect(-3, 0, 6, length, 4);
+	boom.graphics.beginFill('#382822');
+	boom.graphics.drawRoundRect(-3, 0, 4, length, 4);
 	boom.graphics.endFill();
 
 	sail.addChild(anchorLine, boom, furl, sheet);
@@ -1539,8 +1547,8 @@ var ForeAft = function(length, anchorPoint) {
 
 		s.beginFill(sail.sailColor);
 		s.moveTo(0, 0);
-		s.curveTo(-40, length*.7, 0, length);
-		s.curveTo(-10, length/2, 0,0);
+		s.curveTo(-20, length*.7, 0, length);
+		s.curveTo(-6, length/2, 0,0);
 		s.endFill();
 
 		var bunches = 4;
@@ -1555,6 +1563,8 @@ var ForeAft = function(length, anchorPoint) {
 			f.drawRoundRect(-bunchSize/8,bunchSize*i+bunchSize-2, bunchSize/4, 2, 2);
 		};
 		f.endFill();
+
+		sheet.scaleY = 0;
 		
 		//drawLine();
 	}
@@ -1789,7 +1799,7 @@ var Projectile = function(size, angle, owner) {
 
 	function checkForHit() {
 		for (var ship in Game.world.ships) {
-			var boat = Game.world.ships[ship]
+			var boat = Game.world.ships[ship];
 			if (boat != owner) {
 				var globalPos = cannonBall.localToGlobal(0,0);
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
@@ -1873,7 +1883,7 @@ var Game = (function(){
 		createjs.Touch.enable(stage);
 		stage.enableMouseOver(10);
 		stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
-		stage.snapToPixelEnabled = true;
+		//stage.snapToPixelEnabled = true;
 
 		//Initialize sound
 		if (!createjs.Sound.initializeDefaultPlugins()) {

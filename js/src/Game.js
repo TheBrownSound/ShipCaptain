@@ -44,7 +44,7 @@ var Game = (function(){
 		createjs.Touch.enable(stage);
 		stage.enableMouseOver(10);
 		stage.mouseMoveOutside = false; // keep tracking the mouse even when it leaves the canvas
-		stage.snapToPixelEnabled = true;
+		//stage.snapToPixelEnabled = true;
 
 		//Initialize sound
 		if (!createjs.Sound.initializeDefaultPlugins()) {

@@ -9,13 +9,10 @@ var PlayerBoat = function() {
 	var LENGTH = 125;
 	
 	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-23,y:-10}, {x:23,y:-10});
-	var mainSail = new ForeAft(LENGTH*.5, {x:0,y:30});
+	var squareRig = new SquareRig(WIDTH*1.5, {x:-20,y:32}, {x:21,y:32});
 	var telltail = new TellTail(10);
-	squareRig.y = -35;
-	mainSail.y = -26;
-	telltail.y = -30;
-	boat.addSail(mainSail);
+	squareRig.y = -4;
+	telltail.y = -4;
 	boat.addSail(squareRig);
 	boat.addChild(telltail);
 

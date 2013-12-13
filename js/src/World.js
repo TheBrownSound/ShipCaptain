@@ -134,7 +134,7 @@ var World = function(playerBoat){
 	//var testRect = new createjs.Shape();
 	//playerBoat.addChild(testRect);
 
-	Game.stage.onMouseDown = function(e) {
+	Game.stage.addEventListener('mousedown', function(e) {
 		var location = playerBoat.globalToLocal(e.stageX,e.stageY);
 		console.log(location);
 
@@ -159,7 +159,7 @@ var World = function(playerBoat){
 			playerBoat.collision({x:hitLocation.x,y:hitLocation.y});
 		}
 		*/
-	}
+	});
 
 	world.addPirate = addPirate;
 

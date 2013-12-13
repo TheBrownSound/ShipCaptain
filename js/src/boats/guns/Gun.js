@@ -112,7 +112,7 @@ var Projectile = function(size, angle, owner) {
 
 	function checkForHit() {
 		for (var ship in Game.world.ships) {
-			var boat = Game.world.ships[ship]
+			var boat = Game.world.ships[ship];
 			if (boat != owner) {
 				var globalPos = cannonBall.localToGlobal(0,0);
 				var local = boat.globalToLocal(globalPos.x, globalPos.y);
