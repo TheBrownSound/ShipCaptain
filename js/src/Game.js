@@ -114,8 +114,16 @@ var Game = (function(){
 	function sizeCanvas() {
 		if (viewport) {
 			var padding = 75;
-			stage.canvas.width = window.innerWidth;
-			stage.canvas.height = window.innerHeight;
+			
+			var aspect = 4/3;
+			var windowWidth = window.innerWidth;
+			if (window.innerHeight < window.innerWidth*.75) {
+				windowWidth = window.innerHeight * aspect;
+			}
+			var windowHeight = windowWidth / aspect;
+
+			stage.canvas.width = windowWidth;
+			stage.canvas.height = windowHeight;
 			windGauge.x = healthMeter.x = stage.canvas.width - padding;
 			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;

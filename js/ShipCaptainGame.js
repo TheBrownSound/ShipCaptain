@@ -591,12 +591,11 @@ var Ocean = function(width, height){
 	ocean.position = {x:0, y:0};
 
 	var crossWidth = width*3 + height*3;
-
-	var tide = new createjs.Shape();
 	
+	var tide = new createjs.Shape();
 	tide.graphics.beginBitmapFill(Game.assets['tide']);
 	tide.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
+	
 	var underwater = new createjs.Container();
 
 	ocean.addChild(underwater, tide);
@@ -1005,7 +1004,6 @@ var Boat = (function() {
 			bubble.animate();
 			boat.parent.addChildAt(bubble, 0);
 		}
-
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x+_bump.x;
@@ -1949,8 +1947,16 @@ var Game = (function(){
 	function sizeCanvas() {
 		if (viewport) {
 			var padding = 75;
-			stage.canvas.width = window.innerWidth;
-			stage.canvas.height = window.innerHeight;
+			
+			var aspect = 4/3;
+			var windowWidth = window.innerWidth;
+			if (window.innerHeight < window.innerWidth*.75) {
+				windowWidth = window.innerHeight * aspect;
+			}
+			var windowHeight = windowWidth / aspect;
+
+			stage.canvas.width = windowWidth;
+			stage.canvas.height = windowHeight;
 			windGauge.x = healthMeter.x = stage.canvas.width - padding;
 			windGauge.y = speedMeter.x = padding;
 			healthMeter.y = stage.canvas.height - healthMeter.height - padding;

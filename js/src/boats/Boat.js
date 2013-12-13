@@ -370,7 +370,6 @@ var Boat = (function() {
 			boat.parent.addChildAt(bubble, 0);
 		}
 
-
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
 		boat.x += axisSpeed.x+_bump.x;
 		boat.y += axisSpeed.y+_bump.y;

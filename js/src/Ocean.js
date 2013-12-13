@@ -8,12 +8,11 @@ var Ocean = function(width, height){
 	ocean.position = {x:0, y:0};
 
 	var crossWidth = width*3 + height*3;
-
-	var tide = new createjs.Shape();
 	
+	var tide = new createjs.Shape();
 	tide.graphics.beginBitmapFill(Game.assets['tide']);
 	tide.graphics.drawRect(-crossWidth, -crossWidth, crossWidth*2, crossWidth*2);
-
+	
 	var underwater = new createjs.Container();
 
 	ocean.addChild(underwater, tide);
