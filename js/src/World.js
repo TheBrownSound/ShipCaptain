@@ -91,10 +91,34 @@ var World = function(playerBoat){
 	}
 
 	function triggerCollision(boat, object, collisionRect) {
-		var localPos = boat.globalToLocal(collisionRect.x,collisionRect.y)
+		var localPos = map.globalToLocal(collisionRect.x,collisionRect.y)
 		collisionRect.x = localPos.x;
 		collisionRect.y = localPos.y;
-		boat.collision(object, collisionRect);
+
+		var centerOfImpact = {
+			x: collisionRect.x+(collisionRect.width/2),
+			y: collisionRect.y+(collisionRect.height/2)
+		}
+		if (boat.x < centerOfImpact.x) {
+			boat.x -= collisionRect.width;
+		} else {
+			boat.x += collisionRect.width;
+		}
+
+		if (boat.y < centerOfImpact.y) {
+			boat.y -= collisionRect.height;
+		} else {
+			boat.y += collisionRect.height;
+		}
+		/*
+		var hitMarker = new createjs.Shape();
+		map.addChild(hitMarker);
+		hitMarker.graphics.clear();
+		hitMarker.graphics.beginFill('#F00');
+		hitMarker.graphics.rect(collisionRect.x,collisionRect.y,collisionRect.width,collisionRect.height);
+		hitMarker.graphics.endFill();
+	*/
+		//boat.collision(object, collisionRect);
 	}
 	
 	function update() {
@@ -153,13 +177,13 @@ var World = function(playerBoat){
 		console.log(location);
 		
 		//Spawn test pirate
-		/*
+		
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = location.x;
 			pirate.y = location.y;
 		}
-		*/
+		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		

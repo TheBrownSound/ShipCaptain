@@ -369,10 +369,34 @@ var World = function(playerBoat){
 	}
 
 	function triggerCollision(boat, object, collisionRect) {
-		var localPos = boat.globalToLocal(collisionRect.x,collisionRect.y)
+		var localPos = map.globalToLocal(collisionRect.x,collisionRect.y)
 		collisionRect.x = localPos.x;
 		collisionRect.y = localPos.y;
-		boat.collision(object, collisionRect);
+
+		var centerOfImpact = {
+			x: collisionRect.x+(collisionRect.width/2),
+			y: collisionRect.y+(collisionRect.height/2)
+		}
+		if (boat.x < centerOfImpact.x) {
+			boat.x -= collisionRect.width;
+		} else {
+			boat.x += collisionRect.width;
+		}
+
+		if (boat.y < centerOfImpact.y) {
+			boat.y -= collisionRect.height;
+		} else {
+			boat.y += collisionRect.height;
+		}
+		/*
+		var hitMarker = new createjs.Shape();
+		map.addChild(hitMarker);
+		hitMarker.graphics.clear();
+		hitMarker.graphics.beginFill('#F00');
+		hitMarker.graphics.rect(collisionRect.x,collisionRect.y,collisionRect.width,collisionRect.height);
+		hitMarker.graphics.endFill();
+	*/
+		//boat.collision(object, collisionRect);
 	}
 	
 	function update() {
@@ -431,13 +455,13 @@ var World = function(playerBoat){
 		console.log(location);
 		
 		//Spawn test pirate
-		/*
+		
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = location.x;
 			pirate.y = location.y;
 		}
-		*/
+		
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
@@ -670,6 +694,7 @@ var Boat = (function() {
 	var boat = new createjs.Container();
 
 	var dispatcher = createjs.EventDispatcher.initialize(boat);
+	var updateInterval = setInterval(update, Math.floor(1000/60))
 
 	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
 	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
@@ -795,7 +820,7 @@ var Boat = (function() {
 			splinter.animate();
 		};
 		
-		createjs.Ticker.removeEventListener("tick", update);
+		clearInterval(updateInterval);
 		boat.parent.removeChild(boat);
 	}
 
@@ -881,9 +906,6 @@ var Boat = (function() {
 		boat.damage(dmg);
 	}
 
-	//var hitMarker = Utils.getDebugMarker();
-	//boat.addChild(hitMarker);
-
 	boat.collision = function(object, location) {
 		var objVelocity = {x:0,y:0};
 		if (object.type === 'boat') {
@@ -905,7 +927,7 @@ var Boat = (function() {
 		impactRoation = (impactLocation.x/impactLocation.y)*.5;
 		boat.x += impactXForce;
 		boat.y += impactYForce;
-		_speed -= impactForce;
+		//_speed -= impactForce;
 		if (_speed < 0 ) _speed = 0;
 
 		_bump = {
@@ -915,8 +937,8 @@ var Boat = (function() {
 		};
 
 		if (impactForce > 1) {
-			console.log(impactForce);
-			boat.damage(impactForce);
+			//console.log(impactForce);
+			//boat.damage(impactForce);
 			var hitSound = createjs.Sound.play("hit");
 			hitSound.volume = 0.1;
 		}
@@ -1009,18 +1031,16 @@ var Boat = (function() {
 		}
 
 		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
-		boat.x += axisSpeed.x+_bump.x;
-		boat.y += axisSpeed.y+_bump.y;
+		boat.x += axisSpeed.x//+_bump.x;
+		boat.y += axisSpeed.y//+_bump.y;
 		till.rotation = -(helm.turnAmount*20);
-		boat.rotation += getCurrentAgility()*helm.turnAmount+_bump.rotation;
+		boat.rotation += getCurrentAgility()*helm.turnAmount//+_bump.rotation;
 
 		bumpDecay();
 
 		boat.dispatchEvent('moved');
 	}
 
-	var updateInterval = setInterval(update, Math.floor(1000/60))
-	//createjs.Ticker.addEventListener("tick", update);
 	return boat;
 });
 var PlayerBoat = function() {
