@@ -20,10 +20,11 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   var bubbleTick = 0;
 
   // Boat Arrays
+  var masts = [];
   var mastAnchors = [];
-  var gunMounts = [];
   var sails = [];
   var guns = [];
+  var gunMounts = [];
 
   var boat = new createjs.Container();
   var helm = new Helm(boat);
@@ -32,11 +33,8 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
 
   var dispatcher = createjs.EventDispatcher.initialize(boat);
   var updateInterval = setInterval(update, Math.floor(1000/60))
-
-  var mast = boat.mast = new createjs.Bitmap('images/mast_small.png');
-  var till = boat.till = new createjs.Bitmap('images/raft_rudder.png');
-
-  boat.addChild(hull, mast);
+  
+  boat.addChild(hull);
 
   boat.turnLeft = helm.turnLeft;
   boat.turnRight = helm.turnRight;
@@ -178,13 +176,22 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     gunMounts.push({x:x,y:y});
   }
 
-  boat.addRudder = function(bitmap, onTop) {
-    boat.rudder = bitmap;
-    if (onTop) {
-      boat.addChildAt(bitmap, 1);
+  boat.addRudder = function(rudder, onTop) {
+    if (!boat.rudder) {
+      boat.rudder = rudder;
+      if (onTop) {
+        boat.addChildAt(rudder, 1);
+      } else {
+        boat.addChildAt(rudder, 0);
+      }
     } else {
-      boat.addChildAt(bitmap, 0);
+      console.log('Boat already has a rudder!');
     }
+  }
+
+  boat.addMast = function(mast) {
+    masts.push(mast);
+    boat.addChild(mast);
   }
 
   boat.setSailColor = function(hex) {
@@ -345,6 +352,10 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   boat.__defineGetter__('heading', function(){
     var heading = boat.rotation%360;
     return (heading < 0) ? heading+360:heading;
+  });
+
+  boat.__defineGetter__('masts', function(){
+    return masts;
   });
 
   boat.__defineGetter__('guns', function(){
