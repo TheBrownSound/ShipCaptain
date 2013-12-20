@@ -20,9 +20,18 @@ var Raft = function() {
 var SmallBoat = function() {
   var boat = new Boat(Game.assets['basicBoat']);
   var rudder = new BasicRudder();
-  boat.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
-  boat.addRudder(rudder, true);
+  var mast = SmallMast();
+  var sail = new ForeAft(boat.length/3, {x:0,y:22});
+  
   rudder.y = 73;
+  mast.y = -36;
+  sail.y = -32;
+
+  boat.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
+
+  boat.addRudder(rudder, true);
+  boat.addMast(mast);
+  boat.addSail(sail);
   return boat;
 }
 

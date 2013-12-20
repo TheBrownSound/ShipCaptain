@@ -1104,9 +1104,18 @@ var Raft = function() {
 var SmallBoat = function() {
   var boat = new Boat(Game.assets['basicBoat']);
   var rudder = new BasicRudder();
-  boat.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
-  boat.addRudder(rudder, true);
+  var mast = SmallMast();
+  var sail = new ForeAft(boat.length/3, {x:0,y:22});
+  
   rudder.y = 73;
+  mast.y = -36;
+  sail.y = -32;
+
+  boat.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
+
+  boat.addRudder(rudder, true);
+  boat.addMast(mast);
+  boat.addSail(sail);
   return boat;
 }
 
@@ -1134,19 +1143,12 @@ var BasicRudder = function() {
 var PlayerBoat = function() {
 	var boat = new SmallBoat();
 	boat.name = 'PlayerBoat';
-	boat.setSailColor('#FFF');
 
 	var _fireAtWill = false;
 
-	var WIDTH = 56;
-	var LENGTH = 125;
-	
-	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-20,y:32}, {x:21,y:32});
+	// TellTail
 	var telltail = new TellTail(10);
-	squareRig.y = -4;
 	telltail.y = -4;
-	boat.addSail(squareRig);
 	boat.addChild(telltail);
 
 	// GUNS!
@@ -1525,7 +1527,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
-	sail.speed = 2.0;
+	sail.speed = length/40;
 
 	var sheet_luff = 20;
 	var yard_thickness = 4;

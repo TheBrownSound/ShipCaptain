@@ -69,7 +69,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 var SquareRig = function(length, anchor1, anchor2) {
 	var sail = new Sail(180, 26, 90);
 	sail.name = 'square';
-	sail.speed = 2.0;
+	sail.speed = length/40;
 
 	var sheet_luff = 20;
 	var yard_thickness = 4;

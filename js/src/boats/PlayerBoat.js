@@ -1,19 +1,12 @@
 var PlayerBoat = function() {
 	var boat = new SmallBoat();
 	boat.name = 'PlayerBoat';
-	boat.setSailColor('#FFF');
 
 	var _fireAtWill = false;
 
-	var WIDTH = 56;
-	var LENGTH = 125;
-	
-	// Sails
-	var squareRig = new SquareRig(WIDTH*1.5, {x:-20,y:32}, {x:21,y:32});
+	// TellTail
 	var telltail = new TellTail(10);
-	squareRig.y = -4;
 	telltail.y = -4;
-	boat.addSail(squareRig);
 	boat.addChild(telltail);
 
 	// GUNS!
