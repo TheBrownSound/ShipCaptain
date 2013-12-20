@@ -7,6 +7,7 @@
 // @depends Ocean.js
 // @depends Weather.js
 // @depends boats/Boat.js
+// @depends boats/Boats.js
 // @depends boats/PlayerBoat.js
 // @depends boats/AIBoat.js
 // @depends boats/Pirate.js
@@ -63,7 +64,9 @@ var Game = (function(){
 			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
 			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
-			{src:"images/tide.png", id:"tide"}
+			{src:"images/tide.png", id:"tide"},
+			{src:"images/raft_hull.png", id:"raft"},
+			{src:"images/basic_hull.png", id:"basicBoat"}
 		];
 
 		preloader = new createjs.LoadQueue(false);

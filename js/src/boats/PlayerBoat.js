@@ -1,5 +1,5 @@
 var PlayerBoat = function() {
-	var boat = new Boat();
+	var boat = new SmallBoat();
 	boat.name = 'PlayerBoat';
 	boat.setSailColor('#FFF');
 

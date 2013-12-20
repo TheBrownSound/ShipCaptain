@@ -1,5 +1,5 @@
 var AIBoat = function() {
-	var boat = new Boat();
+	var boat = new Raft();
 	var _mode = 'wander';
 	var _enemies = [];
 	var _currentTarget = false;

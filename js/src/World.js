@@ -99,6 +99,7 @@ var World = function(playerBoat){
 			x: collisionRect.x+(collisionRect.width/2),
 			y: collisionRect.y+(collisionRect.height/2)
 		}
+
 		if (boat.x < centerOfImpact.x) {
 			boat.x -= collisionRect.width;
 		} else {
@@ -163,7 +164,7 @@ var World = function(playerBoat){
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 	}
 
-	var testBoat = new Boat();
+	var testBoat = new Raft();
 	testBoat.x = 300;
 	testBoat.y = 300;
 

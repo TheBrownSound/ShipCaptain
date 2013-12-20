@@ -377,6 +377,7 @@ var World = function(playerBoat){
 			x: collisionRect.x+(collisionRect.width/2),
 			y: collisionRect.y+(collisionRect.height/2)
 		}
+
 		if (boat.x < centerOfImpact.x) {
 			boat.x -= collisionRect.width;
 		} else {
@@ -441,7 +442,7 @@ var World = function(playerBoat){
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 	}
 
-	var testBoat = new Boat();
+	var testBoat = new Raft();
 	testBoat.x = 300;
 	testBoat.y = 300;
 
@@ -672,379 +673,425 @@ var Weather = function(){
 
 	return weather;
 }
-var Boat = (function() {
-	var WIDTH = 56;
-	var LENGTH = 125;
-	var _agility = 1;
-	
-	// Movement Properties
-	var _topSpeed = 0;
-	var _speed = 0;
-	var _limit = 0;
+var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for bounds to exist
+  // Create hull and set bounds
+  var hull = new createjs.Bitmap(hullImage);
+  var bounds = hull.getBounds();
+  hull.regX = bounds.width/2;
+  hull.regY = bounds.height/2;
 
-	var _heading = 0;
-	var _bump = {x:0,y:0,rotation:0};
-	
-	// Health Properties
-	var _life = 100;
-	var _health = 100;
+  // Movement Properties
+  var _topSpeed = 0;
+  var _speed = 0;
+  var _limit = 0;
+  var _agility = 1;
 
-	var bubbleTick = 0;
+  // Changing Properties
+  var _heading = 0;
+  var _bump = {x:0,y:0,rotation:0};
+  var _life = 100;
+  var _health = 100;
 
-	var boat = new createjs.Container();
+  var bubbleTick = 0;
 
-	var dispatcher = createjs.EventDispatcher.initialize(boat);
-	var updateInterval = setInterval(update, Math.floor(1000/60))
+  // Boat Arrays
+  var mastAnchors = [];
+  var gunMounts = [];
+  var sails = [];
+  var guns = [];
 
-	var hull = boat.hull = new createjs.Bitmap('images/small_boat.png');
-	var mast = boat.mast = new createjs.Bitmap('images/small_boat_mast.png');
-	var till = boat.till = new createjs.Bitmap('images/rudder.png');
-	var helm = new Helm(boat);
-	hull.x = mast.x = -(WIDTH/2);
-	hull.y = mast.y = -(LENGTH/2);
-	till.y = 58;
-	till.regX = 2;
-	till.regY = 24;
+  var boat = new createjs.Container();
+  var helm = new Helm(boat);
+  boat.hull = hull; // used for pixel hittest at the moment
+  boat.type = 'boat';
 
-	boat.sails = [];
-	boat.guns = [];
+  var dispatcher = createjs.EventDispatcher.initialize(boat);
+  var updateInterval = setInterval(update, Math.floor(1000/60))
 
-	boat.addChild(hull, till, mast);
+  var mast = boat.mast = new createjs.Bitmap('images/mast_small.png');
+  var till = boat.till = new createjs.Bitmap('images/raft_rudder.png');
 
-	boat.turnLeft = helm.turnLeft;
-	boat.turnRight = helm.turnRight;
+  boat.addChild(hull, mast);
 
-	function speedCalc() {
-		var potentialSpeed = 0;
-		/*
-		for (var i = 0; i < boat.sails.length; i++) {
-			var sail = boat.sails[i];
-			potentialSpeed += sail.power;
-		};
-		*/
+  boat.turnLeft = helm.turnLeft;
+  boat.turnRight = helm.turnRight;
 
-		if (_health > 0) {
-			potentialSpeed = (_limit/10)*_topSpeed;
-			potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
-		}
+  function speedCalc() {
+    var potentialSpeed = 0;
+    /*
+    for (var i = 0; i < boat.sails.length; i++) {
+      var sail = boat.sails[i];
+      potentialSpeed += sail.power;
+    };
+    */
 
-		var potentialAxisSpeed = Utils.getAxisSpeed(boat.heading, potentialSpeed);
+    if (_health > 0) {
+      potentialSpeed = (_limit/10)*_topSpeed;
+      potentialSpeed = Math.round( potentialSpeed * 1000) / 1000; //Rounds to three decimals
+    }
 
-		potentialAxisSpeed.x = Math.abs(Math.round( potentialAxisSpeed.x * 1000) / 1000);
-		potentialAxisSpeed.y = Math.abs(Math.round( potentialAxisSpeed.y * 1000) / 1000);
+    var potentialAxisSpeed = Utils.getAxisSpeed(boat.heading, potentialSpeed);
 
-		if (_speed != potentialSpeed) {
-			if (_speed > potentialSpeed) {
-				_speed -= .005;
-			} else if (_speed < potentialSpeed) {
-				_speed += .01;
-			}
-		}
-	}
+    potentialAxisSpeed.x = Math.abs(Math.round( potentialAxisSpeed.x * 1000) / 1000);
+    potentialAxisSpeed.y = Math.abs(Math.round( potentialAxisSpeed.y * 1000) / 1000);
 
-	function adjustTrim() {
-		var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
-		boat.sails.map(function(sail){
-			sail.trim(windHeading);
-		});
-	}
+    if (_speed != potentialSpeed) {
+      if (_speed > potentialSpeed) {
+        _speed -= .005;
+      } else if (_speed < potentialSpeed) {
+        _speed += .01;
+      }
+    }
+  }
 
-	function updateSails() {
-		boat.sails.map(function(sail){
-			sail.power = _limit/10;
-		});
-	}
+  function adjustTrim() {
+    var windHeading = Utils.convertToHeading(Game.world.weather.wind.direction - boat.rotation);
+    sails.map(function(sail){
+      sail.trim(windHeading);
+    });
+  }
 
-	function bumpDecay() {
-		if (_bump.x != 0) {
-			if (_bump.x > 0) {
-				_bump.x -= 0.01;
-				if (_bump.x < 0 ) {
-					_bump.x = 0;
-				}
-			} else if (_bump.x < 0) {
-				_bump.x += 0.01;
-				if (_bump.x > 0 ) {
-					_bump.x = 0;
-				}
-			}
-		}
+  function updateSails() {
+    sails.map(function(sail){
+      sail.power = _limit/10;
+    });
+  }
 
-		if (_bump.y != 0) {
-			if (_bump.y > 0) {
-				_bump.y -= 0.01;
-				if (_bump.y < 0 ) {
-					_bump.y = 0;
-				}
-			} else if (_bump.y < 0) {
-				_bump.y += 0.01;
-				if (_bump.y > 0 ) {
-					_bump.y = 0;
-				}
-			}
-		}
-		if (_bump.rotation != 0) {
-			if (_bump.rotation > 0) {
-				_bump.rotation -= 0.01;
-				if (_bump.rotation < 0 ) {
-					_bump.rotation = 0;
-				}
-			} else if (_bump.rotation < 0) {
-				_bump.rotation += 0.01;
-				if (_bump.rotation > 0 ) {
-					_bump.rotation = 0;
-				}
-			}
-		}
-	}
+  function bumpDecay() {
+    if (_bump.x != 0) {
+      if (_bump.x > 0) {
+        _bump.x -= 0.01;
+        if (_bump.x < 0 ) {
+          _bump.x = 0;
+        }
+      } else if (_bump.x < 0) {
+        _bump.x += 0.01;
+        if (_bump.x > 0 ) {
+          _bump.x = 0;
+        }
+      }
+    }
 
-	function sink() {
-		console.log('sunk');
-		boat.dispatchEvent('sunk');
+    if (_bump.y != 0) {
+      if (_bump.y > 0) {
+        _bump.y -= 0.01;
+        if (_bump.y < 0 ) {
+          _bump.y = 0;
+        }
+      } else if (_bump.y < 0) {
+        _bump.y += 0.01;
+        if (_bump.y > 0 ) {
+          _bump.y = 0;
+        }
+      }
+    }
+    if (_bump.rotation != 0) {
+      if (_bump.rotation > 0) {
+        _bump.rotation -= 0.01;
+        if (_bump.rotation < 0 ) {
+          _bump.rotation = 0;
+        }
+      } else if (_bump.rotation < 0) {
+        _bump.rotation += 0.01;
+        if (_bump.rotation > 0 ) {
+          _bump.rotation = 0;
+        }
+      }
+    }
+  }
 
-		//Smoke
-		for (var i = 0; i < 40; i++) {
-			var smoke = new Particles.Smoke();
-			smoke.x = boat.x;
-			smoke.y = boat.y;
-			boat.parent.addChildAt(smoke, 1);
-			smoke.animate();
-		};
+  function sink() {
+    console.log('sunk');
+    boat.dispatchEvent('sunk');
 
-		//Splinters
-		for (var i = 0; i < 20; i++) {
-			var splinter = new Particles.Splinter();
-			splinter.x = boat.x;
-			splinter.y = boat.y;
-			boat.parent.addChildAt(splinter, 1);
-			splinter.animate();
-		};
-		
-		clearInterval(updateInterval);
-		boat.parent.removeChild(boat);
-	}
+    //Smoke
+    for (var i = 0; i < 40; i++) {
+      var smoke = new Particles.Smoke();
+      smoke.x = boat.x;
+      smoke.y = boat.y;
+      boat.parent.addChildAt(smoke, 1);
+      smoke.animate();
+    };
 
-	function getCurrentAgility() {
-		var limit = 2; // speed at which velocity no longer factors into agility
-		if (boat.speed < limit) {
-			var reducedAgility = (boat.speed/limit)*_agility;
-			if (reducedAgility < 0.3) {
-				return 0.3
-			} else {
-				return reducedAgility
-			}
-		} else {
-			return _agility;
-		}
-	}
+    //Splinters
+    for (var i = 0; i < 20; i++) {
+      var splinter = new Particles.Splinter();
+      splinter.x = boat.x;
+      splinter.y = boat.y;
+      boat.parent.addChildAt(splinter, 1);
+      splinter.animate();
+    };
+    
+    clearInterval(updateInterval);
+    boat.parent.removeChild(boat);
+  }
 
-	
+  function getCurrentAgility() {
+    var limit = 2; // speed at which velocity no longer factors into agility
+    if (boat.speed < limit) {
+      var reducedAgility = (boat.speed/limit)*_agility;
+      if (reducedAgility < 0.3) {
+        return 0.3
+      } else {
+        return reducedAgility
+      }
+    } else {
+      return _agility;
+    }
+  }
 
-	boat.setSailColor = function(hex) {
-		for (var sail in this.sails) {
-			this.sails[sail].color = hex;
-		}
-	}
+  boat.setAnchorPoints = function(){
+    for (arg in arguments) {
+      var point = arguments[arg];
+      if (typeof point == 'object' && point.x && point.y) {
+        mastAnchors.push({x:point.x,y:point.y});
+      }
+    }
+  }
 
-	boat.addSail = function(sail, position) {
-		this.sails.push(sail);
+  boat.setGunMount = function(x,y) {
+    gunMounts.push({x:x,y:y});
+  }
 
-		// Recalculate top speed
-		var topSpeed = 0;
-		for (var i = 0; i < this.sails.length; i++) {
-			topSpeed += this.sails[i].speed;
-		};
-		var diminishingReturns = 1/Math.sqrt(this.sails.length);
-		_topSpeed = (topSpeed*diminishingReturns);
-		if (sail.type == "sqare") {
-			this.addChildAt(sail);
-		} else {
-			this.addChildAt(sail, 1);
-		}
-		
-	}
+  boat.addRudder = function(bitmap, onTop) {
+    boat.rudder = bitmap;
+    if (onTop) {
+      boat.addChildAt(bitmap, 1);
+    } else {
+      boat.addChildAt(bitmap, 0);
+    }
+  }
 
-	boat.addGun = function(gun, position) {
-		this.guns.push(gun);
-		this.addChildAt(gun, 1);
-	}
+  boat.setSailColor = function(hex) {
+    for (var sail in sails) {
+      sails[sail].color = hex;
+    }
+  }
 
-	boat.stopTurning = function(){
-		helm.stopTurning();
-		boat.rotation = Math.round(boat.rotation);
-	}
+  boat.addSail = function(sail, position) {
+    sails.push(sail);
 
-	boat.increaseSpeed = function() {
-		_limit++;
-		if (_limit > 10) {
-			_limit = 10;
-		}
-		updateSails();
-	}
+    // Recalculate top speed
+    var topSpeed = 0;
+    for (var i = 0; i < sails.length; i++) {
+      topSpeed += sails[i].speed;
+    };
+    var diminishingReturns = 1/Math.sqrt(sails.length);
+    _topSpeed = (topSpeed*diminishingReturns);
+    if (sail.type == "sqare") {
+      this.addChildAt(sail);
+    } else {
+      this.addChildAt(sail, 1);
+    }
+    
+  }
 
-	boat.decreaseSpeed = function() {
-		_limit--;
-		if (_limit <= 0) {
-			_limit = 0;
-		}
-		updateSails();
-	}
+  boat.addGun = function(gun, position) {
+    guns.push(gun);
+    this.addChildAt(gun, 1);
+  }
 
-	
-	boat.cannonHit = function(damageAmount, location) {
-		createjs.Sound.play("hit").setVolume(0.5);
-		createjs.Sound.play("small_explosion");
-		var dmg = Math.round(damageAmount);
-		for (var i = 0; i < dmg; i++) {
-			var splinter = new Particles.Splinter();
-			var pos = boat.hull.localToLocal(location.x, location.y, boat.parent)
-			splinter.x = pos.x;
-			splinter.y = pos.y;
-			boat.parent.addChildAt(splinter, 1);
-			splinter.animate();
-		};
-		boat.damage(dmg);
-	}
+  boat.stopTurning = function(){
+    helm.stopTurning();
+    boat.rotation = Math.round(boat.rotation);
+  }
 
-	boat.collision = function(object, location) {
-		var objVelocity = {x:0,y:0};
-		if (object.type === 'boat') {
-			objVelocity = Utils.getAxisSpeed(object.heading, object.speed);
-		}
+  boat.increaseSpeed = function() {
+    _limit++;
+    if (_limit > 10) {
+      _limit = 10;
+    }
+    updateSails();
+  }
 
-		var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
-		var impactXForce = -(boatVelocity.x - objVelocity.x);
-		var impactYForce = -(boatVelocity.y - objVelocity.y);
-		var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
-		impactLocation = {
-			x: location.x+(location.width/2),
-			y: location.y+(location.height/2)
-		}
+  boat.decreaseSpeed = function() {
+    _limit--;
+    if (_limit <= 0) {
+      _limit = 0;
+    }
+    updateSails();
+  }
 
-		//hitMarker.x = impactLocation.x
-		//hitMarker.y = impactLocation.y
+  
+  boat.cannonHit = function(damageAmount, location) {
+    createjs.Sound.play("hit").setVolume(0.5);
+    createjs.Sound.play("small_explosion");
+    var dmg = Math.round(damageAmount);
+    for (var i = 0; i < dmg; i++) {
+      var splinter = new Particles.Splinter();
+      var pos = boat.hull.localToLocal(location.x, location.y, boat.parent)
+      splinter.x = pos.x;
+      splinter.y = pos.y;
+      boat.parent.addChildAt(splinter, 1);
+      splinter.animate();
+    };
+    boat.damage(dmg);
+  }
 
-		impactRoation = (impactLocation.x/impactLocation.y)*.5;
-		boat.x += impactXForce;
-		boat.y += impactYForce;
-		//_speed -= impactForce;
-		if (_speed < 0 ) _speed = 0;
+  boat.collision = function(object, location) {
+    var objVelocity = {x:0,y:0};
+    if (object.type === 'boat') {
+      objVelocity = Utils.getAxisSpeed(object.heading, object.speed);
+    }
 
-		_bump = {
-			x: impactXForce*.5,
-			y: impactYForce*.5,
-			rotation: impactRoation*impactForce
-		};
+    var boatVelocity = Utils.getAxisSpeed(this.heading, this.speed);
+    var impactXForce = -(boatVelocity.x - objVelocity.x);
+    var impactYForce = -(boatVelocity.y - objVelocity.y);
+    var impactForce = Math.abs(Utils.getTotalSpeed(impactXForce,impactYForce));
+    impactLocation = {
+      x: location.x+(location.width/2),
+      y: location.y+(location.height/2)
+    }
 
-		if (impactForce > 1) {
-			//console.log(impactForce);
-			//boat.damage(impactForce);
-			var hitSound = createjs.Sound.play("hit");
-			hitSound.volume = 0.1;
-		}
-	}
+    //hitMarker.x = impactLocation.x
+    //hitMarker.y = impactLocation.y
 
-	boat.repair = function(amount) {
-		if (_health < _life) {
-			_health += amount;
-			if (_health > _life) {
-				_health = _life;
-			}
-			boat.dispatchEvent('healthChanged', amount);
-		}
-	}
+    impactRoation = (impactLocation.x/impactLocation.y)*.5;
+    boat.x += impactXForce;
+    boat.y += impactYForce;
+    //_speed -= impactForce;
+    if (_speed < 0 ) _speed = 0;
 
-	boat.damage = function(amount) {
-		if (_health > 0) {
-			_health -= amount;
-			if (_health <= 0) {
-				_health = 0;
-				sink();
-			}
-			boat.dispatchEvent('healthChanged', amount);
-		}
-	}
+    _bump = {
+      x: impactXForce*.5,
+      y: impactYForce*.5,
+      rotation: impactRoation*impactForce
+    };
 
-	// Getters
-	boat.__defineGetter__('health', function(){
-		return _health;
-	});
+    if (impactForce > 1) {
+      //console.log(impactForce);
+      //boat.damage(impactForce);
+      var hitSound = createjs.Sound.play("hit");
+      hitSound.volume = 0.1;
+    }
+  }
 
-	boat.__defineGetter__('life', function(){
-		return _life;
-	});
+  boat.repair = function(amount) {
+    if (_health < _life) {
+      _health += amount;
+      if (_health > _life) {
+        _health = _life;
+      }
+      boat.dispatchEvent('healthChanged', amount);
+    }
+  }
 
-	boat.__defineGetter__('agility', function(){
-		return _agility;
-	});
+  boat.damage = function(amount) {
+    if (_health > 0) {
+      _health -= amount;
+      if (_health <= 0) {
+        _health = 0;
+        sink();
+      }
+      boat.dispatchEvent('healthChanged', amount);
+    }
+  }
 
-	boat.__defineGetter__('topSpeed', function(){
-		return _topSpeed;
-	});
+  // Getters
+  boat.__defineGetter__('health', function(){
+    return _health;
+  });
 
-	boat.__defineGetter__('potentialSpeed', function(){
-		return _topSpeed*(_limit/10);
-	});
+  boat.__defineGetter__('life', function(){
+    return _life;
+  });
 
-	boat.__defineGetter__('speed', function(){
-		return _speed;
-	});
+  boat.__defineGetter__('agility', function(){
+    return _agility;
+  });
 
-	boat.__defineGetter__('knots', function(){
-		var knotConversion = 4;
-		return Math.round(boat.speed*knotConversion);
-	});
+  boat.__defineGetter__('topSpeed', function(){
+    return _topSpeed;
+  });
 
-	boat.__defineGetter__('heading', function(){
-		var heading = boat.rotation%360;
-		return (heading < 0) ? heading+360:heading;;
-	});
+  boat.__defineGetter__('potentialSpeed', function(){
+    return _topSpeed*(_limit/10);
+  });
 
-	boat.__defineGetter__('width', function(){
-		return WIDTH;
-	});
-	
-	boat.__defineGetter__('length', function(){
-		return LENGTH;
-	});
+  boat.__defineGetter__('speed', function(){
+    return _speed;
+  });
 
-	boat.getSternPosition = function() {
-		return LENGTH-boat.regY;
-	}
+  boat.__defineGetter__('knots', function(){
+    var knotConversion = 4;
+    return Math.round(boat.speed*knotConversion);
+  });
 
-	function update() {
-		speedCalc();
+  boat.__defineGetter__('heading', function(){
+    var heading = boat.rotation%360;
+    return (heading < 0) ? heading+360:heading;
+  });
 
-		if (_health > 0) {
-			adjustTrim();
-		}
+  boat.__defineGetter__('guns', function(){
+    return guns;
+  });
 
-		bubbleTick += Math.round(boat.speed);
-		if (bubbleTick >= 7) {
-			bubbleTick = 0;
-			var bubble = new Particles.Bubble();
-			var pos = boat.localToLocal(0, 0, boat.parent);
-			bubble.x = pos.x;
-			bubble.y = pos.y;
-			bubble.animate();
-			boat.parent.addChildAt(bubble, 0);
-		}
+  boat.__defineGetter__('width', function(){
+    return bounds.width;
+  });
+  
+  boat.__defineGetter__('length', function(){
+    return bounds.height;
+  });
 
-		var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
-		boat.x += axisSpeed.x//+_bump.x;
-		boat.y += axisSpeed.y//+_bump.y;
-		till.rotation = -(helm.turnAmount*20);
-		boat.rotation += getCurrentAgility()*helm.turnAmount//+_bump.rotation;
+  boat.getSternPosition = function() {
+    return bounds.height-boat.regY;
+  }
 
-		bumpDecay();
+  function update() {
+    speedCalc();
 
-		boat.dispatchEvent('moved');
-	}
+    if (_health > 0) {
+      adjustTrim();
+    }
 
-	return boat;
+    bubbleTick += Math.round(boat.speed);
+    if (bubbleTick >= 7) {
+      bubbleTick = 0;
+      var bubble = new Particles.Bubble();
+      var pos = boat.localToLocal(0, 0, boat.parent);
+      bubble.x = pos.x;
+      bubble.y = pos.y;
+      bubble.animate();
+      boat.parent.addChildAt(bubble, 0);
+    }
+
+    var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
+    boat.x += axisSpeed.x//+_bump.x;
+    boat.y += axisSpeed.y//+_bump.y;
+    if (boat.rudder) {
+      boat.rudder.rotation = -(helm.turnAmount*20);
+    }
+    boat.rotation += getCurrentAgility()*helm.turnAmount//+_bump.rotation;
+
+    bumpDecay();
+
+    boat.dispatchEvent('moved');
+  }
+
+  return boat;
 });
+var Raft = function() {
+  var raft = new Boat(Game.assets['raft']);
+  var rudder = new createjs.Bitmap('images/raft_rudder.png');
+  raft.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
+  raft.addRudder(rudder, true);
+
+  rudder.regX = 2;
+  rudder.regY = 24;
+  rudder.x = 17;
+  rudder.y = 34;
+
+  return raft;
+}
+
+var SmallBoat = function() {
+  var boat = new Boat(Game.assets['basicBoat']);
+  boat.setAnchorPoints();
+  return boat;
+}
 var PlayerBoat = function() {
-	var boat = new Boat();
+	var boat = new SmallBoat();
 	boat.name = 'PlayerBoat';
 	boat.setSailColor('#FFF');
 
@@ -1187,7 +1234,7 @@ var PlayerBoat = function() {
 	return boat;
 }
 var AIBoat = function() {
-	var boat = new Boat();
+	var boat = new Raft();
 	var _mode = 'wander';
 	var _enemies = [];
 	var _currentTarget = false;
@@ -1942,7 +1989,9 @@ var Game = (function(){
 			{src:"sounds/small_explosion.mp3", id:"small_explosion", data:soundInstanceLimit},
 			{src:"sounds/wood_crack.mp3", id:"hit", data:soundInstanceLimit},
 			{src:"sounds/water.mp3", id:"water"},
-			{src:"images/tide.png", id:"tide"}
+			{src:"images/tide.png", id:"tide"},
+			{src:"images/raft_hull.png", id:"raft"},
+			{src:"images/basic_hull.png", id:"basicBoat"}
 		];
 
 		preloader = new createjs.LoadQueue(false);
