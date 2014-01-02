@@ -289,6 +289,10 @@ var Viewport = function(container) {
 		container.y = height/2;
 	}
 
+	viewport.toggleZoom = function() {
+		changeScale(1);
+	}
+
 	viewport.zoomIn = function() {
 		changeScale(1);
 	}
@@ -2145,6 +2149,7 @@ var Game = (function(){
 	}
 
 	function onKeyUp(event) {
+		console.log(event.keyCode);
 		switch(event.keyCode) {
 			case 187: // = key, Zoom In
 				viewport.zoomIn();
@@ -2154,6 +2159,9 @@ var Game = (function(){
 				break;
 			case 27: // Escape
 				game.dispatchEvent('escape');
+				break;
+			case 90: // z key, Toggle Zoom
+				viewport.toggleZoom();
 				break;
 			default:
 				game.dispatchEvent({type:'onKeyUp', key:event.keyCode});

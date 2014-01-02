@@ -149,6 +149,7 @@ var Game = (function(){
 	}
 
 	function onKeyUp(event) {
+		console.log(event.keyCode);
 		switch(event.keyCode) {
 			case 187: // = key, Zoom In
 				viewport.zoomIn();
@@ -158,6 +159,9 @@ var Game = (function(){
 				break;
 			case 27: // Escape
 				game.dispatchEvent('escape');
+				break;
+			case 90: // z key, Toggle Zoom
+				viewport.toggleZoom();
 				break;
 			default:
 				game.dispatchEvent({type:'onKeyUp', key:event.keyCode});

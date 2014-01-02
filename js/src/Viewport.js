@@ -46,6 +46,10 @@ var Viewport = function(container) {
 		container.y = height/2;
 	}
 
+	viewport.toggleZoom = function() {
+		changeScale(1);
+	}
+
 	viewport.zoomIn = function() {
 		changeScale(1);
 	}
