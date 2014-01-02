@@ -33,7 +33,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
 
   var dispatcher = createjs.EventDispatcher.initialize(boat);
   var updateInterval = setInterval(update, Math.floor(1000/60))
-  
+
   boat.addChild(hull);
 
   boat.turnLeft = helm.turnLeft;
@@ -382,15 +382,29 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
 
     bubbleTick += Math.round(boat.speed);
+    var pos = boat.localToLocal(0, 0, boat.parent);
+
     if (bubbleTick >= 7) {
       bubbleTick = 0;
       var bubble = new Particles.Bubble();
-      var pos = boat.localToLocal(0, 0, boat.parent);
       bubble.x = pos.x;
       bubble.y = pos.y;
       bubble.animate();
       boat.parent.addChildAt(bubble, 0);
     }
+    
+    /*
+    var leftWave = new Particles.Wave(boat.speed);
+    var rightWave = new Particles.Wave(boat.speed);
+    leftWave.x = rightWave.x = pos.x;
+    leftWave.y = rightWave.y = pos.y;
+    leftWave.rotation = boat.heading-60;
+    rightWave.rotation = boat.heading+60;
+    leftWave.animate();
+    rightWave.animate();
+    boat.parent.addChildAt(leftWave, 0);
+    boat.parent.addChildAt(rightWave, 0);
+    */
 
     var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
     boat.x += axisSpeed.x//+_bump.x;

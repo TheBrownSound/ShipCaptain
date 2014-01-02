@@ -216,6 +216,29 @@ var Particles = function() {
 		return bubble;
 	}
 
+	particles.Wave = function(speed) {
+		var wave = new createjs.Bitmap('images/wave_particle.png');
+		
+		function remove() {
+			wave.parent.removeChild(wave);
+		}
+	
+		wave.animate = function() {
+			createjs.Tween.get(wave,{loop:false})
+				.to({
+					y: speed*10
+				},speed*1000,createjs.Ease.sineOut);
+
+			createjs.Tween.get(wave,{loop:false})
+				.to({
+					scaleX: 0,
+					scaleY: 0
+				},speed*1000,createjs.Ease.easeOut)
+				.call(remove);
+		}
+		return wave;
+	}
+
 	return particles;
 }();
 var Viewport = function(container) {
@@ -708,7 +731,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
 
   var dispatcher = createjs.EventDispatcher.initialize(boat);
   var updateInterval = setInterval(update, Math.floor(1000/60))
-  
+
   boat.addChild(hull);
 
   boat.turnLeft = helm.turnLeft;
@@ -1057,15 +1080,29 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
 
     bubbleTick += Math.round(boat.speed);
+    var pos = boat.localToLocal(0, 0, boat.parent);
+
     if (bubbleTick >= 7) {
       bubbleTick = 0;
       var bubble = new Particles.Bubble();
-      var pos = boat.localToLocal(0, 0, boat.parent);
       bubble.x = pos.x;
       bubble.y = pos.y;
       bubble.animate();
       boat.parent.addChildAt(bubble, 0);
     }
+    
+    /*
+    var leftWave = new Particles.Wave(boat.speed);
+    var rightWave = new Particles.Wave(boat.speed);
+    leftWave.x = rightWave.x = pos.x;
+    leftWave.y = rightWave.y = pos.y;
+    leftWave.rotation = boat.heading-60;
+    rightWave.rotation = boat.heading+60;
+    leftWave.animate();
+    rightWave.animate();
+    boat.parent.addChildAt(leftWave, 0);
+    boat.parent.addChildAt(rightWave, 0);
+    */
 
     var axisSpeed = Utils.getAxisSpeed(boat.heading, boat.speed);
     boat.x += axisSpeed.x//+_bump.x;
@@ -1903,7 +1940,7 @@ var Gun = function(caliber, length, owner) {
 
 var Projectile = function(size, angle, owner) {
 	var velocity = size*2;
-	var range = velocity*4;
+	var range = velocity*8;
 
 	var boatXSpeed = Math.sin(owner.heading*Math.PI/180)*owner.speed;
 	var boatYSpeed = Math.cos(owner.heading*Math.PI/180)*-owner.speed;

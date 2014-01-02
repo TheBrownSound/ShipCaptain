@@ -126,5 +126,28 @@ var Particles = function() {
 		return bubble;
 	}
 
+	particles.Wave = function(speed) {
+		var wave = new createjs.Bitmap('images/wave_particle.png');
+		
+		function remove() {
+			wave.parent.removeChild(wave);
+		}
+	
+		wave.animate = function() {
+			createjs.Tween.get(wave,{loop:false})
+				.to({
+					y: speed*10
+				},speed*1000,createjs.Ease.sineOut);
+
+			createjs.Tween.get(wave,{loop:false})
+				.to({
+					scaleX: 0,
+					scaleY: 0
+				},speed*1000,createjs.Ease.easeOut)
+				.call(remove);
+		}
+		return wave;
+	}
+
 	return particles;
 }();

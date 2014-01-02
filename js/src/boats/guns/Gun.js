@@ -95,7 +95,7 @@ var Gun = function(caliber, length, owner) {
 
 var Projectile = function(size, angle, owner) {
 	var velocity = size*2;
-	var range = velocity*4;
+	var range = velocity*8;
 
 	var boatXSpeed = Math.sin(owner.heading*Math.PI/180)*owner.speed;
 	var boatYSpeed = Math.cos(owner.heading*Math.PI/180)*-owner.speed;
