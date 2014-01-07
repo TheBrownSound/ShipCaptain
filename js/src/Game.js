@@ -16,6 +16,7 @@
 // @depends boats/Telltail.js
 // @depends boats/guns/Gun.js
 // @depends static/Place.js
+// @depends static/City.js
 // @depends static/Island.js
 
 

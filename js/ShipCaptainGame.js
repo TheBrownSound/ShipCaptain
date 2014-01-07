@@ -305,6 +305,8 @@ var Viewport = function(container) {
 }
 // Top Down world class
 var World = function(playerBoat){
+	var BOUNDS = 50000;
+
 	var _eventFrequency = 10000;
 
 	var world = new createjs.Container();
@@ -316,6 +318,14 @@ var World = function(playerBoat){
 	var map = world.map = new createjs.Container();
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
+
+	var cityOne = new City();
+	cityOne.x = 3000;
+	cityOne.y = 1000;
+
+	var cityTwo = new City();
+	cityTwo.x = -5000;
+	cityTwo.y = -2000;
 
 	var island = new Island();
 	island.y = -200;
@@ -329,6 +339,8 @@ var World = function(playerBoat){
 	world.addChild(ocean, map);
 
 	addBoat(playerBoat);
+	addPlace(cityOne);
+	addPlace(cityTwo);
 	addPlace(island);
 
 	var eventTick = setInterval(eventSpawner, _eventFrequency);
@@ -2004,6 +2016,21 @@ var Place = function() {
 	var place = new createjs.Container();
 	place.type = "stationary";
 	return place;
+}
+var City = function() {
+  var city = new Place();
+  var top = new createjs.Bitmap("images/city_top.png");
+  var bottom = new createjs.Bitmap("images/city_bottom.png")
+  city.addChild(bottom, top);
+
+  city.__defineGetter__('hitBox', function(){
+    return top;
+  });
+
+  city.regX = 500;
+  city.regY = 500;
+
+  return city;
 }
 var Island = function() {
 	var island = new Place();
