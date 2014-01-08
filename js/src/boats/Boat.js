@@ -16,6 +16,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   var _bump = {x:0,y:0,rotation:0};
   var _life = 100;
   var _health = 100;
+  var _dockedAtPort = false;
 
   var bubbleTick = 0;
 
@@ -243,7 +244,6 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
     updateSails();
   }
-
   
   boat.cannonHit = function(damageAmount, location) {
     createjs.Sound.play("hit").setVolume(0.5);
@@ -320,6 +320,14 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   }
 
   // Getters
+  boat.__defineGetter__('dockedAt', function() {
+    return _dockedAtPort;
+  });
+
+  boat.__defineSetter__('dockedAt', function(port) {
+    _dockedAtPort = port;
+  });
+
   boat.__defineGetter__('health', function(){
     return _health;
   });

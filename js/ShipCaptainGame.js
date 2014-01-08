@@ -49,6 +49,13 @@ var Utils = function() {
 		return this.convertToHeading(heading);
 	}
 
+	utils.getPointAwayFromPoint = function(point,distance,angle) {
+		return {
+			x: (Math.sin(angle*(Math.PI/180)) * distance) + point.x,
+			y: -(Math.cos(angle*(Math.PI/180)) * distance) + point.y
+		}
+	}
+
 	utils.distanceBetweenTwoPoints = function(point1, point2) {
 		var xs = point2.x - point1.x;
 		xs = xs * xs;
@@ -311,6 +318,7 @@ var World = function(playerBoat){
 
 	var world = new createjs.Container();
 	world.name = 'world';
+	world.ports = [];
 	world.places = [];
 	world.ships = [];
 	world.playerBoat = playerBoat;
@@ -319,13 +327,8 @@ var World = function(playerBoat){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 
-	var cityOne = new City();
-	cityOne.x = 3000;
-	cityOne.y = 1000;
-
-	var cityTwo = new City();
-	cityTwo.x = -5000;
-	cityTwo.y = -2000;
+	var cityOne = new Port(800,50);
+	var cityTwo = new Port(-5000,-2000);
 
 	var island = new Island();
 	island.y = -200;
@@ -361,6 +364,10 @@ var World = function(playerBoat){
 	}
 
 	function addPlace(obj) {
+		if (obj.type == 'port') {
+			world.ports.push(obj);
+			obj.init();
+		}
 		map.addChildAt(obj, 0);
 		world.places.push(obj);
 	}
@@ -385,16 +392,44 @@ var World = function(playerBoat){
 		}
 	}
 
+	function addMerchant() {
+		var merchant = new Merchant();
+
+		var randomPort = Utils.getRandomInt(0, world.ports.length-1);
+		var port = world.ports[randomPort];
+		console.log('Port: ', port);
+		if (port) {
+			console.log('port docks: ', port.dockPositions);
+			var docks = port.dockPositions;
+			for (var position in docks) {
+				var dock = docks[position];
+				console.log('DOCK:', dock);
+				if (!dock.occupied) {
+					merchant.x = dock.x;
+					merchant.y = dock.y;
+					merchant.rotation = dock.heading;
+					port.dock(merchant, position);
+					break;
+				}
+			}
+		}
+
+		addBoat(merchant);
+		return merchant;
+	}
+
 	function eventSpawner() {
 		var spawnEvent = (Utils.getRandomInt(0,5) === 0);
 		console.log('Spawn event: ', spawnEvent);
 		if (spawnEvent) {
-			var location = getEventLocation();
-			var boat = addPirate();
+			//var location = getEventLocation();
+			//var boat = addPirate();
+			/*
 			if (boat) {
 				boat.x = location.x;
 				boat.y = location.y;
 			}
+			*/
 		}
 	}
 
@@ -481,12 +516,6 @@ var World = function(playerBoat){
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 	}
 
-	var testBoat = new Raft();
-	testBoat.x = 300;
-	testBoat.y = 300;
-
-	addBoat(testBoat);
-
 	var testRect = new createjs.Shape();
 	map.addChild(testRect);
 
@@ -495,13 +524,13 @@ var World = function(playerBoat){
 		console.log(location);
 		
 		//Spawn test pirate
-		
+		/*
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = location.x;
 			pirate.y = location.y;
 		}
-		
+		*/
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
@@ -518,6 +547,8 @@ var World = function(playerBoat){
 		*/
 	});
 
+	addMerchant();
+	world.addMerchant = addMerchant;
 	world.addPirate = addPirate;
 
 	createjs.Ticker.addEventListener("tick", update);
@@ -730,6 +761,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   var _bump = {x:0,y:0,rotation:0};
   var _life = 100;
   var _health = 100;
+  var _dockedAtPort = false;
 
   var bubbleTick = 0;
 
@@ -957,7 +989,6 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
     updateSails();
   }
-
   
   boat.cannonHit = function(damageAmount, location) {
     createjs.Sound.play("hit").setVolume(0.5);
@@ -1034,6 +1065,14 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   }
 
   // Getters
+  boat.__defineGetter__('dockedAt', function() {
+    return _dockedAtPort;
+  });
+
+  boat.__defineSetter__('dockedAt', function(port) {
+    _dockedAtPort = port;
+  });
+
   boat.__defineGetter__('health', function(){
     return _health;
   });
@@ -1329,16 +1368,19 @@ var PlayerBoat = function() {
 
 	return boat;
 }
-var AIBoat = function() {
-	var boat = new Raft();
-	var _mode = 'wander';
+var AIBoat = function(boat, boatClass) {
+	boat.class = (boatClass) ? boatClass : 'merchant'; // pirate, navy, merchant
+	var _mode = 'float';
+	var _destinations = [];
 	var _enemies = [];
 	var _currentTarget = false;
+	var _docked = false;
 
 	var moveInterval = setInterval(moveBoat, 2000); //Adjust movement every 2 seconds
 	var lookInterval = setInterval(checkSurroundings, 100); //React 10 times every second
 
 	function moveBoat() {
+		console.log('moveBoat: ', _mode);
 
 		if (_currentTarget) {
 			if (_mode === 'combat') {
@@ -1353,7 +1395,17 @@ var AIBoat = function() {
 				var evadeHeading = Utils.getRandomInt(_currentTarget.heading-90, _currentTarget.heading+90)
 				sailToDestination(Utils.convertToHeading(evadeHeading));
 				boat.increaseSpeed();
+			} 
+		} else if (_mode === 'destination') {
+			console.log(_destinations[0]);
+			if (_destinations.length >= 1) {
+				sailToDestination(_destinations[0]);
+				boat.increaseSpeed();
+			} else {
+				_mode = 'float';
 			}
+		} else if (_mode === 'docked') {
+			checkForMissionFrom(_docked.port)
 		} else if (_mode === 'wander') {
 			wander();
 			var speedChange = Utils.getRandomInt(0,10);
@@ -1361,6 +1413,10 @@ var AIBoat = function() {
 				boat.decreaseSpeed();
 			} else if (speedChange == 1) {
 				boat.increaseSpeed();
+			}
+		} else if (_mode === 'float') {
+			while (boat.speed > 0) {
+				boat.decreaseSpeed();
 			}
 		}
 		
@@ -1374,6 +1430,13 @@ var AIBoat = function() {
 	}
 
 	function checkSurroundings() {
+		if (_destinations[0]) {
+			var prox = Math.abs(Utils.distanceBetweenTwoPoints(boat,_destinations[0]));
+			if (prox <= 10) {
+				_destinations.shift();
+			}
+		}
+
 		if (_currentTarget) {
 			for (var gun in boat.guns) {
 				var cannon = boat.guns[gun];
@@ -1391,7 +1454,19 @@ var AIBoat = function() {
 		}
 	}
 
+	function checkForMissionFrom(port) {
+		if (port.missions.length >= 1) {
+			console.log('got mission!');
+			var mission = port.acceptMission(0);
+			port.undock(_docked.num);
+			boat.sailTo(Utils.getPointAwayFromPoint({x:_docked.x, y:_docked.y}, 300, _docked.heading));
+			boat.sailTo(mission.target);
+			console.log(_destinations);
+		}
+	}
+
 	function sailToDestination(location) {
+		console.log('sailToDestination', location)
 		switch(typeof(location)) {
 			case 'number': // Heading
 				turnToHeading(location);
@@ -1446,7 +1521,6 @@ var AIBoat = function() {
 
 	function getEvadePosition(enemy) {
 		var runAmount = 2000;
-
 	}
 
 	function clearChecks() {
@@ -1481,6 +1555,15 @@ var AIBoat = function() {
 		}
 	}
 
+	boat.float = function() {
+		_mode = 'float';
+	}
+
+	boat.sailTo = function(location) {
+		_mode = 'destination';
+		_destinations.push(location);
+	}
+
 	boat.attack = function(enemy) {
 		_enemies.push(enemy);
 		enemy.addEventListener('sunk', removeEnemy);
@@ -1494,13 +1577,24 @@ var AIBoat = function() {
 		_mode = 'evade';
 	}
 
+	boat.dock = function(dock) {
+		_mode = 'docked';
+		_docked = dock;
+	}
+
 	boat.addEventListener('damaged', checkStatus);
 	boat.addEventListener('sunk', clearChecks);
 
 	return boat;
 }
+var Merchant = function() {
+  var boat = new AIBoat(new SmallBoat);
+  boat.class = "merchant";
+
+  return boat;
+}
 var Pirate = function() {
-	var boat = new AIBoat();
+	var boat = new AIBoat(new Raft);
 	var mainGun = new Gun(3, 10, boat);
 	mainGun.x = 20;
 	mainGun.y = -25;
@@ -2017,20 +2111,99 @@ var Place = function() {
 	place.type = "stationary";
 	return place;
 }
-var City = function() {
-  var city = new Place();
+var Port = function(xPos,yPos) {
+  var MAX_MISSIONS = 4;
+
+  var port = new Place();
+  port.type = 'port';
+  
+  var missions = [];
+  var dockPositions = [];
+
+  var missionInterval = setInterval(generateMission, 60000); // New mission every minute
+
+  // Graphics setup
   var top = new createjs.Bitmap("images/city_top.png");
   var bottom = new createjs.Bitmap("images/city_bottom.png")
-  city.addChild(bottom, top);
+  port.addChild(bottom, top);
+  port.regX = 500;
+  port.regY = 500;
 
-  city.__defineGetter__('hitBox', function(){
+  port.x = xPos;
+  port.y = yPos;
+
+  function generateMission() {
+    switch (Utils.getRandomInt(1,1)) {
+      case 1:
+        var ports = Game.world.ports.slice(0);
+        ports.splice(ports.indexOf(port), 1);//removes this port
+        if (ports.length >= 1) {
+          var targetPort = ports[Utils.getRandomInt(0,ports.length-1)];
+          port.addMission({
+            type: 'deliver',
+            target: targetPort
+          });
+        }
+        break;
+    }
+  }
+
+  function addDockPosition(xLoc,yLoc,head) {
+    dockPositions.push({
+      num: dockPositions.length,
+      x: port.x+xLoc,
+      y: port.y+yLoc,
+      heading: head,
+      port: port,
+      occupied: false
+    });
+  }
+
+  port.init = function() {
+    addDockPosition(-180,390,220);
+    addDockPosition(-310,260,220);
+  }
+
+  port.addMission = function(mission) {
+    if (missions.length >= MAX_MISSIONS) {
+      missions.shift();
+    }
+    missions.push(mission);
+  }
+
+  port.acceptMission = function(num) {
+    var mission = missions.slice(num, 1);
+    return (mission.length == 1) ? mission[0] : false;
+  }
+
+  port.dock = function(boat, dockNum) {
+    var position = dockPositions[dockNum];
+    if (position) {
+      boat.dock(dockPositions[dockNum]);
+      position.occupied = boat;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  port.undock = function(dockNum) {
+    dockPositions[dockNum].occupied = false;
+  }
+
+  port.__defineGetter__('dockPositions', function(){
+    return dockPositions;
+  });
+
+  port.__defineGetter__('hitBox', function(){
     return top;
   });
 
-  city.regX = 500;
-  city.regY = 500;
+  port.__defineGetter__('missions', function(){
+    return missions;
+  });
 
-  return city;
+  return port;
 }
 var Island = function() {
 	var island = new Place();

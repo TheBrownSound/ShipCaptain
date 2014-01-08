@@ -10,13 +10,14 @@
 // @depends boats/Boats.js
 // @depends boats/PlayerBoat.js
 // @depends boats/AIBoat.js
+// @depends boats/Merchant.js
 // @depends boats/Pirate.js
 // @depends boats/Sails.js
 // @depends boats/Helm.js
 // @depends boats/Telltail.js
 // @depends boats/guns/Gun.js
 // @depends static/Place.js
-// @depends static/City.js
+// @depends static/Port.js
 // @depends static/Island.js
 
 

@@ -6,6 +6,7 @@ var World = function(playerBoat){
 
 	var world = new createjs.Container();
 	world.name = 'world';
+	world.ports = [];
 	world.places = [];
 	world.ships = [];
 	world.playerBoat = playerBoat;
@@ -14,13 +15,8 @@ var World = function(playerBoat){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 
-	var cityOne = new City();
-	cityOne.x = 3000;
-	cityOne.y = 1000;
-
-	var cityTwo = new City();
-	cityTwo.x = -5000;
-	cityTwo.y = -2000;
+	var cityOne = new Port(800,50);
+	var cityTwo = new Port(-5000,-2000);
 
 	var island = new Island();
 	island.y = -200;
@@ -56,6 +52,10 @@ var World = function(playerBoat){
 	}
 
 	function addPlace(obj) {
+		if (obj.type == 'port') {
+			world.ports.push(obj);
+			obj.init();
+		}
 		map.addChildAt(obj, 0);
 		world.places.push(obj);
 	}
@@ -80,16 +80,44 @@ var World = function(playerBoat){
 		}
 	}
 
+	function addMerchant() {
+		var merchant = new Merchant();
+
+		var randomPort = Utils.getRandomInt(0, world.ports.length-1);
+		var port = world.ports[randomPort];
+		console.log('Port: ', port);
+		if (port) {
+			console.log('port docks: ', port.dockPositions);
+			var docks = port.dockPositions;
+			for (var position in docks) {
+				var dock = docks[position];
+				console.log('DOCK:', dock);
+				if (!dock.occupied) {
+					merchant.x = dock.x;
+					merchant.y = dock.y;
+					merchant.rotation = dock.heading;
+					port.dock(merchant, position);
+					break;
+				}
+			}
+		}
+
+		addBoat(merchant);
+		return merchant;
+	}
+
 	function eventSpawner() {
 		var spawnEvent = (Utils.getRandomInt(0,5) === 0);
 		console.log('Spawn event: ', spawnEvent);
 		if (spawnEvent) {
-			var location = getEventLocation();
-			var boat = addPirate();
+			//var location = getEventLocation();
+			//var boat = addPirate();
+			/*
 			if (boat) {
 				boat.x = location.x;
 				boat.y = location.y;
 			}
+			*/
 		}
 	}
 
@@ -176,12 +204,6 @@ var World = function(playerBoat){
 			.to({x:xSpeed*50, y:ySpeed*50}, 1000, createjs.Ease.sineOut)
 	}
 
-	var testBoat = new Raft();
-	testBoat.x = 300;
-	testBoat.y = 300;
-
-	addBoat(testBoat);
-
 	var testRect = new createjs.Shape();
 	map.addChild(testRect);
 
@@ -190,13 +212,13 @@ var World = function(playerBoat){
 		console.log(location);
 		
 		//Spawn test pirate
-		
+		/*
 		var pirate = addPirate();
 		if (pirate) {
 			pirate.x = location.x;
 			pirate.y = location.y;
 		}
-		
+		*/
 		/*
 		var hitRect = ndgmr.checkPixelCollision(playerBoat.hull,testBoat.hull, 0, true);
 		
@@ -213,6 +235,8 @@ var World = function(playerBoat){
 		*/
 	});
 
+	addMerchant();
+	world.addMerchant = addMerchant;
 	world.addPirate = addPirate;
 
 	createjs.Ticker.addEventListener("tick", update);

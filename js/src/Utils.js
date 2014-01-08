@@ -48,6 +48,13 @@ var Utils = function() {
 		return this.convertToHeading(heading);
 	}
 
+	utils.getPointAwayFromPoint = function(point,distance,angle) {
+		return {
+			x: (Math.sin(angle*(Math.PI/180)) * distance) + point.x,
+			y: -(Math.cos(angle*(Math.PI/180)) * distance) + point.y
+		}
+	}
+
 	utils.distanceBetweenTwoPoints = function(point1, point2) {
 		var xs = point2.x - point1.x;
 		xs = xs * xs;
