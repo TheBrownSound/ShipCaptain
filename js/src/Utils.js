@@ -60,7 +60,7 @@ var Utils = function() {
 		xs = xs * xs;
 		var ys = point2.y - point1.y;
 		ys = ys * ys;
-		return Math.sqrt(xs + ys);
+		return Math.sqrt(xs + ys);// returns abs values
 	}
 
 	utils.getRandomInt = function(min, max) {

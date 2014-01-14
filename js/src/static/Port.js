@@ -6,7 +6,7 @@ var Port = function(xPos,yPos) {
   
   var missions = [];
   var dockPositions = [];
-
+  var ships = [];
   var missionInterval = setInterval(generateMission, 60000); // New mission every minute
 
   // Graphics setup
@@ -33,6 +33,10 @@ var Port = function(xPos,yPos) {
         }
         break;
     }
+  }
+
+  function addBoat(boat) {
+
   }
 
   function addDockPosition(xLoc,yLoc,head) {
@@ -66,7 +70,7 @@ var Port = function(xPos,yPos) {
   port.dock = function(boat, dockNum) {
     var position = dockPositions[dockNum];
     if (position) {
-      boat.dock(dockPositions[dockNum]);
+      //boat.dock(dockPositions[dockNum]);
       position.occupied = boat;
       return true;
     } else {
@@ -76,6 +80,10 @@ var Port = function(xPos,yPos) {
 
   port.undock = function(dockNum) {
     dockPositions[dockNum].occupied = false;
+  }
+
+  port.requestDockPosition = function(boat) {
+    
   }
 
   port.__defineGetter__('dockPositions', function(){
