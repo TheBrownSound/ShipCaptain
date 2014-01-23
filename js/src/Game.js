@@ -94,6 +94,7 @@ var Game = (function(){
 
 		var playerBoat = new PlayerBoat();
 		var world = game.world = new World(playerBoat);
+		world.generateWorld();
 		
 		viewport = new Viewport(world);
 		viewport.width = stage.canvas.width;
@@ -108,7 +109,7 @@ var Game = (function(){
 		fireRight = new ShootButton('starboard');
 
 		stage.addChild(viewport, windGauge, healthMeter, speedMeter, fireLeft, fireUp, fireRight);
-		
+
 		//Ticker
 		createjs.Ticker.setFPS(60);
 		createjs.Ticker.addEventListener("tick", tick);

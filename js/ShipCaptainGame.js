@@ -252,7 +252,7 @@ var Viewport = function(container) {
 	var _width = 400;
 	var _height = 300;
 	var currentScale = 1;
-	var scaleIncrements = [.5, 1];
+	var scaleIncrements = [.2, .5, 1];
 
 	var viewport = new createjs.Container();
 	viewport.name = 'viewport';
@@ -327,29 +327,19 @@ var World = function(playerBoat){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 
-	var cityOne = new Port(800,50);
-	var cityTwo = new Port(-5000,-2000);
-
-	var island = new Island();
-	island.y = -200;
-
+	/*
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
 	map.addChild(mapCenter);
+	*/
+	
 	world.addChild(ocean, map);
-
 	addBoat(playerBoat);
-	addPlace(cityOne);
-	addPlace(cityTwo);
-	addPlace(island);
 
 	var eventTick = setInterval(eventSpawner, _eventFrequency);
-
-	//Start playing water sound
-	createjs.Sound.play("water", {loop:-1});
 
 	function addBoat(boat) {
 		console.log('adding boat', boat);
@@ -373,7 +363,6 @@ var World = function(playerBoat){
 	}
 
 	function addPirate() {
-		if (world.ships.length < 5) {
 			var pirate = new Pirate();
 			var minDistance = 1000;
 
@@ -389,7 +378,6 @@ var World = function(playerBoat){
 			}
 			addBoat(pirate);
 			return pirate;
-		}
 	}
 
 	function addMerchant() {
@@ -547,7 +535,21 @@ var World = function(playerBoat){
 		*/
 	});
 
-	addMerchant();
+	world.generateWorld = function() {
+		var cityOne = new Port(800,50);
+		var cityTwo = new Port(-800,-50);
+		var island = new Island();
+		island.y = -200;
+
+		addPlace(cityOne);
+		addPlace(cityTwo);
+		addPlace(island);
+
+		//Start playing water sound
+		createjs.Sound.play("water", {loop:-1});
+	}
+
+	world.addBoat = addBoat;
 	world.addMerchant = addMerchant;
 	world.addPirate = addPirate;
 
@@ -761,7 +763,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   var _bump = {x:0,y:0,rotation:0};
   var _life = 100;
   var _health = 100;
-  var _dockedAtPort = false;
+  var _docked = false;
 
   var bubbleTick = 0;
 
@@ -989,6 +991,16 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
     updateSails();
   }
+
+  boat.setSpeed = function(amount) {
+    if (amount > 10) {
+      amount = 10;
+    } else if ( amount < 0) {
+      amount = 0;
+    }
+    _limit = amount;
+    updateSails();
+  }
   
   boat.cannonHit = function(damageAmount, location) {
     createjs.Sound.play("hit").setVolume(0.5);
@@ -1064,13 +1076,23 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     }
   }
 
-  // Getters
-  boat.__defineGetter__('dockedAt', function() {
-    return _dockedAtPort;
-  });
+  boat.dockAt = function(dock) {
+    _docked = dock;
+    if (dock) {
+      dock.occupied = boat;
+      boat.dispatchEvent('docking', dock);
+      createjs.Tween.get(boat, {override:true})
+        .to({
+          rotation:dock.heading,
+          x: dock.x,
+          y: dock.y
+        }, 10000, createjs.Ease.sineOut)
+    } 
+  }
 
-  boat.__defineSetter__('dockedAt', function(port) {
-    _dockedAtPort = port;
+  // Getters
+  boat.__defineGetter__('docked', function() {
+    return _docked;
   });
 
   boat.__defineGetter__('health', function(){
@@ -1373,11 +1395,13 @@ var AIBoat = function(boat, boatClass) {
   var _mode = 'float';
   var _destinations = [];
   var _enemies = [];
+  var _wait = 0;
   var _currentTarget = false;
-  var _docked = false;
 
   var moveInterval = setInterval(moveBoat, 2000); //Adjust movement every 2 seconds
   var lookInterval = setInterval(checkSurroundings, 100); //React 10 times every second
+
+  var mark = Utils.getDebugMarker();
 
   function moveBoat() {
     // Check curent heading for near collisions
@@ -1390,22 +1414,57 @@ var AIBoat = function(boat, boatClass) {
     }
     */
 
+    boat.parent.addChild(mark);
+
+    if (_wait > 0) {
+      _wait--;
+      return;
+    }
+
     // Check prioritized actions
     if (_enemies.length > 0) {
       // Has enemies, decide what to do (assumes greatest threat is always first in the array)
-      //check health
-      if (boat.health > 40) {
+      if (boat.health > 40) { //check health
         // attack or defend
         attackEnemy(_enemies[0]);
       } else {
         evadeEnemy(_enemies[0]);
       }
     } else if (_destinations.length > 0) {
-      // sail to next destination
-      sailToDestination(_destinations[0]);
+      var location = _destinations[0];
+      if (location.type == 'dock') {
+        _wait = Utils.getRandomInt(4,15);
+        boat.setSpeed(0);
+        boat.dockAt(location);
+        //animateToDock(location);
+      } else {
+        var distance = Utils.distanceBetweenTwoPoints(boat,location);
+        if (location.type == 'port') {
+          if (distance < 1200) {
+            var dock = location.requestDockPosition(boat);
+            if (dock) {
+              _destinations.splice(0,1);
+              _destinations.unshift(dock);
+              _destinations.unshift(dock.approachLocation);
+            } else {
+              boat.setSpeed(0);
+              return;
+            }
+          }
+        }
+
+        // set speed
+        if (distance > 1000) {
+          boat.setSpeed(10);
+        } else {
+          var newSpeed = Math.round(distance)/100;
+          boat.setSpeed(newSpeed);
+        }
+
+        sailToDestination(location); // sail to next destination
+      }
     } else {
-      // not doing anything select new action
-      chooseAction();
+      chooseAction(); // not doing anything select new action
     }
   }
 
@@ -1413,8 +1472,14 @@ var AIBoat = function(boat, boatClass) {
     if (boat.class == 'merchant') {
       // Sail to a port!
       var ports = Game.world.ports.slice(0); // Copies world port array
-      if (_docked) {
-        ports.splice(ports.indexOf(_docked.port), 1);//removes port docked at
+      if (boat.docked) {
+        console.log('undock!')
+        ports.splice(ports.indexOf(boat.docked.port), 1);//removes port docked at
+
+        _destinations.push(boat.docked.approachLocation);
+        //removes references for docking
+        boat.docked.occupied = false;
+        boat.dockAt(false);
       }
       if (ports.length >= 1) {
         var targetPort = ports[Utils.getRandomInt(0,ports.length-1)];
@@ -1448,11 +1513,10 @@ var AIBoat = function(boat, boatClass) {
     }
     */
 
-
     // Removes destinations arrived at
     if (_destinations[0]) {
       var prox = Math.abs(Utils.distanceBetweenTwoPoints(boat,_destinations[0]));
-      if (prox <= 10) {
+      if (prox <= 100) {
         _destinations.shift();
       }
     }
@@ -1497,7 +1561,7 @@ var AIBoat = function(boat, boatClass) {
     if (port.missions.length >= 1) {
       console.log('got mission!');
       var mission = port.acceptMission(0);
-      port.undock(_docked.num);
+      //port.undock(_docked.num);
       //boat.sailTo(Utils.getPointAwayFromPoint({x:_docked.x, y:_docked.y}, 300, _docked.heading));
       //boat.sailTo(mission.target);
       console.log(_destinations);
@@ -1505,7 +1569,7 @@ var AIBoat = function(boat, boatClass) {
   }
 
   function sailToDestination(location) {
-    console.log('sailToDestination', location)
+    //console.log('sailToDestination', location)
     switch(typeof(location)) {
       case 'number': // Heading
         turnToHeading(location);
@@ -1515,6 +1579,9 @@ var AIBoat = function(boat, boatClass) {
         turnToHeading(heading);
         break;
     }
+
+    mark.x = location.x;
+    mark.y = location.y;
   }
 
   function turnToHeading(heading) {
@@ -1564,7 +1631,7 @@ var AIBoat = function(boat, boatClass) {
     Utils.removeFromArray(_enemies, enemy);
     enemy.removeEventListener('sunk', removeEnemy);
   }
-  
+
   boat.addEventListener('damaged', boatDamaged);
   boat.addEventListener('sunk', clearChecks);
 
@@ -2131,19 +2198,21 @@ var Port = function(xPos,yPos) {
     }
   }
 
-  function addBoat(boat) {
-
-  }
-
   function addDockPosition(xLoc,yLoc,head) {
-    dockPositions.push({
-      num: dockPositions.length,
-      x: port.x+xLoc,
-      y: port.y+yLoc,
-      heading: head,
-      port: port,
-      occupied: false
-    });
+    // Create Dock
+    var dock = new Dock(port, xLoc, yLoc, head);
+    dockPositions.push(dock);
+
+    // Spawn merchant for dock position
+    var newBoat = new Merchant();
+    ships.push(newBoat);
+
+    newBoat.x = dock.x;
+    newBoat.y = dock.y;
+    newBoat.rotation = dock.heading;
+
+    Game.world.addBoat(newBoat);
+    newBoat.dockAt(dock);
   }
 
   port.init = function() {
@@ -2179,7 +2248,14 @@ var Port = function(xPos,yPos) {
   }
 
   port.requestDockPosition = function(boat) {
-    
+    for (var position in dockPositions) {
+      var dock = dockPositions[position];
+      if (!dock.occupied) {
+        dock.occupied = boat;
+        return dock;
+      }
+    }
+    return false;
   }
 
   port.__defineGetter__('dockPositions', function(){
@@ -2195,6 +2271,43 @@ var Port = function(xPos,yPos) {
   });
 
   return port;
+}
+
+var Dock = function(port, xLoc, yLoc, head) {
+  var _occupied = false;
+  var _owner = port;
+  var _heading = head;
+
+  var dock = {
+    x: _owner.x+xLoc,
+    y: _owner.y+yLoc,
+    type: 'dock'
+  }
+
+  var _approachPoint = Utils.getPointAwayFromPoint(dock, 300, _heading);
+  _approachPoint.type = 'approach';
+
+  dock.__defineGetter__('occupied', function(){
+    return _occupied;
+  });
+
+  dock.__defineSetter__('occupied', function(boat){
+    _occupied = boat;
+  });
+
+  dock.__defineGetter__('port', function(){
+    return _owner;
+  });
+
+  dock.__defineGetter__('heading', function(){
+    return _heading
+  });
+
+  dock.__defineGetter__('approachLocation', function(){
+    return _approachPoint;
+  });
+
+  return dock;
 }
 var Island = function() {
 	var island = new Place();
@@ -2283,6 +2396,7 @@ var Game = (function(){
 
 		var playerBoat = new PlayerBoat();
 		var world = game.world = new World(playerBoat);
+		world.generateWorld();
 		
 		viewport = new Viewport(world);
 		viewport.width = stage.canvas.width;
@@ -2297,7 +2411,7 @@ var Game = (function(){
 		fireRight = new ShootButton('starboard');
 
 		stage.addChild(viewport, windGauge, healthMeter, speedMeter, fireLeft, fireUp, fireRight);
-		
+
 		//Ticker
 		createjs.Ticker.setFPS(60);
 		createjs.Ticker.addEventListener("tick", tick);

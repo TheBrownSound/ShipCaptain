@@ -15,29 +15,19 @@ var World = function(playerBoat){
 	var ocean = world.ocean = new Ocean(500,500);
 	var weather = world.weather = new Weather();
 
-	var cityOne = new Port(800,50);
-	var cityTwo = new Port(-5000,-2000);
-
-	var island = new Island();
-	island.y = -200;
-
+	/*
 	var mapCenter = new createjs.Shape();
 	mapCenter.graphics.beginFill('#F00');
 	mapCenter.graphics.drawCircle(-5,-5,20);
 	mapCenter.graphics.endFill();
 
 	map.addChild(mapCenter);
+	*/
+	
 	world.addChild(ocean, map);
-
 	addBoat(playerBoat);
-	addPlace(cityOne);
-	addPlace(cityTwo);
-	addPlace(island);
 
 	var eventTick = setInterval(eventSpawner, _eventFrequency);
-
-	//Start playing water sound
-	createjs.Sound.play("water", {loop:-1});
 
 	function addBoat(boat) {
 		console.log('adding boat', boat);
@@ -61,7 +51,6 @@ var World = function(playerBoat){
 	}
 
 	function addPirate() {
-		if (world.ships.length < 5) {
 			var pirate = new Pirate();
 			var minDistance = 1000;
 
@@ -77,7 +66,6 @@ var World = function(playerBoat){
 			}
 			addBoat(pirate);
 			return pirate;
-		}
 	}
 
 	function addMerchant() {
@@ -235,7 +223,21 @@ var World = function(playerBoat){
 		*/
 	});
 
-	addMerchant();
+	world.generateWorld = function() {
+		var cityOne = new Port(800,50);
+		var cityTwo = new Port(-800,-50);
+		var island = new Island();
+		island.y = -200;
+
+		addPlace(cityOne);
+		addPlace(cityTwo);
+		addPlace(island);
+
+		//Start playing water sound
+		createjs.Sound.play("water", {loop:-1});
+	}
+
+	world.addBoat = addBoat;
 	world.addMerchant = addMerchant;
 	world.addPirate = addPirate;
 

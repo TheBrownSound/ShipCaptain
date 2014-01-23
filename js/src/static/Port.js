@@ -35,19 +35,21 @@ var Port = function(xPos,yPos) {
     }
   }
 
-  function addBoat(boat) {
-
-  }
-
   function addDockPosition(xLoc,yLoc,head) {
-    dockPositions.push({
-      num: dockPositions.length,
-      x: port.x+xLoc,
-      y: port.y+yLoc,
-      heading: head,
-      port: port,
-      occupied: false
-    });
+    // Create Dock
+    var dock = new Dock(port, xLoc, yLoc, head);
+    dockPositions.push(dock);
+
+    // Spawn merchant for dock position
+    var newBoat = new Merchant();
+    ships.push(newBoat);
+
+    newBoat.x = dock.x;
+    newBoat.y = dock.y;
+    newBoat.rotation = dock.heading;
+
+    Game.world.addBoat(newBoat);
+    newBoat.dockAt(dock);
   }
 
   port.init = function() {
@@ -83,7 +85,14 @@ var Port = function(xPos,yPos) {
   }
 
   port.requestDockPosition = function(boat) {
-    
+    for (var position in dockPositions) {
+      var dock = dockPositions[position];
+      if (!dock.occupied) {
+        dock.occupied = boat;
+        return dock;
+      }
+    }
+    return false;
   }
 
   port.__defineGetter__('dockPositions', function(){
@@ -99,4 +108,41 @@ var Port = function(xPos,yPos) {
   });
 
   return port;
+}
+
+var Dock = function(port, xLoc, yLoc, head) {
+  var _occupied = false;
+  var _owner = port;
+  var _heading = head;
+
+  var dock = {
+    x: _owner.x+xLoc,
+    y: _owner.y+yLoc,
+    type: 'dock'
+  }
+
+  var _approachPoint = Utils.getPointAwayFromPoint(dock, 300, _heading);
+  _approachPoint.type = 'approach';
+
+  dock.__defineGetter__('occupied', function(){
+    return _occupied;
+  });
+
+  dock.__defineSetter__('occupied', function(boat){
+    _occupied = boat;
+  });
+
+  dock.__defineGetter__('port', function(){
+    return _owner;
+  });
+
+  dock.__defineGetter__('heading', function(){
+    return _heading
+  });
+
+  dock.__defineGetter__('approachLocation', function(){
+    return _approachPoint;
+  });
+
+  return dock;
 }

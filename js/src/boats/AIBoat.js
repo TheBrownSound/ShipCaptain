@@ -3,11 +3,13 @@ var AIBoat = function(boat, boatClass) {
   var _mode = 'float';
   var _destinations = [];
   var _enemies = [];
+  var _wait = 0;
   var _currentTarget = false;
-  var _docked = false;
 
   var moveInterval = setInterval(moveBoat, 2000); //Adjust movement every 2 seconds
   var lookInterval = setInterval(checkSurroundings, 100); //React 10 times every second
+
+  var mark = Utils.getDebugMarker();
 
   function moveBoat() {
     // Check curent heading for near collisions
@@ -20,22 +22,57 @@ var AIBoat = function(boat, boatClass) {
     }
     */
 
+    boat.parent.addChild(mark);
+
+    if (_wait > 0) {
+      _wait--;
+      return;
+    }
+
     // Check prioritized actions
     if (_enemies.length > 0) {
       // Has enemies, decide what to do (assumes greatest threat is always first in the array)
-      //check health
-      if (boat.health > 40) {
+      if (boat.health > 40) { //check health
         // attack or defend
         attackEnemy(_enemies[0]);
       } else {
         evadeEnemy(_enemies[0]);
       }
     } else if (_destinations.length > 0) {
-      // sail to next destination
-      sailToDestination(_destinations[0]);
+      var location = _destinations[0];
+      if (location.type == 'dock') {
+        _wait = Utils.getRandomInt(4,15);
+        boat.setSpeed(0);
+        boat.dockAt(location);
+        //animateToDock(location);
+      } else {
+        var distance = Utils.distanceBetweenTwoPoints(boat,location);
+        if (location.type == 'port') {
+          if (distance < 1200) {
+            var dock = location.requestDockPosition(boat);
+            if (dock) {
+              _destinations.splice(0,1);
+              _destinations.unshift(dock);
+              _destinations.unshift(dock.approachLocation);
+            } else {
+              boat.setSpeed(0);
+              return;
+            }
+          }
+        }
+
+        // set speed
+        if (distance > 1000) {
+          boat.setSpeed(10);
+        } else {
+          var newSpeed = Math.round(distance)/100;
+          boat.setSpeed(newSpeed);
+        }
+
+        sailToDestination(location); // sail to next destination
+      }
     } else {
-      // not doing anything select new action
-      chooseAction();
+      chooseAction(); // not doing anything select new action
     }
   }
 
@@ -43,8 +80,14 @@ var AIBoat = function(boat, boatClass) {
     if (boat.class == 'merchant') {
       // Sail to a port!
       var ports = Game.world.ports.slice(0); // Copies world port array
-      if (_docked) {
-        ports.splice(ports.indexOf(_docked.port), 1);//removes port docked at
+      if (boat.docked) {
+        console.log('undock!')
+        ports.splice(ports.indexOf(boat.docked.port), 1);//removes port docked at
+
+        _destinations.push(boat.docked.approachLocation);
+        //removes references for docking
+        boat.docked.occupied = false;
+        boat.dockAt(false);
       }
       if (ports.length >= 1) {
         var targetPort = ports[Utils.getRandomInt(0,ports.length-1)];
@@ -78,11 +121,10 @@ var AIBoat = function(boat, boatClass) {
     }
     */
 
-
     // Removes destinations arrived at
     if (_destinations[0]) {
       var prox = Math.abs(Utils.distanceBetweenTwoPoints(boat,_destinations[0]));
-      if (prox <= 10) {
+      if (prox <= 100) {
         _destinations.shift();
       }
     }
@@ -127,7 +169,7 @@ var AIBoat = function(boat, boatClass) {
     if (port.missions.length >= 1) {
       console.log('got mission!');
       var mission = port.acceptMission(0);
-      port.undock(_docked.num);
+      //port.undock(_docked.num);
       //boat.sailTo(Utils.getPointAwayFromPoint({x:_docked.x, y:_docked.y}, 300, _docked.heading));
       //boat.sailTo(mission.target);
       console.log(_destinations);
@@ -135,7 +177,7 @@ var AIBoat = function(boat, boatClass) {
   }
 
   function sailToDestination(location) {
-    console.log('sailToDestination', location)
+    //console.log('sailToDestination', location)
     switch(typeof(location)) {
       case 'number': // Heading
         turnToHeading(location);
@@ -145,6 +187,9 @@ var AIBoat = function(boat, boatClass) {
         turnToHeading(heading);
         break;
     }
+
+    mark.x = location.x;
+    mark.y = location.y;
   }
 
   function turnToHeading(heading) {
@@ -194,7 +239,7 @@ var AIBoat = function(boat, boatClass) {
     Utils.removeFromArray(_enemies, enemy);
     enemy.removeEventListener('sunk', removeEnemy);
   }
-  
+
   boat.addEventListener('damaged', boatDamaged);
   boat.addEventListener('sunk', clearChecks);
 
