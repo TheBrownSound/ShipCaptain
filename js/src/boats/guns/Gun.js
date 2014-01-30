@@ -50,7 +50,7 @@ var Gun = function(caliber, length, owner) {
 		var pos = gun.localToLocal(0,-length,owner.parent);
 		ball.x = pos.x;
 		ball.y = pos.y;
-		owner.parent.addChildAt(ball, 2);
+		owner.parent.addChild(ball);
 
 		for (var i = 0; i < caliber; i++) {
 			var smoke = new Particles.Smoke(60);
@@ -105,8 +105,10 @@ var Projectile = function(size, angle, owner) {
 	cannonBall.graphics.drawCircle(0,0,size/2);
 	cannonBall.graphics.endFill();
 
+	var moveInterval = setInterval(move, Math.floor(1000/60));
+
 	function removeProjectile() {
-		createjs.Ticker.removeEventListener("tick", update);
+		clearInterval(moveInterval);
 		cannonBall.parent.removeChild(cannonBall);
 	}
 
@@ -137,7 +139,7 @@ var Projectile = function(size, angle, owner) {
 		removeProjectile();
 	}
 
-	function update() {
+	function move() {
 		range--;
 		if (range > 0) {
 			cannonBall.x += Math.sin(angle*Math.PI/180)*velocity+boatXSpeed;
@@ -148,6 +150,5 @@ var Projectile = function(size, angle, owner) {
 		}
 	}
 
-	createjs.Ticker.addEventListener("tick", update);
 	return cannonBall;
 }

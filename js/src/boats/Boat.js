@@ -33,7 +33,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   boat.type = 'boat';
 
   var dispatcher = createjs.EventDispatcher.initialize(boat);
-  var updateInterval = setInterval(update, Math.floor(1000/60))
+  var updateInterval = setInterval(update, Math.floor(1000/60));
 
   boat.addChild(hull);
 

@@ -35,9 +35,9 @@ var Port = function(xPos,yPos) {
     }
   }
 
-  function addDockPosition(xLoc,yLoc,head) {
+  function addDockPosition(xLoc,yLoc,head,approach) {
     // Create Dock
-    var dock = new Dock(port, xLoc, yLoc, head);
+    var dock = new Dock(port, xLoc, yLoc, head, approach);
     dockPositions.push(dock);
 
     // Spawn merchant for dock position
@@ -53,8 +53,8 @@ var Port = function(xPos,yPos) {
   }
 
   port.init = function() {
-    addDockPosition(-180,390,220);
-    addDockPosition(-310,260,220);
+    addDockPosition(-180,390,220,200);
+    addDockPosition(-312,264,220,240);
   }
 
   port.addMission = function(mission) {
@@ -110,10 +110,11 @@ var Port = function(xPos,yPos) {
   return port;
 }
 
-var Dock = function(port, xLoc, yLoc, head) {
+var Dock = function(port, xLoc, yLoc, dockAngle, approachAngle) {
   var _occupied = false;
   var _owner = port;
-  var _heading = head;
+  var _heading = dockAngle;
+  var _approachAngle = approachAngle || dockAngle;
 
   var dock = {
     x: _owner.x+xLoc,
@@ -121,7 +122,7 @@ var Dock = function(port, xLoc, yLoc, head) {
     type: 'dock'
   }
 
-  var _approachPoint = Utils.getPointAwayFromPoint(dock, 300, _heading);
+  var _approachPoint = Utils.getPointAwayFromPoint(dock, 300, _approachAngle);
   _approachPoint.type = 'approach';
 
   dock.__defineGetter__('occupied', function(){

@@ -44,21 +44,10 @@ var AIBoat = function(boat, boatClass) {
         _wait = Utils.getRandomInt(4,15);
         boat.setSpeed(0);
         boat.dockAt(location);
-        //animateToDock(location);
       } else {
         var distance = Utils.distanceBetweenTwoPoints(boat,location);
-        if (location.type == 'port') {
-          if (distance < 1200) {
-            var dock = location.requestDockPosition(boat);
-            if (dock) {
-              _destinations.splice(0,1);
-              _destinations.unshift(dock);
-              _destinations.unshift(dock.approachLocation);
-            } else {
-              boat.setSpeed(0);
-              return;
-            }
-          }
+        if (location.type == 'port' && distance < 1200) {
+          beginPortApproach(location);
         }
 
         // set speed
@@ -142,6 +131,33 @@ var AIBoat = function(boat, boatClass) {
     }
   }
 
+  function getPathToDestination(destination) {
+    // Pathfinding!
+    // any collisions between origin and destination?
+    var places = Game.world.places.slice(0); // Copies world places array
+    
+    var pathLine = new createjs.Shape();
+    var g = pathLine.graphics;
+    line.graphics.setStrokeStyle(1);
+    line.graphics.beginStroke("#F00");
+    line.graphics.moveTo(boat.x,boat.y);
+    line.graphics.lineTo(destination.x,destination.y);
+    line.graphics.endStroke();
+    pathLine.cache(boat.x,boat.y,boat.x+destination.x,boat.y+destination.y);
+    boat.parent.addChild(pathLine);
+    
+    var collisions = [];
+    for (var place in places) {
+      var obj = places[place];
+      var hit = ndgmr.checkPixelCollision(pathLine,obj.hitBox, 0, true);
+      if (hit) {
+        collisions.push(obj);
+      }
+    }
+
+    console.log(collisions);
+  }
+
   function attackEnemy(enemy) {
     var attackPosition = getAttackPosition(enemy);
     sailToDestination(attackPosition);
@@ -163,6 +179,18 @@ var AIBoat = function(boat, boatClass) {
   function boatDamaged() {
     // Add enemy if not already
     // Re-prioritize enemies
+  }
+
+  function beginPortApproach(port) {
+    var dock = port.requestDockPosition(boat);
+    if (dock) {
+      _destinations.splice(0,1); // removes port from destinations
+      _destinations.unshift(dock);
+      _destinations.unshift(dock.approachLocation);
+    } else {
+      boat.setSpeed(0);
+      return;
+    }
   }
 
   function checkForMissionFrom(port) {
