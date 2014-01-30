@@ -1,5 +1,5 @@
 var PlayerBoat = function() {
-	var boat = new SmallBoat();
+	var boat = new Cruiser();
 	boat.name = 'PlayerBoat';
 
 	var _fireAtWill = false;

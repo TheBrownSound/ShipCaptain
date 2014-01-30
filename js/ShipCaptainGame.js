@@ -962,12 +962,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     };
     var diminishingReturns = 1/Math.sqrt(sails.length);
     _topSpeed = (topSpeed*diminishingReturns);
-    if (sail.type == "sqare") {
-      this.addChildAt(sail);
-    } else {
-      this.addChildAt(sail, 1);
-    }
-    
+    this.addChild(sail);
   }
 
   boat.addGun = function(gun, position) {
@@ -1237,6 +1232,28 @@ var SmallBoat = function() {
   return boat;
 }
 
+var Cruiser = function() {
+  var boat = new Boat(Game.assets['cruiser']);
+  var rudder = new BasicRudder();
+  var mast = SmallMast();
+  var jib = new ForeAft(80, {x:1,y:-20});
+  var main = new SquareRig(120, {x:-38,y:26}, {x:40,y:30});
+  
+  rudder.y = 106;
+  jib.y = -120;
+  mast.x = 1;
+  mast.y = -19;
+  main.y = -24;
+
+  boat.setAnchorPoints({x:-30,y:-40},{x:30,y:-40},{x:30,y:40},{x:-30,y:40});
+
+  boat.addRudder(rudder);
+  boat.addSail(main);
+  boat.addSail(jib);
+  boat.addMast(mast);
+  return boat;
+}
+
 var SmallMast = function() {
   var mast = new createjs.Bitmap('images/mast_small.png');
   mast.regX = mast.regY = 7;
@@ -1259,7 +1276,7 @@ var BasicRudder = function() {
   return rudder;
 }
 var PlayerBoat = function() {
-	var boat = new SmallBoat();
+	var boat = new Cruiser();
 	boat.name = 'PlayerBoat';
 
 	var _fireAtWill = false;
@@ -2432,7 +2449,8 @@ var Game = (function(){
 			{src:"sounds/water.mp3", id:"water"},
 			{src:"images/tide.png", id:"tide"},
 			{src:"images/raft_hull.png", id:"raft"},
-			{src:"images/basic_hull.png", id:"basicBoat"}
+			{src:"images/basic_hull.png", id:"basicBoat"},
+			{src:"images/cruiser_hull.png", id:"cruiser"}
 		];
 
 		preloader = new createjs.LoadQueue(false);

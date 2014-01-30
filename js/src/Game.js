@@ -68,7 +68,8 @@ var Game = (function(){
 			{src:"sounds/water.mp3", id:"water"},
 			{src:"images/tide.png", id:"tide"},
 			{src:"images/raft_hull.png", id:"raft"},
-			{src:"images/basic_hull.png", id:"basicBoat"}
+			{src:"images/basic_hull.png", id:"basicBoat"},
+			{src:"images/cruiser_hull.png", id:"cruiser"}
 		];
 
 		preloader = new createjs.LoadQueue(false);

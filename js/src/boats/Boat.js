@@ -211,12 +211,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
     };
     var diminishingReturns = 1/Math.sqrt(sails.length);
     _topSpeed = (topSpeed*diminishingReturns);
-    if (sail.type == "sqare") {
-      this.addChildAt(sail);
-    } else {
-      this.addChildAt(sail, 1);
-    }
-    
+    this.addChild(sail);
   }
 
   boat.addGun = function(gun, position) {
