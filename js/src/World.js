@@ -1,6 +1,7 @@
 // Top Down world class
 var World = function(playerBoat){
-  var BOUNDS = 50000;
+  var MAP_TILES = 20;
+  var TILE_SIZE = 1000;
 
   var _eventFrequency = 10000;
   var updateInterval = setInterval(update, Math.floor(1000/60));
@@ -228,15 +229,61 @@ var World = function(playerBoat){
     }
   }
 
-  world.generateWorld = function() {
-    var cityOne = new Port(800,50);
-    var cityTwo = new Port(-800,-50);
-    var island = new Island();
-    island.y = -200;
+  function getRandomNodeType() {
+    switch(Utils.getRandomInt(0,10)) {
+      case 1:
+        return 'island';
+      case 2:
+        return 'city';
+      default:
+        return 'empty';
+    }
+  }
 
-    addPlace(cityOne);
-    addPlace(cityTwo);
-    addPlace(island);
+  world.generateWorld = function(worldObj) {
+    //TODO implement building from worldObj
+    var tileOffset = (MAP_TILES*TILE_SIZE)/2;
+    var nodes = [];
+
+    if (worldObj) {
+
+    } else {
+      // creates the world
+      for (var i = 0; i < MAP_TILES*MAP_TILES; i++) {
+        var node = {};
+        node.col = i%MAP_TILES
+        node.row = Math.floor(i/MAP_TILES);
+        node.type = getRandomNodeType();
+        console.log("row: ", node.row ,"col:", node.col, "type:", node.type);
+        nodes.push(node);
+      };
+    }
+
+    for (var i = 0; i < nodes.length; i++) {
+      var location = nodes[i];
+      location.x = (TILE_SIZE*location.col)-tileOffset;
+      location.y = (TILE_SIZE*location.row)-tileOffset;
+      switch (location.type) {
+        case 'city':
+          var city = new Port();
+          city.x = location.x;
+          city.y = location.y;
+          addPlace(city);
+          break;
+        case 'island':
+          var island = new Island();
+          island.x = location.x;
+          island.y = location.y;
+          addPlace(island);
+          break;
+      }
+      // outlines the nodes
+      var rect = new createjs.Shape();
+      rect.graphics.beginStroke(1);
+      rect.graphics.drawRect(location.x, location.y, TILE_SIZE, TILE_SIZE);
+      rect.graphics.endStroke();
+      map.addChild(rect);
+    };
 
     //Start playing water sound
     createjs.Sound.play("water", {loop:-1});

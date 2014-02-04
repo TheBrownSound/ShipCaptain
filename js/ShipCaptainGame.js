@@ -312,7 +312,8 @@ var Viewport = function(container) {
 }
 // Top Down world class
 var World = function(playerBoat){
-  var BOUNDS = 50000;
+  var MAP_TILES = 20;
+  var TILE_SIZE = 1000;
 
   var _eventFrequency = 10000;
   var updateInterval = setInterval(update, Math.floor(1000/60));
@@ -540,15 +541,61 @@ var World = function(playerBoat){
     }
   }
 
-  world.generateWorld = function() {
-    var cityOne = new Port(800,50);
-    var cityTwo = new Port(-800,-50);
-    var island = new Island();
-    island.y = -200;
+  function getRandomNodeType() {
+    switch(Utils.getRandomInt(0,10)) {
+      case 1:
+        return 'island';
+      case 2:
+        return 'city';
+      default:
+        return 'empty';
+    }
+  }
 
-    addPlace(cityOne);
-    addPlace(cityTwo);
-    addPlace(island);
+  world.generateWorld = function(worldObj) {
+    //TODO implement building from worldObj
+    var tileOffset = (MAP_TILES*TILE_SIZE)/2;
+    var nodes = [];
+
+    if (worldObj) {
+
+    } else {
+      // creates the world
+      for (var i = 0; i < MAP_TILES*MAP_TILES; i++) {
+        var node = {};
+        node.col = i%MAP_TILES
+        node.row = Math.floor(i/MAP_TILES);
+        node.type = getRandomNodeType();
+        console.log("row: ", node.row ,"col:", node.col, "type:", node.type);
+        nodes.push(node);
+      };
+    }
+
+    for (var i = 0; i < nodes.length; i++) {
+      var location = nodes[i];
+      location.x = (TILE_SIZE*location.col)-tileOffset;
+      location.y = (TILE_SIZE*location.row)-tileOffset;
+      switch (location.type) {
+        case 'city':
+          var city = new Port();
+          city.x = location.x;
+          city.y = location.y;
+          addPlace(city);
+          break;
+        case 'island':
+          var island = new Island();
+          island.x = location.x;
+          island.y = location.y;
+          addPlace(island);
+          break;
+      }
+      // outlines the nodes
+      var rect = new createjs.Shape();
+      rect.graphics.beginStroke(1);
+      rect.graphics.drawRect(location.x, location.y, TILE_SIZE, TILE_SIZE);
+      rect.graphics.endStroke();
+      map.addChild(rect);
+    };
 
     //Start playing water sound
     createjs.Sound.play("water", {loop:-1});
@@ -2211,7 +2258,7 @@ var Place = function() {
 	place.type = "stationary";
 	return place;
 }
-var Port = function(xPos,yPos) {
+var Port = function() {
   var MAX_MISSIONS = 4;
 
   var port = new Place();
@@ -2220,7 +2267,7 @@ var Port = function(xPos,yPos) {
   var missions = [];
   var dockPositions = [];
   var ships = [];
-  var missionInterval = setInterval(generateMission, 60000); // New mission every minute
+  //var missionInterval = setInterval(generateMission, 60000); // New mission every minute
 
   // Graphics setup
   var top = new createjs.Bitmap("images/city_top.png");
@@ -2229,8 +2276,7 @@ var Port = function(xPos,yPos) {
   port.regX = 500;
   port.regY = 500;
 
-  port.x = xPos;
-  port.y = yPos;
+  
 
   function generateMission() {
     switch (Utils.getRandomInt(1,1)) {
@@ -2252,7 +2298,7 @@ var Port = function(xPos,yPos) {
     // Create Dock
     var dock = new Dock(port, xLoc, yLoc, head, approach);
     dockPositions.push(dock);
-
+    /*
     // Spawn merchant for dock position
     var newBoat = new Merchant();
     ships.push(newBoat);
@@ -2263,6 +2309,7 @@ var Port = function(xPos,yPos) {
 
     Game.world.addBoat(newBoat);
     newBoat.dockAt(dock);
+    */
   }
 
   port.init = function() {

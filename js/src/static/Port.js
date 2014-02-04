@@ -1,4 +1,4 @@
-var Port = function(xPos,yPos) {
+var Port = function() {
   var MAX_MISSIONS = 4;
 
   var port = new Place();
@@ -7,7 +7,7 @@ var Port = function(xPos,yPos) {
   var missions = [];
   var dockPositions = [];
   var ships = [];
-  var missionInterval = setInterval(generateMission, 60000); // New mission every minute
+  //var missionInterval = setInterval(generateMission, 60000); // New mission every minute
 
   // Graphics setup
   var top = new createjs.Bitmap("images/city_top.png");
@@ -16,8 +16,7 @@ var Port = function(xPos,yPos) {
   port.regX = 500;
   port.regY = 500;
 
-  port.x = xPos;
-  port.y = yPos;
+  
 
   function generateMission() {
     switch (Utils.getRandomInt(1,1)) {
@@ -39,7 +38,7 @@ var Port = function(xPos,yPos) {
     // Create Dock
     var dock = new Dock(port, xLoc, yLoc, head, approach);
     dockPositions.push(dock);
-
+    /*
     // Spawn merchant for dock position
     var newBoat = new Merchant();
     ships.push(newBoat);
@@ -50,6 +49,7 @@ var Port = function(xPos,yPos) {
 
     Game.world.addBoat(newBoat);
     newBoat.dockAt(dock);
+    */
   }
 
   port.init = function() {
