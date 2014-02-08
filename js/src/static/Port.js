@@ -16,8 +16,6 @@ var Port = function() {
   port.regX = 500;
   port.regY = 500;
 
-  
-
   function generateMission() {
     switch (Utils.getRandomInt(1,1)) {
       case 1:

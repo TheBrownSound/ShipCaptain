@@ -13,6 +13,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
 
   // Changing Properties
   var _heading = 0;
+  var _lastHeading = 0;
   var _bump = {x:0,y:0,rotation:0};
   var _life = 100;
   var _health = 100;
@@ -400,7 +401,8 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   function update() {
     speedCalc();
 
-    if (_health > 0) {
+    if (_health > 0 && boat.heading != _lastHeading) {
+      _lastHeading = boat.heading;
       adjustTrim();
     }
 

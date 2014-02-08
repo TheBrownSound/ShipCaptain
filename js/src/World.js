@@ -3,6 +3,17 @@ var World = function(playerBoat){
   var MAP_TILES = 20;
   var TILE_SIZE = 1000;
 
+  var PLACES = [{
+    type: 'civilian',
+    count: 6
+  }, {
+    type: 'pirate',
+    count: 3
+  }, {
+    type: 'island',
+    count: 10
+  }];
+
   var _eventFrequency = 10000;
   var updateInterval = setInterval(update, Math.floor(1000/60));
 
@@ -16,15 +27,6 @@ var World = function(playerBoat){
   var map = world.map = new createjs.Container();
   var ocean = world.ocean = new Ocean(500,500);
   var weather = world.weather = new Weather();
-
-  /*
-  var mapCenter = new createjs.Shape();
-  mapCenter.graphics.beginFill('#F00');
-  mapCenter.graphics.drawCircle(-5,-5,20);
-  mapCenter.graphics.endFill();
-
-  map.addChild(mapCenter);
-  */
   
   world.addChild(ocean, map);
   addBoat(playerBoat);
@@ -251,23 +253,39 @@ var World = function(playerBoat){
       // creates the world
       for (var i = 0; i < MAP_TILES*MAP_TILES; i++) {
         var node = {};
+        node.num = i;
         node.col = i%MAP_TILES
         node.row = Math.floor(i/MAP_TILES);
-        node.type = getRandomNodeType();
-        console.log("row: ", node.row ,"col:", node.col, "type:", node.type);
+        node.info = {
+          type: 'empty'
+        }
         nodes.push(node);
       };
+
+      var availableNodes = nodes.slice(0);
+      for (var obj in PLACES) {
+        var place = PLACES[obj];
+        for (var i = 0; i < place.count; i++) {
+          var randomIndex = Utils.getRandomInt(0, availableNodes.length);
+          var randomNode = availableNodes.splice(randomIndex,1)[0];
+          nodes[randomNode.num].info = {
+            type: place.type
+          }
+          console.log('randomNode', randomNode.num);
+        };
+      }
     }
 
     for (var i = 0; i < nodes.length; i++) {
       var location = nodes[i];
       location.x = (TILE_SIZE*location.col)-tileOffset;
       location.y = (TILE_SIZE*location.row)-tileOffset;
-      switch (location.type) {
-        case 'city':
+      switch (location.info.type) {
+        case 'civilian':
+        case 'pirate':
           var city = new Port();
-          city.x = location.x;
-          city.y = location.y;
+          city.x = location.x+city.regX;
+          city.y = location.y+city.regY;
           addPlace(city);
           break;
         case 'island':

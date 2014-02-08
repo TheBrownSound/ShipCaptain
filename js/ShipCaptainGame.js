@@ -315,6 +315,17 @@ var World = function(playerBoat){
   var MAP_TILES = 20;
   var TILE_SIZE = 1000;
 
+  var PLACES = [{
+    type: 'civilian',
+    count: 6
+  }, {
+    type: 'pirate',
+    count: 3
+  }, {
+    type: 'island',
+    count: 10
+  }];
+
   var _eventFrequency = 10000;
   var updateInterval = setInterval(update, Math.floor(1000/60));
 
@@ -328,15 +339,6 @@ var World = function(playerBoat){
   var map = world.map = new createjs.Container();
   var ocean = world.ocean = new Ocean(500,500);
   var weather = world.weather = new Weather();
-
-  /*
-  var mapCenter = new createjs.Shape();
-  mapCenter.graphics.beginFill('#F00');
-  mapCenter.graphics.drawCircle(-5,-5,20);
-  mapCenter.graphics.endFill();
-
-  map.addChild(mapCenter);
-  */
   
   world.addChild(ocean, map);
   addBoat(playerBoat);
@@ -563,23 +565,39 @@ var World = function(playerBoat){
       // creates the world
       for (var i = 0; i < MAP_TILES*MAP_TILES; i++) {
         var node = {};
+        node.num = i;
         node.col = i%MAP_TILES
         node.row = Math.floor(i/MAP_TILES);
-        node.type = getRandomNodeType();
-        console.log("row: ", node.row ,"col:", node.col, "type:", node.type);
+        node.info = {
+          type: 'empty'
+        }
         nodes.push(node);
       };
+
+      var availableNodes = nodes.slice(0);
+      for (var obj in PLACES) {
+        var place = PLACES[obj];
+        for (var i = 0; i < place.count; i++) {
+          var randomIndex = Utils.getRandomInt(0, availableNodes.length);
+          var randomNode = availableNodes.splice(randomIndex,1)[0];
+          nodes[randomNode.num].info = {
+            type: place.type
+          }
+          console.log('randomNode', randomNode.num);
+        };
+      }
     }
 
     for (var i = 0; i < nodes.length; i++) {
       var location = nodes[i];
       location.x = (TILE_SIZE*location.col)-tileOffset;
       location.y = (TILE_SIZE*location.row)-tileOffset;
-      switch (location.type) {
-        case 'city':
+      switch (location.info.type) {
+        case 'civilian':
+        case 'pirate':
           var city = new Port();
-          city.x = location.x;
-          city.y = location.y;
+          city.x = location.x+city.regX;
+          city.y = location.y+city.regY;
           addPlace(city);
           break;
         case 'island':
@@ -811,6 +829,7 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
 
   // Changing Properties
   var _heading = 0;
+  var _lastHeading = 0;
   var _bump = {x:0,y:0,rotation:0};
   var _life = 100;
   var _health = 100;
@@ -1198,7 +1217,8 @@ var Boat = (function(hullImage) { // bitmap hull image needs to be preloaded for
   function update() {
     speedCalc();
 
-    if (_health > 0) {
+    if (_health > 0 && boat.heading != _lastHeading) {
+      _lastHeading = boat.heading;
       adjustTrim();
     }
 
@@ -1283,7 +1303,7 @@ var Cruiser = function() {
   var boat = new Boat(Game.assets['cruiser']);
   var rudder = new BasicRudder();
   var mast = SmallMast();
-  var jib = new ForeAft(80, {x:1,y:-20});
+  var jib = new Spinnaker(80, {x:-38,y:-40},{x:40,y:-40});
   var main = new SquareRig(120, {x:-38,y:26}, {x:40,y:30});
   
   rudder.y = 106;
@@ -1761,11 +1781,13 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	sail.sailColor = '#ded5be';
 	sail.lineColor = '#231F20';
 
-	function trimTo(angle) {
+	var dispatcher = createjs.EventDispatcher.initialize(sail);
+
+	function trimTo(desiredAngle) {
 		var animate = createjs.Tween.get(sail, {override:true});
-		animate.to({rotation:angle}, 2000, createjs.Ease.linear);
+		animate.to({rotation:desiredAngle}, 2000, createjs.Ease.linear);
 		animate.addEventListener("change", function(event){
-			if (sail.changed) sail.changed(false);
+			sail.dispatchEvent("positionChange");
 		});
 	}
 
@@ -1793,7 +1815,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 	});
 
 	sail.__defineGetter__('angle', function(){
-		return sail.rotation;
+		return sail.position;
 	});
 
 	sail.__defineGetter__('power', function(){
@@ -1802,7 +1824,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	sail.__defineSetter__('power', function(perc){
 		_power = perc;
-		if (sail.powerChanged) sail.powerChanged();
+		sail.dispatchEvent("powerChange");
 	});
 
 	sail.__defineGetter__('tack', function(){
@@ -1811,7 +1833,7 @@ var Sail = (function(windOffset, sailRange, noSail) {
 
 	sail.__defineSetter__('color', function(hex){
 		sail.sailColor = hex;
-		if (sail.changed) sail.changed(true);
+		sail.dispatchEvent("colorChange");
 	});
 
 	return sail;
@@ -1875,10 +1897,9 @@ var SquareRig = function(length, anchor1, anchor2) {
 		};
 		f.endFill();
 
-		//sail.drawLines();
 	}
 
-	sail.drawLines = function() {
+	function drawLines() {
 		var g1 = anchorPoint1.graphics;
 		var g2 = anchorPoint2.graphics;
 		g1.clear();
@@ -1897,15 +1918,7 @@ var SquareRig = function(length, anchor1, anchor2) {
 		g2.endStroke();
 	}
 
-	sail.changed = function(fullRedraw) {
-		if (fullRedraw) {
-			drawSail();
-		} else {
-			sail.drawLines();
-		}
-	}
-
-	sail.powerChanged = function() {
+	sail.addEventListener("powerChange", function() {
 		if (sail.power <= 0) {
 			createjs.Tween.get(furl, {override:true})
 			.to({scaleY:1}, 400, createjs.Ease.linear)
@@ -1916,7 +1929,10 @@ var SquareRig = function(length, anchor1, anchor2) {
 		}
 		createjs.Tween.get(sheet, {override:true})
 			.to({scaleY:sail.power+.1}, 400, createjs.Ease.linear)
-	}
+	});
+
+	sail.addEventListener("positionChange", drawLines);
+	sail.addEventListener("colorChange", drawSail);
 
 	sheet.scaleY = 0;
 	drawSail();
@@ -1979,23 +1995,9 @@ var ForeAft = function(length, anchorPoint) {
 		f.endFill();
 
 		sheet.scaleX = 0;
-		
-		//drawLine();
 	}
 
-	sail.changed = function(fullRedraw) {
-		if (fullRedraw) {
-			drawSail();
-		} else {
-			drawLine();
-			if (tack != sail.tack) {
-				tack = sail.tack;
-				sail.powerChanged();
-			}
-		}
-	}
-
-	sail.powerChanged = function() {
+	function powerChanged() {
 		if (sail.power <= 0) {
 			createjs.Tween.get(furl, {override:true})
 			.to({scaleX:1}, 400, createjs.Ease.linear)
@@ -2010,7 +2012,100 @@ var ForeAft = function(length, anchorPoint) {
 			.to({scaleX:scale}, 400, createjs.Ease.linear)
 	}
 
+	sail.addEventListener("positionChange", function() {
+		drawLine();
+		if (tack != sail.tack) {
+			tack = sail.tack;
+			powerChanged();
+		}
+	});
+
+	sail.addEventListener("powerChange", powerChanged);
+
+	sail.addEventListener("colorChange", drawSail);
+
 	drawSail();
+	return sail;
+}
+
+var Spinnaker = function(length, anchor1, anchor2) {
+	var sail = new Sail(45, 45, 135);
+	sail.name = 'spinnaker';
+
+	var _trim = 0;
+	var tack;
+	var sheet = new	createjs.Shape();
+
+	var mastLine = new createjs.Shape();
+	var anchorLine1 = new createjs.Shape();
+	var anchorLine2 = new createjs.Shape();
+	anchorLine1.y = anchorLine2.y = length-10;
+
+	sail.addChild(anchorLine1, anchorLine2, sheet, mastLine);
+
+	function drawMastLine() {
+		var g = mastLine.graphics;
+		g.clear();
+		g.setStrokeStyle('2').beginStroke(sail.lineColor);
+		
+		var anchor = sail.parent.localToLocal(sail.x,sail.y+length, sail);
+		g.moveTo(0,0);
+		g.lineTo(anchor.x, anchor.y);
+		g.endStroke();
+	}
+
+	function drawAnchorLines() {
+		var g1 = anchorLine1.graphics;
+		var g2 = anchorLine2.graphics;
+		g1.clear();
+		g2.clear();
+		g1.setStrokeStyle('2').beginStroke(sail.lineColor);
+		g2.setStrokeStyle('2').beginStroke(sail.lineColor);
+		
+		var anchorOne = sail.parent.localToLocal(anchor1.x,anchor1.y, anchorLine1);
+		var anchorTwo = sail.parent.localToLocal(anchor2.x,anchor2.y, anchorLine2);
+
+		g1.moveTo(0,0);
+		g2.moveTo(0,0);
+		g1.lineTo(anchorOne.x, anchorOne.y);
+		g2.lineTo(anchorTwo.x, anchorTwo.y);
+		g1.endStroke();
+		g2.endStroke();
+	}
+
+	function drawSail() {
+		var s = sheet.graphics;
+		s.clear();
+
+		s.beginFill(sail.sailColor);
+		s.moveTo(0, 0);
+
+		var curveDirection = (sail.tack == 'port') ? -1 : 1;
+		// outside luff
+		s.curveTo(20*curveDirection, length*.7, 0, length);
+		
+		// back to center/mast line
+		var mastAnchorPoint = sail.parent.localToLocal(sail.x,sail.y+length, sail);
+		s.curveTo(10*curveDirection, length*.5, mastAnchorPoint.x, mastAnchorPoint.y);		
+		
+		// center to front
+		s.curveTo(3*curveDirection, mastAnchorPoint.y/2, 0,0);
+		s.endFill();
+	}
+
+	sail.addEventListener("powerChange", drawSail);
+
+	sail.addEventListener("positionChange", function(){
+		drawSail();
+		drawMastLine();
+		drawAnchorLines();
+		if (tack != sail.tack) {
+			tack = sail.tack;
+		}
+	});
+
+	sail.addEventListener("colorChange", drawSail);
+
 	return sail;
 }
 var Helm = function(ship) {
@@ -2275,8 +2370,6 @@ var Port = function() {
   port.addChild(bottom, top);
   port.regX = 500;
   port.regY = 500;
-
-  
 
   function generateMission() {
     switch (Utils.getRandomInt(1,1)) {

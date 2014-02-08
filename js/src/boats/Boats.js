@@ -39,7 +39,7 @@ var Cruiser = function() {
   var boat = new Boat(Game.assets['cruiser']);
   var rudder = new BasicRudder();
   var mast = SmallMast();
-  var jib = new ForeAft(80, {x:1,y:-20});
+  var jib = new Spinnaker(80, {x:-38,y:-40},{x:40,y:-40});
   var main = new SquareRig(120, {x:-38,y:26}, {x:40,y:30});
   
   rudder.y = 106;
